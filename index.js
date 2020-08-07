@@ -1,3 +1,4 @@
+require('./src/heroku-server')
 const Discord = require('discord.js')
 const {
   handleNewMessage,

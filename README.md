@@ -9,8 +9,6 @@
 <!-- prettier-ignore-start -->
 [![Build Status][build-badge]][build]
 [![Code Coverage][coverage-badge]][coverage]
-[![version][version-badge]][package]
-[![downloads][downloads-badge]][npmtrends]
 [![MIT License][license-badge]][license]
 
 [![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
@@ -115,10 +113,6 @@ MIT
 [build]: https://travis-ci.com/kentcdodds/kcd-discord-bot
 [coverage-badge]: https://img.shields.io/codecov/c/github/kentcdodds/kcd-discord-bot.svg?style=flat-square
 [coverage]: https://codecov.io/github/kentcdodds/kcd-discord-bot
-[version-badge]: https://img.shields.io/npm/v/kcd-discord-bot.svg?style=flat-square
-[package]: https://www.npmjs.com/package/kcd-discord-bot
-[downloads-badge]: https://img.shields.io/npm/dm/kcd-discord-bot.svg?style=flat-square
-[npmtrends]: http://www.npmtrends.com/kcd-discord-bot
 [license-badge]: https://img.shields.io/npm/l/kcd-discord-bot.svg?style=flat-square
 [license]: https://github.com/kentcdodds/kcd-discord-bot/blob/master/LICENSE
 [prs-badge]: https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square

@@ -1,0 +1,52 @@
+{
+  "name": "kcd-discord-bot",
+  "version": "0.0.0-semantically-released",
+  "description": "The bot for the KCD discord community (https://kcd.im/discord)",
+  "main": "dist/index.js",
+  "keywords": [],
+  "author": "Kent C. Dodds <me@kentcdodds.com> (https://kentcdodds.com)",
+  "license": "MIT",
+  "engines": {
+    "node": ">=10",
+    "npm": ">=6"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kentcdodds/kcd-discord-bot"
+  },
+  "bugs": {
+    "url": "https://github.com/kentcdodds/kcd-discord-bot/issues"
+  },
+  "homepage": "https://github.com/kentcdodds/kcd-discord-bot#readme",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "start": "node .",
+    "lint": "kcd-scripts lint",
+    "setup": "npm install && npm run validate -s",
+    "test": "kcd-scripts test",
+    "test:update": "npm test -- --updateSnapshot --coverage",
+    "validate": "kcd-scripts validate"
+  },
+  "dependencies": {
+    "discord.js": "^12.2.0",
+    "dotenv": "^8.2.0"
+  },
+  "devDependencies": {
+    "got": "^11.5.1",
+    "kcd-scripts": "^6.0.0",
+    "msw": "^0.20.1"
+  },
+  "eslintConfig": {
+    "extends": "./node_modules/kcd-scripts/eslint.js",
+    "rules": {
+      "babel/camelcase": "off"
+    }
+  },
+  "eslintIgnore": [
+    "node_modules",
+    "coverage",
+    "dist"
+  ]
+}

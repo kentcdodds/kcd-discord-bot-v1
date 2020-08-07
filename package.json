@@ -31,10 +31,10 @@
   },
   "dependencies": {
     "discord.js": "^12.2.0",
-    "dotenv": "^8.2.0"
+    "dotenv": "^8.2.0",
+    "got": "^11.5.1"
   },
   "devDependencies": {
-    "got": "^11.5.1",
     "kcd-scripts": "^6.0.0",
     "msw": "^0.20.1"
   },

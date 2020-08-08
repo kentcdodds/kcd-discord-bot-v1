@@ -57,8 +57,6 @@ async function setup() {
     return `<@${this.id}>`
   }
 
-  const welcomeCategoryChannel = {type: 'category', name: 'Welcome!'}
-
   const guild = {
     client: mockClient,
     members: {
@@ -71,8 +69,32 @@ async function setup() {
     },
     channels: {
       cache: {
+        _channels: {
+          welcomeCategoryChannel: {
+            type: 'category',
+            name: 'Welcome!',
+            toString: () => 'welcome-id',
+          },
+          introductionChannel: {
+            type: 'text',
+            name: '👶-introductions',
+            toString: () => 'introductions-id',
+          },
+          talkToBotsChannel: {
+            type: 'text',
+            name: '🤖-talk-to-bots',
+            toString: () => 'bots-id',
+          },
+          officeHoursChannel: {
+            type: 'text',
+            name: '🏫-office-hours',
+            toString: () => 'office-hours-id',
+          },
+        },
         find(cb) {
-          if (cb(welcomeCategoryChannel)) return welcomeCategoryChannel
+          for (const ch of Object.values(this._channels)) {
+            if (cb(ch)) return ch
+          }
           throw new Error('unhandled case in channels.cache.find')
         },
       },
@@ -203,7 +225,7 @@ ${channel.messages._messages
 }
 
 test('the typical flow', async () => {
-  const {send, getMessageThread, channel, member} = await setup()
+  const {send, getMessageThread, member} = await setup()
 
   await send('Fred')
   await send('fred@example.com')
@@ -218,7 +240,9 @@ test('the typical flow', async () => {
 
     I'm a bot and I'm here to welcome you to the KCD Community on Discord! Before you can join in the fun, I need to ask you a few questions. If you have any trouble, please email team@kentcdodds.com with your discord username (\`fredjoe#1234\`) and we'll get things fixed up for you.
 
-    So, let's get started...
+    (Note, if you make a mistake, you can edit your responses).
+
+    So, let's get started. Here's the first question (of 5):
     BOT: What's your first name?
     Fred Joe: Fred
     BOT: Great, hi Fred 👋
@@ -245,10 +269,11 @@ test('the typical flow', async () => {
     BOT: Awesome, welcome to the KCD Community on Discord!
     BOT: You should be good to go now. Don't forget to check fred@example.com for a confirmation email. Thanks and enjoy the community!
 
-    This channel will self-destruct in 10 seconds..."
+    I recommend you introduce yourself in introductions-id and take a look at what you can do in bots-id. And don't miss Kent's office hours in office-hours-id! Enjoy the community!
+
+    This channel will get deleted automatically eventually, but you can delete this channel now by sending the word \`delete\`."
   `)
 
-  expect(channel.delete).toHaveBeenCalledTimes(1)
   expect(member.roles.add).toHaveBeenCalledWith(
     member.guild.roles.cache._roles.member,
     'New confirmed member',
@@ -340,7 +365,9 @@ test('typing and editing to an invalid value', async () => {
 
     I'm a bot and I'm here to welcome you to the KCD Community on Discord! Before you can join in the fun, I need to ask you a few questions. If you have any trouble, please email team@kentcdodds.com with your discord username (\`fredjoe#1234\`) and we'll get things fixed up for you.
 
-    So, let's get started...
+    (Note, if you make a mistake, you can edit your responses).
+
+    So, let's get started. Here's the first question (of 5):
     BOT: What's your first name?
     Fred Joe: Fred
     BOT: Great, hi Fred 👋
@@ -378,6 +405,8 @@ test('typing and editing to an invalid value', async () => {
     BOT: Awesome, welcome to the KCD Community on Discord!
     BOT: You should be good to go now. Don't forget to check fred@acme.com for a confirmation email. Thanks and enjoy the community!
 
-    This channel will self-destruct in 10 seconds..."
+    I recommend you introduce yourself in introductions-id and take a look at what you can do in bots-id. And don't miss Kent's office hours in office-hours-id! Enjoy the community!
+
+    This channel will get deleted automatically eventually, but you can delete this channel now by sending the word \`delete\`."
   `)
 })

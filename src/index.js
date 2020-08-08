@@ -83,16 +83,27 @@ If you'd like to change any, simply edit your response. **If everything's correc
     getAnswer: messageContents =>
       /^Awesome, welcome to the KCD/.test(messageContents) ? true : null,
     action: async (answers, message) => {
-      const memberRole = message.guild.roles.cache.find(
-        ({name}) => name === 'Member',
-      )
-      const unconfirmedMemberRole = message.guild.roles.cache.find(
+      const {guild, author} = message
+      const memberRole = guild.roles.cache.find(({name}) => name === 'Member')
+      const unconfirmedMemberRole = guild.roles.cache.find(
         ({name}) => name === 'Unconfirmed Member',
       )
 
-      const member = message.guild.members.cache.find(
-        ({user}) => user.id === message.author.id,
+      const member = guild.members.cache.find(({user}) => user.id === author.id)
+
+      const introChannel = guild.channels.cache.find(
+        ({name, type}) =>
+          name.toLowerCase().includes('introduction') && type === 'text',
       )
+      const botsChannel = guild.channels.cache.find(
+        ({name, type}) =>
+          name.toLowerCase().includes('talk-to-bots') && type === 'text',
+      )
+      const officeHoursChannel = guild.channels.cache.find(
+        ({name, type}) =>
+          name.toLowerCase().includes('office-hours') && type === 'text',
+      )
+      const recommendations = `I recommend you introduce yourself in ${introChannel} and take a look at what you can do in ${botsChannel}. And don't miss Kent's office hours in ${officeHoursChannel}! Enjoy the community!`
 
       await member.roles.remove(unconfirmedMemberRole)
       await member.roles.add(memberRole, 'New confirmed member')
@@ -111,9 +122,11 @@ If you'd like to change any, simply edit your response. **If everything's correc
           `
 Please verify your humanity here: ${body.url}
 
-Once you've done that, then you should be good to go! Enjoy the community!
+Once you've done that, then you should be good to go!
 
-You can delete this channel by sending the word \`delete\`.
+${recommendations}
+
+This channel will get deleted automatically eventually, but you can delete this channel now by sending the word \`delete\`.
           `.trim(),
         )
       } else {
@@ -121,13 +134,11 @@ You can delete this channel by sending the word \`delete\`.
           `
 You should be good to go now. Don't forget to check ${answers.email} for a confirmation email. Thanks and enjoy the community!
 
-This channel will self-destruct in 10 seconds...
+${recommendations}
+
+This channel will get deleted automatically eventually, but you can delete this channel now by sending the word \`delete\`.
           `.trim(),
         )
-        await new Promise(resolve =>
-          setTimeout(resolve, process.env.NODE_ENV === 'test' ? 0 : 5000),
-        )
-        await message.channel.delete()
       }
     },
     validate(response) {
@@ -163,7 +174,7 @@ async function handleNewMessage(message) {
     ({user}) => user.id === message.author.id,
   )
 
-  if (message.content === 'delete') {
+  if (message.content.toLowerCase() === 'delete') {
     const isUnconfirmed = !!member.roles.cache.find(
       ({name}) => name === 'Unconfirmed Member',
     )
@@ -376,9 +387,12 @@ Hello ${user} 👋
 
 I'm a bot and I'm here to welcome you to the KCD Community on Discord! Before you can join in the fun, I need to ask you a few questions. If you have any trouble, please email team@kentcdodds.com with your discord username (\`${username}#${discriminator}\`) and we'll get things fixed up for you.
 
-So, let's get started...
+(Note, if you make a mistake, you can edit your responses).
+
+So, let's get started. Here's the first question (of ${steps.length}):
       `.trim(),
   )
+
   await channel.send(steps[0].question)
 }
 

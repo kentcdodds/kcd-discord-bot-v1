@@ -1,3 +1,4 @@
+const path = require('path')
 const Discord = require('discord.js')
 const {
   handleNewMessage,
@@ -7,7 +8,7 @@ const {
 } = require('.')
 
 require('dotenv').config({
-  path: `../.env.${process.env.NODE_ENV || 'local'}`,
+  path: path.join(__dirname, '..', `/.env.${process.env.NODE_ENV || 'local'}`),
 })
 
 const client = new Discord.Client()

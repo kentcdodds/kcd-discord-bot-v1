@@ -49,6 +49,7 @@ async function setup() {
       discriminator: '1234',
     },
     roles: {
+      remove: jest.fn(),
       add: jest.fn(),
     },
   }
@@ -124,6 +125,10 @@ async function setup() {
         _roles: {
           everyone: {name: '@everyone', id: 'everyone-role-id'},
           member: {name: 'Member', id: 'member-role-id'},
+          unconfirmedMember: {
+            name: 'Unconfirmed Member',
+            id: 'unconfirmed-role-id',
+          },
         },
         find(cb) {
           for (const role of Object.values(this._roles)) {
@@ -137,6 +142,13 @@ async function setup() {
   mockMember.guild = guild
 
   await handleNewMember(mockMember)
+
+  expect(mockMember.roles.add).toHaveBeenCalledWith(
+    guild.roles.cache._roles.unconfirmedMember,
+    'New member',
+  )
+  expect(mockMember.roles.add).toHaveBeenCalledTimes(1)
+  mockMember.roles.add.mockClear()
 
   async function sendFromUser(content) {
     const message = channel.messages._create({author: mockMember, content})
@@ -231,7 +243,7 @@ test('the typical flow', async () => {
     If you'd like to change any, simply edit your response. **If everything's correct, simply reply \\"yes\\"**.
     Fred Joe: yes
     BOT: Awesome, welcome to the KCD Community on Discord!
-    BOT: You should be good to go now. Don't forget to check fred@example.com for a confirmation email. Thanks!
+    BOT: You should be good to go now. Don't forget to check fred@example.com for a confirmation email. Thanks and enjoy the community!
 
     This channel will self-destruct in 10 seconds..."
   `)
@@ -239,6 +251,7 @@ test('the typical flow', async () => {
   expect(channel.delete).toHaveBeenCalledTimes(1)
   expect(member.roles.add).toHaveBeenCalledWith(
     member.guild.roles.cache._roles.member,
+    'New confirmed member',
   )
   expect(member.roles.add).toHaveBeenCalledTimes(1)
 })
@@ -363,7 +376,7 @@ test('typing and editing to an invalid value', async () => {
     If you'd like to change any, simply edit your response. **If everything's correct, simply reply \\"yes\\"**.
     Fred Joe: yes
     BOT: Awesome, welcome to the KCD Community on Discord!
-    BOT: You should be good to go now. Don't forget to check fred@acme.com for a confirmation email. Thanks!
+    BOT: You should be good to go now. Don't forget to check fred@acme.com for a confirmation email. Thanks and enjoy the community!
 
     This channel will self-destruct in 10 seconds..."
   `)

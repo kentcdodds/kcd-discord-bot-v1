@@ -83,11 +83,19 @@ If you'd like to change any, simply edit your response. **If everything's correc
     getAnswer: messageContents =>
       /^Awesome, welcome to the KCD/.test(messageContents) ? true : null,
     action: async (answers, message) => {
-      const role = message.guild.roles.cache.find(({name}) => name === 'Member')
+      const memberRole = message.guild.roles.cache.find(
+        ({name}) => name === 'Member',
+      )
+      const unconfirmedMemberRole = message.guild.roles.cache.find(
+        ({name}) => name === 'Unconfirmed Member',
+      )
+
       const member = message.guild.members.cache.find(
         ({user}) => user.id === message.author.id,
       )
-      await member.roles.add(role)
+
+      await member.roles.remove(unconfirmedMemberRole)
+      await member.roles.add(memberRole, 'New confirmed member')
       const {body} = await got.post(
         'https://app.convertkit.com/forms/1547100/subscriptions',
         {
@@ -103,7 +111,7 @@ If you'd like to change any, simply edit your response. **If everything's correc
           `
 Please verify your humanity here: ${body.url}
 
-Once you've done that, then you should be good to go...
+Once you've done that, then you should be good to go! Enjoy the community!
 
 You can delete this channel by sending the word \`delete\`.
           `.trim(),
@@ -111,7 +119,7 @@ You can delete this channel by sending the word \`delete\`.
       } else {
         message.channel.send(
           `
-You should be good to go now. Don't forget to check ${answers.email} for a confirmation email. Thanks!
+You should be good to go now. Don't forget to check ${answers.email} for a confirmation email. Thanks and enjoy the community!
 
 This channel will self-destruct in 10 seconds...
           `.trim(),
@@ -151,9 +159,21 @@ async function handleNewMessage(message) {
   if (!message.channel.name.startsWith('👋-welcome-')) return
   if (message.author.id === message.client.user.id) return
 
+  const member = message.guild.members.cache.find(
+    ({user}) => user.id === message.author.id,
+  )
+
   if (message.content === 'delete') {
-    message.channel.delete()
-    return
+    const isUnconfirmed = !!member.roles.cache.find(
+      ({name}) => name === 'Unconfirmed Member',
+    )
+    const promises = [message.channel.delete()]
+    if (isUnconfirmed) {
+      promises.push(
+        member.kick('Unconfirmed member deleted the onboarding channel.'),
+      )
+    }
+    return Promise.all(promises)
   }
 
   const messages = Array.from((await message.channel.messages.fetch()).values())
@@ -281,14 +301,13 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
     const currentStep = steps.find(step => !answers.hasOwnProperty(step.name))
     if (currentStep) {
       promises.push(
-        newMessage.channel.send(
-          `Thanks for fixing things up, now we can continue.`,
-        ),
-      )
-      promises.push(
-        newMessage.channel.send(
-          getMessageContents(currentStep.question, answers),
-        ),
+        newMessage.channel
+          .send(`Thanks for fixing things up, now we can continue.`)
+          .then(() => {
+            newMessage.channel.send(
+              getMessageContents(currentStep.question, answers),
+            )
+          }),
       )
     }
   }
@@ -305,6 +324,11 @@ async function handleNewMember(member) {
   const everyoneRole = member.guild.roles.cache.find(
     ({name}) => name === '@everyone',
   )
+  const unconfirmedMemberRole = member.guild.roles.cache.find(
+    ({name}) => name === 'Unconfirmed Member',
+  )
+
+  await member.roles.add(unconfirmedMemberRole, 'New member')
 
   const allPermissions = Object.keys(Discord.Permissions.FLAGS)
 
@@ -359,55 +383,60 @@ So, let's get started...
 }
 
 async function cleanup(guild) {
-  const fiveMinutes = 1000 * 60 * 5
-  const tenMinutes = fiveMinutes * 2
+  const maxWaitingTime = 1000 * 60 * 30
   const tooManyMessages = 100
-  const timeoutWarningMessageContent = `it's been a while and I haven't heard from you. This channel will get automatically deleted after a while. Feel free to come back and try again later if you don't have time to join right now.`
+  const timeoutWarningMessageContent = `it's been a while and I haven't heard from you. This channel will get automatically deleted after a while.`
   const spamWarningMessageContent = `you're sending a lot of messages, this channel will get deleted automatically if you send too many.`
   const asyncStuff = guild.channels.cache
     .filter(({name}) => name.startsWith('👋-welcome-'))
     .mapValues(channel => {
       return (async () => {
         // load all the messages so we can get the last message
-        await channel.messages.fetch()
+        await Promise.all([channel.messages.fetch(), channel.fetch()])
 
-        const {lastMessage, name, client} = channel
+        const {lastMessage, client, members} = channel
 
-        // get the member for mentioning
-        const {username, discriminator} =
-          name.match(/👋-welcome-(?<username>.*?)_(?<discriminator>.*?)$/)
-            ?.groups ?? {}
-        const member = guild.members.cache.find(
-          ({user}) =>
-            user.username === username && user.discriminator === discriminator,
-        ) ?? {user: 'there'}
+        const unconfirmedMember = members.find(({roles}) =>
+          roles.cache.find(({name}) => name === 'Unconfirmed Member'),
+        )
 
         // if they're getting close to too many messages, give them a warning
         if (channel.messages.cache.size > tooManyMessages * 0.7) {
           const hasWarned = channel.messages.cache.find(({content}) =>
             content.includes(spamWarningMessageContent),
           )
-          if (!hasWarned) {
+          if (!hasWarned && unconfirmedMember) {
             await channel.send(
-              `Whoa ${member.user}, ${timeoutWarningMessageContent}`,
+              `Whoa ${unconfirmedMember.user}, ${spamWarningMessageContent}`,
             )
           }
         }
 
         if (channel.messages.cache.size > tooManyMessages) {
           // they sent way too many messages... Spam probably...
-          return channel.delete()
+          const promises = [channel.delete()]
+          if (unconfirmedMember) {
+            promises.push(unconfirmedMember.kick('Too many messages'))
+          }
+          return Promise.all(promises)
         }
 
         if (lastMessage.author.id === client.user.id) {
           // we haven't heard from them in a while...
           const timeSinceLastMessage = new Date() - lastMessage.createdAt
-          if (timeSinceLastMessage > tenMinutes) {
-            return channel.delete()
-          } else if (timeSinceLastMessage > fiveMinutes) {
-            if (!lastMessage.content.includes(timeoutWarningMessageContent)) {
+          if (timeSinceLastMessage > maxWaitingTime) {
+            const promises = [channel.delete()]
+            if (unconfirmedMember) {
+              promises.push(unconfirmedMember.kick('Onboarding timed out'))
+            }
+            return Promise.all(promises)
+          } else if (timeSinceLastMessage > maxWaitingTime * 0.7) {
+            if (
+              !lastMessage.content.includes(timeoutWarningMessageContent) &&
+              unconfirmedMember
+            ) {
               return channel.send(
-                `Hi ${member.user}, ${timeoutWarningMessageContent}`,
+                `Hi ${unconfirmedMember.user}, ${timeoutWarningMessageContent}`,
               )
             }
           }

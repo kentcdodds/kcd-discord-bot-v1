@@ -1,4 +1,3 @@
-// require('./src/heroku-server')
 const Discord = require('discord.js')
 const {
   handleNewMessage,
@@ -13,8 +12,8 @@ require('dotenv').config({
 
 const client = new Discord.Client()
 
-client.login(process.env.DISCORD_BOT_TOKEN)
 console.log('logging in discord client')
+client.login(process.env.DISCORD_BOT_TOKEN)
 
 client.on('message', handleNewMessage)
 client.on('messageUpdate', handleUpdatedMessage)

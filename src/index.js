@@ -62,7 +62,7 @@ Do you agree to abide by and uphold the code of conduct? **The only correct answ
       /^That's right.$/.test(messageContents) ? true : null,
     validate(response) {
       if (response.toLowerCase() !== 'team@kentcdodds.com') {
-        return `That's not right. Please open the code of conduct to find out. We take our code of conduct seriously. Thanks!`
+        return `That's not right. Please open the code of conduct to find out. You're looking for the email address listed under the heading "Have questions/need to report an issue?" We take our code of conduct seriously, so I want to make sure you've opened it. Thanks!`
       }
     },
   },

@@ -107,6 +107,13 @@ If you'd like to change any, simply edit your response. **If everything's correc
 
       await member.roles.remove(unconfirmedMemberRole)
       await member.roles.add(memberRole, 'New confirmed member')
+      await introChannel.send(
+        `
+Hey everyone! ${member.user} is new here. Let's give them a warm welcome!
+
+We'd love to get to know you a bit, ${member.user}. You can tell us where you're from 🌐, where you work 🏢, send a photo of your pet 🐶, what tech you like 💻, your favorite snack 🍬🍎, or anything else you'd like 🤪.
+        `.trim(),
+      )
       const {body} = await got.post(
         'https://app.convertkit.com/forms/1547100/subscriptions',
         {
@@ -391,6 +398,11 @@ I'm a bot and I'm here to welcome you to the KCD Community on Discord! Before yo
 
 So, let's get started. Here's the first question (of ${steps.length}):
       `.trim(),
+  )
+
+  // wait a brief moment because sometimes the first message happens *after* the second
+  await new Promise(resolve =>
+    setTimeout(resolve, process.env.NODE_ENV === 'test' ? 0 : 500),
   )
 
   await channel.send(steps[0].question)

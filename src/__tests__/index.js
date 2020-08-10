@@ -38,11 +38,13 @@ afterEach(() => server.resetHandlers())
 async function setup() {
   const mockClient = {user: {id: 'mock-client', name: 'BOT'}}
   let channel
+  const guild = {}
 
   const mockMember = {
     id: 'mock-user',
     name: 'Fred Joe',
     client: mockClient,
+    guild,
     user: {
       id: 'mock-user',
       username: 'fredjoe',
@@ -57,7 +59,52 @@ async function setup() {
     return `<@${this.id}>`
   }
 
-  const guild = {
+  function createChannel(name, options) {
+    return {
+      id: `channel_${name}`,
+      name,
+      toString: () => `channel_${name}-id`,
+      client: mockClient,
+      type: 'text',
+      messages: {
+        _messages: [],
+        _create({content, author}) {
+          const message = {
+            client: mockClient,
+            guild,
+            author,
+            content,
+            edit(newContent) {
+              return updateMessage(message, newContent)
+            },
+            delete() {
+              const index = channel.messages._messages.indexOf(message)
+              channel.messages._messages.splice(index, 1)
+            },
+            channel,
+          }
+          return message
+        },
+        fetch() {
+          return Promise.resolve(this._messages)
+        },
+      },
+      delete: jest.fn(),
+      async send(newMessageContent) {
+        const message = this.messages._create({
+          author: mockClient.user,
+          content: newMessageContent,
+        })
+        this.messages._messages.unshift(message)
+        // eslint-disable-next-line no-use-before-define
+        await handleNewMessage(message)
+        return message
+      },
+      ...options,
+    }
+  }
+
+  Object.assign(guild, {
     client: mockClient,
     members: {
       cache: {
@@ -70,26 +117,12 @@ async function setup() {
     channels: {
       cache: {
         _channels: {
-          welcomeCategoryChannel: {
+          welcomeCategoryChannel: createChannel('Welcome!', {
             type: 'category',
-            name: 'Welcome!',
-            toString: () => 'welcome-id',
-          },
-          introductionChannel: {
-            type: 'text',
-            name: '👶-introductions',
-            toString: () => 'introductions-id',
-          },
-          talkToBotsChannel: {
-            type: 'text',
-            name: '🤖-talk-to-bots',
-            toString: () => 'bots-id',
-          },
-          officeHoursChannel: {
-            type: 'text',
-            name: '🏫-office-hours',
-            toString: () => 'office-hours-id',
-          },
+          }),
+          introductionChannel: createChannel('👶-introductions'),
+          talkToBotsChannel: createChannel('🤖-talk-to-bots'),
+          officeHoursChannel: createChannel('🏫-office-hours'),
         },
         find(cb) {
           for (const ch of Object.values(this._channels)) {
@@ -99,46 +132,7 @@ async function setup() {
         },
       },
       create(name, options) {
-        channel = {
-          id: `channel_${name}`,
-          name,
-          client: mockClient,
-          messages: {
-            _messages: [],
-            _create({content, author}) {
-              const message = {
-                client: mockClient,
-                guild,
-                author,
-                content,
-                edit(newContent) {
-                  return updateMessage(message, newContent)
-                },
-                delete() {
-                  const index = channel.messages._messages.indexOf(message)
-                  channel.messages._messages.splice(index, 1)
-                },
-                channel,
-              }
-              return message
-            },
-            fetch() {
-              return Promise.resolve(this._messages)
-            },
-          },
-          delete: jest.fn(),
-          async send(newMessageContent) {
-            const message = this.messages._create({
-              author: mockClient.user,
-              content: newMessageContent,
-            })
-            this.messages._messages.unshift(message)
-            // eslint-disable-next-line no-use-before-define
-            await handleNewMessage(message)
-            return message
-          },
-          ...options,
-        }
+        channel = createChannel(name, options)
         return channel
       },
     },
@@ -160,8 +154,7 @@ async function setup() {
         },
       },
     },
-  }
-  mockMember.guild = guild
+  })
 
   await handleNewMember(mockMember)
 
@@ -202,11 +195,11 @@ async function setup() {
       .join('\n')
   }
 
-  function getMessageThread() {
+  function getMessageThread(chan = channel) {
     return `
-Messages in ${channel.name}
+Messages in ${chan.name}
 
-${channel.messages._messages
+${chan.messages._messages
   .map(m => `${m.author.name}: ${m.content}`)
   .reverse()
   .join('\n')}
@@ -221,11 +214,12 @@ ${channel.messages._messages
     channel,
     getMessageThread,
     getBotResponses,
+    introductionChannel: guild.channels.cache._channels.introductionChannel,
   }
 }
 
 test('the typical flow', async () => {
-  const {send, getMessageThread, member} = await setup()
+  const {send, getMessageThread, member, introductionChannel} = await setup()
 
   await send('Fred')
   await send('fred@example.com')
@@ -269,7 +263,7 @@ test('the typical flow', async () => {
     BOT: Awesome, welcome to the KCD Community on Discord!
     BOT: You should be good to go now. Don't forget to check fred@example.com for a confirmation email. Thanks and enjoy the community!
 
-    I recommend you introduce yourself in introductions-id and take a look at what you can do in bots-id. And don't miss Kent's office hours in office-hours-id! Enjoy the community!
+    I recommend you introduce yourself in channel_👶-introductions-id and take a look at what you can do in channel_🤖-talk-to-bots-id. And don't miss Kent's office hours in channel_🏫-office-hours-id! Enjoy the community!
 
     This channel will get deleted automatically eventually, but you can delete this channel now by sending the word \`delete\`."
   `)
@@ -279,6 +273,14 @@ test('the typical flow', async () => {
     'New confirmed member',
   )
   expect(member.roles.add).toHaveBeenCalledTimes(1)
+
+  expect(getMessageThread(introductionChannel)).toMatchInlineSnapshot(`
+    "Messages in 👶-introductions
+
+    BOT: Hey everyone! <@mock-user> is new here. Let's give them a warm welcome!
+
+    We'd love to get to know you a bit, <@mock-user>. You can tell us where you're from 🌐, where you work 🏢, send a photo of your pet 🐶, what tech you like 💻, your favorite snack 🍬🍎, or anything else you'd like 🤪."
+  `)
 })
 
 test('typing and editing to an invalid value', async () => {
@@ -405,7 +407,7 @@ test('typing and editing to an invalid value', async () => {
     BOT: Awesome, welcome to the KCD Community on Discord!
     BOT: You should be good to go now. Don't forget to check fred@acme.com for a confirmation email. Thanks and enjoy the community!
 
-    I recommend you introduce yourself in introductions-id and take a look at what you can do in bots-id. And don't miss Kent's office hours in office-hours-id! Enjoy the community!
+    I recommend you introduce yourself in channel_👶-introductions-id and take a look at what you can do in channel_🤖-talk-to-bots-id. And don't miss Kent's office hours in channel_🏫-office-hours-id! Enjoy the community!
 
     This channel will get deleted automatically eventually, but you can delete this channel now by sending the word \`delete\`."
   `)

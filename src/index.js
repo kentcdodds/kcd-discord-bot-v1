@@ -56,7 +56,7 @@ Do you agree to abide by and uphold the code of conduct? **The only correct answ
   },
   {
     name: 'report',
-    question: `What's the email address you send Code of Conduct concerns and violations to? (If you're not sure, open the code of conduct to find out).`.trim(),
+    question: `Based on what you read in the Code of Conduct, what's the email address you send Code of Conduct concerns and violations to? (If you're not sure, open the code of conduct to find out).`.trim(),
     feedback: `That's right!`,
     getAnswer: messageContents =>
       /^That's right.$/.test(messageContents) ? true : null,

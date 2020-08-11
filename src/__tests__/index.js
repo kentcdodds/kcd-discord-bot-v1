@@ -121,7 +121,7 @@ async function setup() {
             type: 'category',
           }),
           introductionChannel: createChannel('👶-introductions'),
-          talkToBotsChannel: createChannel('🤖-talk-to-bots'),
+          botsOnlyChannel: createChannel('🤖-bots-only'),
           officeHoursChannel: createChannel('🏫-office-hours'),
         },
         find(cb) {
@@ -250,7 +250,7 @@ test('the typical flow', async () => {
     Do you agree to abide by and uphold the code of conduct? **The only correct answer is \\"yes\\"**
     Fred Joe: yes
     BOT: Great, thanks for helping us keep this an awesome place to be.
-    BOT: What's the email address you send Code of Conduct concerns and violations to? (If you're not sure, open the code of conduct to find out).
+    BOT: Based on what you read in the Code of Conduct, what's the email address you send Code of Conduct concerns and violations to? (If you're not sure, open the code of conduct to find out).
     Fred Joe: team@kentcdodds.com
     BOT: That's right!
     BOT: Here are your answers:
@@ -263,7 +263,9 @@ test('the typical flow', async () => {
     BOT: Awesome, welcome to the KCD Community on Discord!
     BOT: You should be good to go now. Don't forget to check fred@example.com for a confirmation email. Thanks and enjoy the community!
 
-    I recommend you introduce yourself in channel_👶-introductions-id and take a look at what you can do in channel_🤖-talk-to-bots-id. And don't miss Kent's office hours in channel_🏫-office-hours-id! Enjoy the community!
+    We'd love to get to know you a bit. In the channel_👶-introductions-id you can tell us where you're from 🌐, where you work 🏢, send a photo of your pet 🐶, what tech you like 💻, your favorite snack 🍬🍎, or anything else you'd like 🤪.
+
+    I also recommend you take a look at what you can do in channel_🤖-bots-only-id. And don't miss Kent's office hours in channel_🏫-office-hours-id! Enjoy the community!
 
     This channel will get deleted automatically eventually, but you can delete this channel now by sending the word \`delete\`."
   `)
@@ -274,13 +276,9 @@ test('the typical flow', async () => {
   )
   expect(member.roles.add).toHaveBeenCalledTimes(1)
 
-  expect(getMessageThread(introductionChannel)).toMatchInlineSnapshot(`
-    "Messages in 👶-introductions
-
-    BOT: Hey everyone! <@mock-user> is new here. Let's give them a warm welcome!
-
-    We'd love to get to know you a bit, <@mock-user>. You can tell us where you're from 🌐, where you work 🏢, send a photo of your pet 🐶, what tech you like 💻, your favorite snack 🍬🍎, or anything else you'd like 🤪."
-  `)
+  expect(getMessageThread(introductionChannel)).toMatchInlineSnapshot(
+    `"Messages in 👶-introductions"`,
+  )
 })
 
 test('typing and editing to an invalid value', async () => {
@@ -308,7 +306,7 @@ test('typing and editing to an invalid value', async () => {
   let cocMessage = await send('yes')
   expect(getBotResponses()).toMatchInlineSnapshot(`
     "BOT: Great, thanks for helping us keep this an awesome place to be.
-    BOT: What's the email address you send Code of Conduct concerns and violations to? (If you're not sure, open the code of conduct to find out)."
+    BOT: Based on what you read in the Code of Conduct, what's the email address you send Code of Conduct concerns and violations to? (If you're not sure, open the code of conduct to find out)."
   `)
   await send('team@kentcdodds.com')
 
@@ -385,7 +383,7 @@ test('typing and editing to an invalid value', async () => {
     Do you agree to abide by and uphold the code of conduct? **The only correct answer is \\"yes\\"**
     Fred Joe: Yes
     BOT: Great, thanks for helping us keep this an awesome place to be.
-    BOT: What's the email address you send Code of Conduct concerns and violations to? (If you're not sure, open the code of conduct to find out).
+    BOT: Based on what you read in the Code of Conduct, what's the email address you send Code of Conduct concerns and violations to? (If you're not sure, open the code of conduct to find out).
     Fred Joe: team@kentcdodds.com
     BOT: That's right!
     BOT: Here are your answers:
@@ -407,7 +405,9 @@ test('typing and editing to an invalid value', async () => {
     BOT: Awesome, welcome to the KCD Community on Discord!
     BOT: You should be good to go now. Don't forget to check fred@acme.com for a confirmation email. Thanks and enjoy the community!
 
-    I recommend you introduce yourself in channel_👶-introductions-id and take a look at what you can do in channel_🤖-talk-to-bots-id. And don't miss Kent's office hours in channel_🏫-office-hours-id! Enjoy the community!
+    We'd love to get to know you a bit. In the channel_👶-introductions-id you can tell us where you're from 🌐, where you work 🏢, send a photo of your pet 🐶, what tech you like 💻, your favorite snack 🍬🍎, or anything else you'd like 🤪.
+
+    I also recommend you take a look at what you can do in channel_🤖-bots-only-id. And don't miss Kent's office hours in channel_🏫-office-hours-id! Enjoy the community!
 
     This channel will get deleted automatically eventually, but you can delete this channel now by sending the word \`delete\`."
   `)

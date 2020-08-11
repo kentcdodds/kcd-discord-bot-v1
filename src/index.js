@@ -97,23 +97,20 @@ If you'd like to change any, simply edit your response. **If everything's correc
       )
       const botsChannel = guild.channels.cache.find(
         ({name, type}) =>
-          name.toLowerCase().includes('talk-to-bots') && type === 'text',
+          name.toLowerCase().includes('bots-only') && type === 'text',
       )
       const officeHoursChannel = guild.channels.cache.find(
         ({name, type}) =>
           name.toLowerCase().includes('office-hours') && type === 'text',
       )
-      const recommendations = `I recommend you introduce yourself in ${introChannel} and take a look at what you can do in ${botsChannel}. And don't miss Kent's office hours in ${officeHoursChannel}! Enjoy the community!`
+      const recommendations = `
+We'd love to get to know you a bit. In the ${introChannel} you can tell us where you're from 🌐, where you work 🏢, send a photo of your pet 🐶, what tech you like 💻, your favorite snack 🍬🍎, or anything else you'd like 🤪.
+
+I also recommend you take a look at what you can do in ${botsChannel}. And don't miss Kent's office hours in ${officeHoursChannel}! Enjoy the community!
+      `.trim()
 
       await member.roles.remove(unconfirmedMemberRole)
       await member.roles.add(memberRole, 'New confirmed member')
-      await introChannel.send(
-        `
-Hey everyone! ${member.user} is new here. Let's give them a warm welcome!
-
-We'd love to get to know you a bit, ${member.user}. You can tell us where you're from 🌐, where you work 🏢, send a photo of your pet 🐶, what tech you like 💻, your favorite snack 🍬🍎, or anything else you'd like 🤪.
-        `.trim(),
-      )
       const {body} = await got.post(
         'https://app.convertkit.com/forms/1547100/subscriptions',
         {

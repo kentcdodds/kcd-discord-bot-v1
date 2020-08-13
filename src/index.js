@@ -171,8 +171,13 @@ function getAnswers(messages) {
 }
 
 async function handleNewMessage(message) {
-  if (!message.channel.name.startsWith('👋-welcome-')) return
   if (message.author.id === message.client.user.id) return
+  // this allows me to just send a quick message to make sure the bot's still working
+  if (message.content.toLowerCase() === '?ping') {
+    await message.channel.send('pong')
+    return
+  }
+  if (!message.channel.name.startsWith('👋-welcome-')) return
 
   const member = message.guild.members.cache.find(
     ({user}) => user.id === message.author.id,

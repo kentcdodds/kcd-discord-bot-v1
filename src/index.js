@@ -413,7 +413,7 @@ So, let's get started. Here's the first question (of ${steps.length}):
 async function cleanup(guild) {
   const maxWaitingTime = 1000 * 60 * 30
   const tooManyMessages = 100
-  const timeoutWarningMessageContent = `it's been a while and I haven't heard from you. This channel will get automatically deleted after a while.`
+  const timeoutWarningMessageContent = `it's been a while and I haven't heard from you. This channel will get automatically deleted and you'll be removed from the server after a while. Don't worry though, you can always try again later when you have time to finish: https://kcd.im/discord`
   const spamWarningMessageContent = `you're sending a lot of messages, this channel will get deleted automatically if you send too many.`
   const asyncStuff = guild.channels.cache
     .filter(({name}) => name.startsWith('👋-welcome-'))

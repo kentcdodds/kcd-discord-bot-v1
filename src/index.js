@@ -1,5 +1,12 @@
 const Discord = require('discord.js')
 const got = require('got')
+const pMemoize = require('p-memoize')
+const {default: md5} = require('md5-hash')
+
+const memGot = pMemoize(got, {
+  // five minutes
+  maxAge: 1000 * 60 * 5,
+})
 
 const editErrorMessagePrefix = `There's a problem with an edit that was just made. Please edit the answer again to fix it.`
 
@@ -90,32 +97,6 @@ If you'd like to change any, simply edit your response. **If everything's correc
         ({name}) => name === 'Unconfirmed Member',
       )
 
-      const introChannel = guild.channels.cache.find(
-        ({name, type}) =>
-          name.toLowerCase().includes('introduction') && type === 'text',
-      )
-      const botsChannel = guild.channels.cache.find(
-        ({name, type}) =>
-          name.toLowerCase().includes('bots-only') && type === 'text',
-      )
-
-      const recommendations = `
-Here are a few things I recommend you spend a second doing:
-
-1. Update your nickname to your actual name (type this: \`/nick Your Name\`)
-2. Update your avatar to a picture of you
-3. Tell us about you in ${introChannel}. Here's a template you can use:
-
-🌐 I'm from:
-🏢 I work at:
-💻 I work with this tech:
-🍎 I snack on:
-🤪 I'm unique because:
-
-4. Check out ${botsChannel} to opt-into notifications for when Kent's streaming or doing Office Hours.
-5. Enjoy the community!
-      `.trim()
-
       await member.roles.remove(unconfirmedMemberRole)
       await member.roles.add(memberRole, 'New confirmed member')
       const {body} = await got.post(
@@ -135,19 +116,15 @@ Please verify your humanity here: ${body.url}
 
 Once you've done that, then you should be good to go!
 
-${recommendations}
-
-This channel will get deleted automatically eventually, but you can delete this channel now by sending the word \`delete\`.
+You now have access to the whole server. If you wanna hang out here for a bit longer, I can help you get started.
           `.trim(),
         )
       } else {
         channel.send(
           `
-You should be good to go now. Don't forget to check ${answers.email} for a confirmation email. Thanks and enjoy the community!
+You should be good to go now. Don't forget to check ${answers.email} for a confirmation email.
 
-${recommendations}
-
-This channel will get deleted automatically eventually, but you can delete this channel now by sending the word \`delete\`.
+You now have access to the whole server. If you wanna hang out here for a bit longer, I can help you get started.
           `.trim(),
         )
       }
@@ -157,6 +134,203 @@ This channel will get deleted automatically eventually, but you can delete this 
         return `Feel free to edit any of the answers. Reply "yes" when we're good to go.`
       }
     },
+  },
+  {
+    name: 'avatar',
+    question: async answers => {
+      let message = `It's more fun here when folks have an avatar. You can go ahead and set yours now 😄`
+      try {
+        const emailHash = md5(answers.email)
+        const image = `https://www.gravatar.com/avatar/${emailHash}?s=128&d=404`
+        await memGot(image)
+        message = `
+${message}
+
+I got this image using your email address with gravatar.com. You can use it for your avatar if you like.
+
+${image}
+        `.trim()
+      } catch (error) {
+        // ignore the error
+      }
+      return `
+${message}
+
+Here's how you set your avatar: https://support.discord.com/hc/en-us/articles/204156688-How-do-I-change-my-avatar-
+
+**When you're finished (or if you'd like to just move on), just say "done"**
+      `.trim()
+    },
+    isQuestionMessage: messageContents =>
+      /^Here's how you set your avatar/.test(messageContents),
+    feedback: (answers, member) => {
+      return member.avatar
+        ? `Great, thanks for adding your avatar.`
+        : 'No worries, you can set your avatar later.'
+    },
+    getAnswer: (messageContents, member) => {
+      if (/adding your avatar/i.test(messageContents)) return 'ADDED'
+      if (/set your avatar later/i.test(messageContents)) return 'SKIPPED'
+
+      // if we're trying to get the answer for this step and we haven't sent
+      // the feedback for it, but the avatar's already set, then we'll skip it
+      // se we'll return a value for this step.
+      if (member.avatar) return 'ALREADY_SET'
+      return null
+    },
+    validate(response) {
+      if (response.toLowerCase() !== 'done') {
+        return `Reply "done" when you're ready to continue.`
+      }
+    },
+  },
+  {
+    name: 'nickname',
+    question: answers =>
+      `I can set your nickname on this server. Would you like me to set it to ${answers.name}? (Reply "yes" or "no")`,
+    isQuestionMessage: messageContents =>
+      /^set your nickname/.test(messageContents),
+    feedback: answers => {
+      return answers.nickname === 'yes'
+        ? `Super, I'll set your nickname for you.`
+        : `No worries, you can set your nickname in this server by typing \`/nick Your Name\`.`
+    },
+    action: (answers, member) => {
+      if (answers.nickname !== 'yes') return
+
+      return member.setNickname(
+        answers.name,
+        'Requested nickname change during onboarding',
+      )
+    },
+    getAnswer: messageContents => {
+      return /^Super, I'll set your nickname/i.test(messageContents)
+        ? 'yes'
+        : /^No worries, you can set your nickname/.test(messageContents)
+        ? 'no'
+        : null
+    },
+    validate(response) {
+      if (!['yes', 'no'].includes(response.toLowerCase())) {
+        return `Would you like me to set your nickname? Reply "yes" or "no".`
+      }
+    },
+  },
+  {
+    name: 'liveStream',
+    question: (answers, member) => {
+      const kentLiveChannel = member.guild.channels.cache.find(
+        ({name, type}) =>
+          name.toLowerCase().includes('kent live') && type === 'voice',
+      )
+
+      return `Would you like to be notified when Kent starts live streaming in ${kentLiveChannel}?`
+    },
+    isQuestionMessage: messageContents =>
+      /notified when Kent starts live streaming/.test(messageContents),
+    feedback: answers => {
+      return answers.liveStream === 'yes'
+        ? `Cool, when Kent starts live streaming, you'll get notified.`
+        : `Ok, you won't be notified when Kent starts live streaming.`
+    },
+    action: async (answers, member) => {
+      if (answers.liveStream !== 'yes') return
+
+      await member.roles.add(
+        member.guild.roles.cache.find(
+          ({name}) => name.toLowerCase() === 'notify: kent live',
+        ),
+        'Requested by user during onboarding',
+      )
+    },
+    getAnswer: messageContents => {
+      return /^Cool, when Kent starts live streaming/i.test(messageContents)
+        ? 'yes'
+        : /^Ok, you won't be notified when Kent starts live streaming/.test(
+            messageContents,
+          )
+        ? 'no'
+        : null
+    },
+    validate(response) {
+      if (!['yes', 'no'].includes(response.toLowerCase())) {
+        return `You must answer "yes" or "no": Would you like to be notified when Kent starts live streaming?`
+      }
+    },
+  },
+  {
+    name: 'officeHours',
+    question: (answers, member) => {
+      const officeHoursChannel = member.guild.channels.cache.find(
+        ({name, type}) =>
+          name.toLowerCase().includes('office hours') && type === 'voice',
+      )
+
+      return `Would you like to be notified when Kent starts https://kcd.im/office-hours in ${officeHoursChannel}?`
+    },
+    isQuestionMessage: messageContents =>
+      /kcd.im\/office-hours/.test(messageContents),
+    feedback: answers => {
+      return answers.officeHours === 'yes'
+        ? `Great, you'll be notified when Kent's Office Hours start.`
+        : `No worries, you won't be notified about Kent's Office Hours.`
+    },
+    action: async (answers, member) => {
+      if (answers.officeHours !== 'yes') return
+
+      await member.roles.add(
+        member.guild.roles.cache.find(
+          ({name}) => name.toLowerCase() === 'notify: office hours',
+        ),
+        'Requested by user during onboarding',
+      )
+    },
+    getAnswer: messageContents => {
+      return /^Great, you'll be notified when Kent's Office Hours start./i.test(
+        messageContents,
+      )
+        ? 'yes'
+        : /^No worries, you won't be notified about Kent's Office Hours./.test(
+            messageContents,
+          )
+        ? 'no'
+        : null
+    },
+    validate(response) {
+      if (!['yes', 'no'].includes(response.toLowerCase())) {
+        return `You must answer "yes" or "no": Would you like to be notified when Kent starts live streaming?`
+      }
+    },
+  },
+  {
+    name: 'finished',
+    question: (answers, member) => {
+      const introChannel = member.guild.channels.cache.find(
+        ({name, type}) =>
+          name.toLowerCase().includes('introduction') && type === 'text',
+      )
+      return `
+Looks like we're all done! Go explore!
+
+We'd love to get to know you a bit. Tell us about you in ${introChannel}. Here's a template you can use:
+
+🌐 I'm from:
+🏢 I work at:
+💻 I work with this tech:
+🍎 I snack on:
+🤪 I'm unique because:
+
+Enjoy the community!
+      `.trim()
+    },
+    isQuestionMessage: messageContents =>
+      /^Looks like we're all done/.test(messageContents),
+    validate() {
+      // there's no valid answer because this is the last step,
+      // so we'll just keep saying this forever.
+      return `We're all done. This channel will get deleted automatically eventually, but if you want to delete it yourself, then say "delete".`
+    },
+    getAnswer: () => null,
   },
 ]
 
@@ -169,11 +343,11 @@ async function getMessageContents(msg, answers, member) {
   }
 }
 
-function getAnswers(messages) {
+function getAnswers(messages, member) {
   const answers = {}
   for (const message of messages) {
     for (const step of steps) {
-      const answer = step.getAnswer(message.content)
+      const answer = step.getAnswer(message.content, member)
       if (answer !== null) {
         answers[step.name] = answer
         break
@@ -225,18 +399,23 @@ async function handleNewMessage(message) {
     return
   }
 
-  const answers = getAnswers(botMessages)
+  const answers = getAnswers(botMessages, member)
 
+  // find the first step with no answer
   const currentStep = steps.find(step => !answers.hasOwnProperty(step.name))
 
   if (!currentStep) {
-    await channel.send(await getMessageContents(steps[0].feedback, answers))
+    // there aren't any answers yet, so let's send the first feedback
+    await channel.send(
+      await getMessageContents(steps[0].feedback, answers, member),
+    )
     return
   }
 
   const currentStepQuestionContent = await getMessageContents(
     currentStep.question,
     answers,
+    member,
   )
   const questionHasBeenAsked = botMessages.find(
     ({content}) => currentStepQuestionContent === content,
@@ -254,7 +433,9 @@ async function handleNewMessage(message) {
 
   answers[currentStep.name] = message.content
   if (currentStep.feedback) {
-    await channel.send(await getMessageContents(currentStep.feedback, answers))
+    await channel.send(
+      await getMessageContents(currentStep.feedback, answers, member),
+    )
   }
   if (currentStep.action) {
     await currentStep.action(answers, member, message.channel)
@@ -263,14 +444,25 @@ async function handleNewMessage(message) {
   const nextStep = steps[steps.indexOf(currentStep) + 1]
   if (nextStep) {
     await message.channel.send(
-      await getMessageContents(nextStep.question, answers),
+      await getMessageContents(nextStep.question, answers, member),
     )
   }
 }
 
 async function handleUpdatedMessage(oldMessage, newMessage) {
-  if (!newMessage.channel.name.startsWith('👋-welcome-')) return
-  if (newMessage.author.id === newMessage.client.user.id) return
+  const {channel} = newMessage
+
+  // must be a welcome channel
+  if (!channel.name.startsWith('👋-welcome-')) return
+
+  // message must have been sent from the new member
+  const {memberId} =
+    channel.topic.match(/\(New Member ID: "(?<memberId>.*?)"\)/)?.groups ?? {}
+  if (newMessage.author.id !== memberId) return
+
+  const member = newMessage.guild.members.cache.find(
+    ({user}) => user.id === memberId,
+  )
 
   const messages = Array.from(
     (await newMessage.channel.messages.fetch()).values(),
@@ -278,12 +470,12 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
   const botMessages = Array.from(messages).filter(
     ({author}) => author.id === newMessage.client.user.id,
   )
-  const answers = getAnswers(botMessages)
+  const answers = getAnswers(botMessages, member)
   const messageAfterEditedMessage = messages[messages.indexOf(newMessage) - 1]
   if (!messageAfterEditedMessage) return
 
   const editedStep = steps.find(s =>
-    s.getAnswer(messageAfterEditedMessage.content),
+    s.getAnswer(messageAfterEditedMessage.content, member),
   )
   if (!editedStep) return
 
@@ -312,7 +504,7 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
     contentAndMessages.push(
       [
         // eslint-disable-next-line no-await-in-loop
-        await getMessageContents(step.question, answers),
+        await getMessageContents(step.question, answers, member),
         messages.find(msg => {
           if (step.isQuestionMessage) {
             return step.isQuestionMessage(msg.content)
@@ -323,8 +515,8 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
       ],
       [
         // eslint-disable-next-line no-await-in-loop
-        await getMessageContents(step.feedback, answers),
-        messages.find(msg => step.getAnswer(msg.content)),
+        await getMessageContents(step.feedback, answers, member),
+        messages.find(msg => step.getAnswer(msg.content, member)),
       ],
     )
   }
@@ -415,8 +607,8 @@ I'm a bot and I'm here to welcome you to the KCD Community on Discord! Before yo
 
 (Note, if you make a mistake, you can edit your responses).
 
-So, let's get started. Here's the first question (of ${steps.length}):
-      `.trim(),
+In less than 2 minutes, you'll have full access to this server. So, let's get started! Here's the first question:
+    `.trim(),
   )
 
   // wait a brief moment because sometimes the first message happens *after* the second
@@ -501,4 +693,6 @@ module.exports = {
 /*
 eslint
   consistent-return: "off",
+  max-statements: ["error", 150],
+  complexity: ["error", 20]
 */

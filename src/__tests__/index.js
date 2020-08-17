@@ -28,6 +28,9 @@ const server = setupServer(
       )
     },
   ),
+  rest.get('https://www.gravatar.com/avatar/:hash', (req, res, ctx) => {
+    return res(ctx.status(200))
+  }),
 )
 
 beforeAll(() => server.listen({onUnhandledRequest: 'warn'}))
@@ -51,8 +54,28 @@ async function setup() {
       discriminator: '1234',
     },
     roles: {
-      remove: jest.fn(),
-      add: jest.fn(),
+      cache: {
+        _roles: [],
+        find(cb) {
+          for (const role of this._roles) {
+            if (cb(role)) return role
+          }
+          return null
+        },
+      },
+      remove(role) {
+        this.cache._roles = this.cache._roles.filter(r => r !== role)
+        return Promise.resolve()
+      },
+      add(role) {
+        this.cache._roles.push(role)
+        return Promise.resolve()
+      },
+    },
+    nickname: 'fred',
+    setNickname(newNickname) {
+      this.nickname = newNickname
+      return Promise.resolve()
     },
   }
   mockMember.user.toString = function toString() {
@@ -122,7 +145,10 @@ async function setup() {
           }),
           introductionChannel: createChannel('👶-introductions'),
           botsOnlyChannel: createChannel('🤖-bots-only'),
-          officeHoursChannel: createChannel('🏫-office-hours'),
+          officeHoursChannel: createChannel(`🏫 Kent's Office Hours`, {
+            type: 'voice',
+          }),
+          kentLiveChannel: createChannel(`💻 Kent live`, {type: 'voice'}),
         },
         find(cb) {
           for (const ch of Object.values(this._channels)) {
@@ -145,6 +171,14 @@ async function setup() {
             name: 'Unconfirmed Member',
             id: 'unconfirmed-role-id',
           },
+          liveStream: {
+            name: 'Notify: Kent Live',
+            id: 'notify-kent-live',
+          },
+          officeHours: {
+            name: 'Notify: Office Hours',
+            id: 'notify-office-hours',
+          },
         },
         find(cb) {
           for (const role of Object.values(this._roles)) {
@@ -158,12 +192,9 @@ async function setup() {
 
   await handleNewMember(mockMember)
 
-  expect(mockMember.roles.add).toHaveBeenCalledWith(
+  expect(mockMember.roles.cache._roles).toEqual([
     guild.roles.cache._roles.unconfirmedMember,
-    'New member',
-  )
-  expect(mockMember.roles.add).toHaveBeenCalledTimes(1)
-  mockMember.roles.add.mockClear()
+  ])
 
   async function sendFromUser(content) {
     const message = channel.messages._create({author: mockMember, content})
@@ -214,18 +245,22 @@ ${chan.messages._messages
     channel,
     getMessageThread,
     getBotResponses,
-    introductionChannel: guild.channels.cache._channels.introductionChannel,
   }
 }
 
 test('the typical flow', async () => {
-  const {send, getMessageThread, member, introductionChannel} = await setup()
+  const {send, getMessageThread, member} = await setup()
 
   await send('Fred')
   await send('fred@example.com')
   await send('yes')
   await send('team@kentcdodds.com')
   await send('yes')
+  await send('done')
+  await send('yes')
+  await send('yes')
+  await send('yes')
+  await send('anything else?')
 
   expect(getMessageThread()).toMatchInlineSnapshot(`
     "Messages in 👋-welcome-fredjoe_1234
@@ -236,7 +271,7 @@ test('the typical flow', async () => {
 
     (Note, if you make a mistake, you can edit your responses).
 
-    So, let's get started. Here's the first question (of 5):
+    In less than 2 minutes, you'll have full access to this server. So, let's get started! Here's the first question:
     BOT: What's your first name?
     Fred Joe: Fred
     BOT: Great, hi Fred 👋
@@ -261,13 +296,32 @@ test('the typical flow', async () => {
     If you'd like to change any, simply edit your response. **If everything's correct, simply reply \\"yes\\"**.
     Fred Joe: yes
     BOT: Awesome, welcome to the KCD Community on Discord!
-    BOT: You should be good to go now. Don't forget to check fred@example.com for a confirmation email. Thanks and enjoy the community!
+    BOT: You should be good to go now. Don't forget to check fred@example.com for a confirmation email.
 
-    Here are a few things I recommend you spend a second doing:
+    You now have access to the whole server. If you wanna hang out here for a bit longer, I can help you get started.
+    BOT: It's more fun here when folks have an avatar. You can go ahead and set yours now 😄
 
-    1. Update your nickname to your actual name (type this: \`/nick Your Name\`)
-    2. Update your avatar to a picture of you
-    3. Tell us about you in channel_👶-introductions-id. Here's a template you can use:
+    I got this image using your email address with gravatar.com. You can use it for your avatar if you like.
+
+    https://www.gravatar.com/avatar/6255165076a5e31273cbda50bb9f9636?s=128&d=404
+
+    Here's how you set your avatar: https://support.discord.com/hc/en-us/articles/204156688-How-do-I-change-my-avatar-
+
+    **When you're finished (or if you'd like to just move on), just say \\"done\\"**
+    Fred Joe: done
+    BOT: No worries, you can set your avatar later.
+    BOT: I can set your nickname on this server. Would you like me to set it to Fred? (Reply \\"yes\\" or \\"no\\")
+    Fred Joe: yes
+    BOT: Super, I'll set your nickname for you.
+    BOT: Would you like to be notified when Kent starts live streaming in channel_💻 Kent live-id?
+    Fred Joe: yes
+    BOT: Cool, when Kent starts live streaming, you'll get notified.
+    BOT: Would you like to be notified when Kent starts https://kcd.im/office-hours in channel_🏫 Kent's Office Hours-id?
+    Fred Joe: yes
+    BOT: Great, you'll be notified when Kent's Office Hours start.
+    BOT: Looks like we're all done! Go explore!
+
+    We'd love to get to know you a bit. Tell us about you in channel_👶-introductions-id. Here's a template you can use:
 
     🌐 I'm from:
     🏢 I work at:
@@ -275,25 +329,26 @@ test('the typical flow', async () => {
     🍎 I snack on:
     🤪 I'm unique because:
 
-    4. Check out channel_🤖-bots-only-id to opt-into notifications for when Kent's streaming or doing Office Hours.
-    5. Enjoy the community!
-
-    This channel will get deleted automatically eventually, but you can delete this channel now by sending the word \`delete\`."
+    Enjoy the community!
+    Fred Joe: anything else?
+    BOT: We're all done. This channel will get deleted automatically eventually, but if you want to delete it yourself, then say \\"delete\\"."
   `)
 
-  expect(member.roles.add).toHaveBeenCalledWith(
-    member.guild.roles.cache._roles.member,
-    'New confirmed member',
-  )
-  expect(member.roles.add).toHaveBeenCalledTimes(1)
-
-  expect(getMessageThread(introductionChannel)).toMatchInlineSnapshot(
-    `"Messages in 👶-introductions"`,
-  )
+  expect(
+    member.roles.cache._roles.map(({name}) => name).join(', '),
+  ).toMatchInlineSnapshot(`"Member, Notify: Kent Live, Notify: Office Hours"`)
 })
 
+// eslint-disable-next-line max-lines-per-function
 test('typing and editing to an invalid value', async () => {
-  const {send, update, getMessageThread, getBotResponses} = await setup()
+  const {
+    send,
+    update,
+    getMessageThread,
+    getBotResponses,
+    member,
+    channel,
+  } = await setup()
 
   await send('Fred')
 
@@ -369,6 +424,8 @@ test('typing and editing to an invalid value', async () => {
 
   await send('yes')
 
+  await send('delete')
+
   expect(getMessageThread()).toMatchInlineSnapshot(`
     "Messages in 👋-welcome-fredjoe_1234
 
@@ -378,7 +435,7 @@ test('typing and editing to an invalid value', async () => {
 
     (Note, if you make a mistake, you can edit your responses).
 
-    So, let's get started. Here's the first question (of 5):
+    In less than 2 minutes, you'll have full access to this server. So, let's get started! Here's the first question:
     BOT: What's your first name?
     Fred Joe: Fred
     BOT: Great, hi Fred 👋
@@ -414,23 +471,23 @@ test('typing and editing to an invalid value', async () => {
     If you'd like to change any, simply edit your response. **If everything's correct, simply reply \\"yes\\"**.
     Fred Joe: yes
     BOT: Awesome, welcome to the KCD Community on Discord!
-    BOT: You should be good to go now. Don't forget to check fred@acme.com for a confirmation email. Thanks and enjoy the community!
+    BOT: You should be good to go now. Don't forget to check fred@acme.com for a confirmation email.
 
-    Here are a few things I recommend you spend a second doing:
+    You now have access to the whole server. If you wanna hang out here for a bit longer, I can help you get started.
+    BOT: It's more fun here when folks have an avatar. You can go ahead and set yours now 😄
 
-    1. Update your nickname to your actual name (type this: \`/nick Your Name\`)
-    2. Update your avatar to a picture of you
-    3. Tell us about you in channel_👶-introductions-id. Here's a template you can use:
+    I got this image using your email address with gravatar.com. You can use it for your avatar if you like.
 
-    🌐 I'm from:
-    🏢 I work at:
-    💻 I work with this tech:
-    🍎 I snack on:
-    🤪 I'm unique because:
+    https://www.gravatar.com/avatar/53a99aa16438d50f6f7405749684b86e?s=128&d=404
 
-    4. Check out channel_🤖-bots-only-id to opt-into notifications for when Kent's streaming or doing Office Hours.
-    5. Enjoy the community!
+    Here's how you set your avatar: https://support.discord.com/hc/en-us/articles/204156688-How-do-I-change-my-avatar-
 
-    This channel will get deleted automatically eventually, but you can delete this channel now by sending the word \`delete\`."
+    **When you're finished (or if you'd like to just move on), just say \\"done\\"**
+    Fred Joe: delete"
   `)
+
+  expect(
+    member.roles.cache._roles.map(({name}) => name).join(', '),
+  ).toMatchInlineSnapshot(`"Member"`)
+  expect(channel.delete).toHaveBeenCalledTimes(1)
 })

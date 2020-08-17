@@ -191,7 +191,7 @@ Here's how you set your avatar: https://support.discord.com/hc/en-us/articles/20
     isQuestionMessage: messageContents =>
       /^set your nickname/.test(messageContents),
     feedback: answers => {
-      return answers.nickname === 'yes'
+      return answers.nickname?.toLowerCase() === 'yes'
         ? `Super, I'll set your nickname for you.`
         : `No worries, you can set your nickname in this server by typing \`/nick Your Name\`.`
     },
@@ -229,7 +229,7 @@ Here's how you set your avatar: https://support.discord.com/hc/en-us/articles/20
     isQuestionMessage: messageContents =>
       /notified when Kent starts live streaming/.test(messageContents),
     feedback: answers => {
-      return answers.liveStream === 'yes'
+      return answers.liveStream?.toLowerCase() === 'yes'
         ? `Cool, when Kent starts live streaming, you'll get notified.`
         : `Ok, you won't be notified when Kent starts live streaming.`
     },
@@ -271,7 +271,7 @@ Here's how you set your avatar: https://support.discord.com/hc/en-us/articles/20
     isQuestionMessage: messageContents =>
       /kcd.im\/office-hours/.test(messageContents),
     feedback: answers => {
-      return answers.officeHours === 'yes'
+      return answers.officeHours?.toLowerCase() === 'yes'
         ? `Great, you'll be notified when Kent's Office Hours start.`
         : `No worries, you won't be notified about Kent's Office Hours.`
     },

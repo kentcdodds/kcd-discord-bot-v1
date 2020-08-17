@@ -1,6 +1,12 @@
 const Discord = require('discord.js')
 const got = require('got')
 
+const {CONVERT_KIT_API_KEY} = process.env
+
+if (!CONVERT_KIT_API_KEY) {
+  throw new Error('CONVERT_KIT_API_KEY env variable is required')
+}
+
 const editErrorMessagePrefix = `There's a problem with an edit that was just made. Please edit the answer again to fix it.`
 
 const steps = [
@@ -104,36 +110,31 @@ If you'd like to change any, simply edit your response. **If everything's correc
           name.toLowerCase().includes('office-hours') && type === 'text',
       )
       const recommendations = `
-We'd love to get to know you a bit. In the ${introChannel} you can tell us where you're from 🌐, where you work 🏢, send a photo of your pet 🐶, what tech you like 💻, your favorite snack 🍬🍎, or anything else you'd like 🤪.
+Here's what I'd suggest you do to get started:
 
-I also recommend you take a look at what you can do in ${botsChannel}. And don't miss Kent's office hours in ${officeHoursChannel}! Enjoy the community!
+1. Introduce yourself in ${introChannel}. Where are you from 🌐? Where do you work 🏢? Send a photo of your pet 🐶. What tech you like 💻? What's your favorite snack 🍬🍎? Tell us anything else you'd like 🤪.
+2. Update your nickname to your actual name (type \`/nick Your Name\`)
+3. Set your avatar if you haven't already
+4. I also recommend you take a look at what you can do in ${botsChannel}.
+5. And don't miss Kent's office hours in ${officeHoursChannel}!
+
+Enjoy the community!
       `.trim()
 
       await member.roles.remove(unconfirmedMemberRole)
       await member.roles.add(memberRole, 'New confirmed member')
-      const {body} = await got.post(
-        'https://app.convertkit.com/forms/1547100/subscriptions',
-        {
-          responseType: 'json',
-          json: {
-            first_name: answers.name,
-            email_address: answers.email,
+      try {
+        await got.post(
+          'https://app.convertkit.com/v3/forms/1547100/subscribe',
+          {
+            responseType: 'json',
+            json: {
+              api_key: CONVERT_KIT_API_KEY,
+              first_name: answers.name,
+              email: answers.email,
+            },
           },
-        },
-      )
-      if (body.status === 'quarantined') {
-        message.channel.send(
-          `
-Please verify your humanity here: ${body.url}
-
-Once you've done that, then you should be good to go!
-
-${recommendations}
-
-This channel will get deleted automatically eventually, but you can delete this channel now by sending the word \`delete\`.
-          `.trim(),
         )
-      } else {
         message.channel.send(
           `
 You should be good to go now. Don't forget to check ${answers.email} for a confirmation email. Thanks and enjoy the community!
@@ -142,6 +143,12 @@ ${recommendations}
 
 This channel will get deleted automatically eventually, but you can delete this channel now by sending the word \`delete\`.
           `.trim(),
+        )
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error(error)
+        message.channel.send(
+          `Something went wrong adding you to Kent's list. If you want to get on the mailing list, please go here: https://kcd.im/subscribe (or email team@kentcdodds.com).`,
         )
       }
     },

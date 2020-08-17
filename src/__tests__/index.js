@@ -5,7 +5,7 @@ const {handleNewMember, handleNewMessage, handleUpdatedMessage} = require('..')
 const server = setupServer(
   // Describe the requests to mock.
   rest.post(
-    'https://app.convertkit.com/forms/1547100/subscriptions',
+    'https://app.convertkit.com/v3/forms/1547100/subscribe',
     (req, res, ctx) => {
       const {first_name, email_address} = req.body
       return res(
@@ -263,9 +263,15 @@ test('the typical flow', async () => {
     BOT: Awesome, welcome to the KCD Community on Discord!
     BOT: You should be good to go now. Don't forget to check fred@example.com for a confirmation email. Thanks and enjoy the community!
 
-    We'd love to get to know you a bit. In the channel_👶-introductions-id you can tell us where you're from 🌐, where you work 🏢, send a photo of your pet 🐶, what tech you like 💻, your favorite snack 🍬🍎, or anything else you'd like 🤪.
+    Here's what I'd suggest you do to get started:
 
-    I also recommend you take a look at what you can do in channel_🤖-bots-only-id. And don't miss Kent's office hours in channel_🏫-office-hours-id! Enjoy the community!
+    1. Introduce yourself in channel_👶-introductions-id. Where are you from 🌐? Where do you work 🏢? Send a photo of your pet 🐶. What tech you like 💻? What's your favorite snack 🍬🍎? Tell us anything else you'd like 🤪.
+    2. Update your nickname to your actual name (type \`/nick Your Name\`)
+    3. Set your avatar if you haven't already
+    4. I also recommend you take a look at what you can do in channel_🤖-bots-only-id.
+    5. And don't miss Kent's office hours in channel_🏫-office-hours-id!
+
+    Enjoy the community!
 
     This channel will get deleted automatically eventually, but you can delete this channel now by sending the word \`delete\`."
   `)
@@ -405,9 +411,15 @@ test('typing and editing to an invalid value', async () => {
     BOT: Awesome, welcome to the KCD Community on Discord!
     BOT: You should be good to go now. Don't forget to check fred@acme.com for a confirmation email. Thanks and enjoy the community!
 
-    We'd love to get to know you a bit. In the channel_👶-introductions-id you can tell us where you're from 🌐, where you work 🏢, send a photo of your pet 🐶, what tech you like 💻, your favorite snack 🍬🍎, or anything else you'd like 🤪.
+    Here's what I'd suggest you do to get started:
 
-    I also recommend you take a look at what you can do in channel_🤖-bots-only-id. And don't miss Kent's office hours in channel_🏫-office-hours-id! Enjoy the community!
+    1. Introduce yourself in channel_👶-introductions-id. Where are you from 🌐? Where do you work 🏢? Send a photo of your pet 🐶. What tech you like 💻? What's your favorite snack 🍬🍎? Tell us anything else you'd like 🤪.
+    2. Update your nickname to your actual name (type \`/nick Your Name\`)
+    3. Set your avatar if you haven't already
+    4. I also recommend you take a look at what you can do in channel_🤖-bots-only-id.
+    5. And don't miss Kent's office hours in channel_🏫-office-hours-id!
+
+    Enjoy the community!
 
     This channel will get deleted automatically eventually, but you can delete this channel now by sending the word \`delete\`."
   `)

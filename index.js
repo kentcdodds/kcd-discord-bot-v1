@@ -16,6 +16,12 @@ console.log('logging in discord client')
 client.login(process.env.DISCORD_BOT_TOKEN)
 
 client.on('message', handleNewMessage)
+client.on('message', async message => {
+  // just a way to check that the bot is running
+  if (message.content.toLowerCase() === '?ping') {
+    await message.channel.send('pong')
+  }
+})
 client.on('messageUpdate', handleUpdatedMessage)
 client.on('guildMemberAdd', handleNewMember)
 

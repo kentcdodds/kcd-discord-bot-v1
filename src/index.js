@@ -1,12 +1,6 @@
 const Discord = require('discord.js')
 const got = require('got')
 
-const {CONVERT_KIT_API_KEY} = process.env
-
-if (!CONVERT_KIT_API_KEY) {
-  throw new Error('CONVERT_KIT_API_KEY env variable is required')
-}
-
 const editErrorMessagePrefix = `There's a problem with an edit that was just made. Please edit the answer again to fix it.`
 
 const steps = [
@@ -88,14 +82,13 @@ If you'd like to change any, simply edit your response. **If everything's correc
     feedback: `Awesome, welcome to the KCD Community on Discord!`,
     getAnswer: messageContents =>
       /^Awesome, welcome to the KCD/.test(messageContents) ? true : null,
-    action: async (answers, message) => {
-      const {guild, author} = message
+    action: async (answers, member, channel) => {
+      const {guild} = member
+
       const memberRole = guild.roles.cache.find(({name}) => name === 'Member')
       const unconfirmedMemberRole = guild.roles.cache.find(
         ({name}) => name === 'Unconfirmed Member',
       )
-
-      const member = guild.members.cache.find(({user}) => user.id === author.id)
 
       const introChannel = guild.channels.cache.find(
         ({name, type}) =>
@@ -105,37 +98,50 @@ If you'd like to change any, simply edit your response. **If everything's correc
         ({name, type}) =>
           name.toLowerCase().includes('bots-only') && type === 'text',
       )
-      const officeHoursChannel = guild.channels.cache.find(
-        ({name, type}) =>
-          name.toLowerCase().includes('office-hours') && type === 'text',
-      )
+
       const recommendations = `
-Here's what I'd suggest you do to get started:
+Here are a few things I recommend you spend a second doing:
 
-1. Introduce yourself in ${introChannel}. Where are you from 🌐? Where do you work 🏢? Send a photo of your pet 🐶. What tech you like 💻? What's your favorite snack 🍬🍎? Tell us anything else you'd like 🤪.
-2. Update your nickname to your actual name (type \`/nick Your Name\`)
-3. Set your avatar if you haven't already
-4. I also recommend you take a look at what you can do in ${botsChannel}.
-5. And don't miss Kent's office hours in ${officeHoursChannel}!
+1. Update your nickname to your actual name (type this: \`/nick Your Name\`)
+2. Update your avatar to a picture of you
+3. Tell us about you in ${introChannel}. Here's a template you can use:
 
-Enjoy the community!
+🌐 I'm from:
+🏢 I work at:
+💻 I work with this tech:
+🍎 I snack on:
+🤪 I'm unique because:
+
+4. Check out ${botsChannel} to opt-into notifications for when Kent's streaming or doing Office Hours.
+5. Enjoy the community!
       `.trim()
 
       await member.roles.remove(unconfirmedMemberRole)
       await member.roles.add(memberRole, 'New confirmed member')
-      try {
-        await got.post(
-          'https://app.convertkit.com/v3/forms/1547100/subscribe',
-          {
-            responseType: 'json',
-            json: {
-              api_key: CONVERT_KIT_API_KEY,
-              first_name: answers.name,
-              email: answers.email,
-            },
+      const {body} = await got.post(
+        'https://app.convertkit.com/forms/1547100/subscriptions',
+        {
+          responseType: 'json',
+          json: {
+            first_name: answers.name,
+            email_address: answers.email,
           },
+        },
+      )
+      if (body.status === 'quarantined') {
+        channel.send(
+          `
+Please verify your humanity here: ${body.url}
+
+Once you've done that, then you should be good to go!
+
+${recommendations}
+
+This channel will get deleted automatically eventually, but you can delete this channel now by sending the word \`delete\`.
+          `.trim(),
         )
-        message.channel.send(
+      } else {
+        channel.send(
           `
 You should be good to go now. Don't forget to check ${answers.email} for a confirmation email. Thanks and enjoy the community!
 
@@ -143,12 +149,6 @@ ${recommendations}
 
 This channel will get deleted automatically eventually, but you can delete this channel now by sending the word \`delete\`.
           `.trim(),
-        )
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error(error)
-        message.channel.send(
-          `Something went wrong adding you to Kent's list. If you want to get on the mailing list, please go here: https://kcd.im/subscribe (or email team@kentcdodds.com).`,
         )
       }
     },
@@ -160,8 +160,14 @@ This channel will get deleted automatically eventually, but you can delete this 
   },
 ]
 
-const getMessageContents = (msg, answers) =>
-  typeof msg === 'function' ? msg(answers) : msg
+async function getMessageContents(msg, answers, member) {
+  if (typeof msg === 'function') {
+    const result = await msg(answers, member)
+    return result
+  } else {
+    return msg
+  }
+}
 
 function getAnswers(messages) {
   const answers = {}
@@ -178,23 +184,25 @@ function getAnswers(messages) {
 }
 
 async function handleNewMessage(message) {
-  if (message.author.id === message.client.user.id) return
-  // this allows me to just send a quick message to make sure the bot's still working
-  if (message.content.toLowerCase() === '?ping') {
-    await message.channel.send('pong')
-    return
-  }
-  if (!message.channel.name.startsWith('👋-welcome-')) return
+  const {channel} = message
+
+  // must be a welcome channel
+  if (!channel.name.startsWith('👋-welcome-')) return
+
+  // message must have been sent from the new member
+  const {memberId} =
+    channel.topic.match(/\(New Member ID: "(?<memberId>.*?)"\)/)?.groups ?? {}
+  if (message.author.id !== memberId) return
 
   const member = message.guild.members.cache.find(
-    ({user}) => user.id === message.author.id,
+    ({user}) => user.id === memberId,
   )
 
   if (message.content.toLowerCase() === 'delete') {
     const isUnconfirmed = !!member.roles.cache.find(
       ({name}) => name === 'Unconfirmed Member',
     )
-    const promises = [message.channel.delete()]
+    const promises = [channel.delete()]
     if (isUnconfirmed) {
       promises.push(
         member.kick('Unconfirmed member deleted the onboarding channel.'),
@@ -203,7 +211,7 @@ async function handleNewMessage(message) {
     return Promise.all(promises)
   }
 
-  const messages = Array.from((await message.channel.messages.fetch()).values())
+  const messages = Array.from((await channel.messages.fetch()).values())
   const botMessages = Array.from(messages).filter(
     ({author}) => author.id === message.client.user.id,
   )
@@ -211,7 +219,7 @@ async function handleNewMessage(message) {
     content.startsWith(editErrorMessagePrefix),
   )
   if (editErrorMessages.length) {
-    await message.channel.send(
+    await channel.send(
       `There are existing errors with your previous answers, please edit your answer above before continuing.`,
     )
     return
@@ -222,11 +230,11 @@ async function handleNewMessage(message) {
   const currentStep = steps.find(step => !answers.hasOwnProperty(step.name))
 
   if (!currentStep) {
-    await message.channel.send(getMessageContents(steps[0].feedback, answers))
+    await channel.send(await getMessageContents(steps[0].feedback, answers))
     return
   }
 
-  const currentStepQuestionContent = getMessageContents(
+  const currentStepQuestionContent = await getMessageContents(
     currentStep.question,
     answers,
   )
@@ -234,29 +242,29 @@ async function handleNewMessage(message) {
     ({content}) => currentStepQuestionContent === content,
   )
   if (!questionHasBeenAsked) {
-    await message.channel.send(currentStepQuestionContent)
+    await channel.send(currentStepQuestionContent)
     return
   }
 
   const error = currentStep.validate(message.content)
   if (error) {
-    await message.channel.send(error)
+    await channel.send(error)
     return
   }
 
   answers[currentStep.name] = message.content
   if (currentStep.feedback) {
-    await message.channel.send(
-      getMessageContents(currentStep.feedback, answers),
-    )
+    await channel.send(await getMessageContents(currentStep.feedback, answers))
   }
   if (currentStep.action) {
-    await currentStep.action(answers, message)
+    await currentStep.action(answers, member, message.channel)
   }
 
   const nextStep = steps[steps.indexOf(currentStep) + 1]
   if (nextStep) {
-    await message.channel.send(getMessageContents(nextStep.question, answers))
+    await message.channel.send(
+      await getMessageContents(nextStep.question, answers),
+    )
   }
 }
 
@@ -303,7 +311,8 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
   for (const step of steps) {
     contentAndMessages.push(
       [
-        getMessageContents(step.question, answers),
+        // eslint-disable-next-line no-await-in-loop
+        await getMessageContents(step.question, answers),
         messages.find(msg => {
           if (step.isQuestionMessage) {
             return step.isQuestionMessage(msg.content)
@@ -313,7 +322,8 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
         }),
       ],
       [
-        getMessageContents(step.feedback, answers),
+        // eslint-disable-next-line no-await-in-loop
+        await getMessageContents(step.feedback, answers),
         messages.find(msg => step.getAnswer(msg.content)),
       ],
     )
@@ -330,9 +340,9 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
       promises.push(
         newMessage.channel
           .send(`Thanks for fixing things up, now we can continue.`)
-          .then(() => {
+          .then(async () => {
             newMessage.channel.send(
-              getMessageContents(currentStep.question, answers),
+              await getMessageContents(currentStep.question, answers),
             )
           }),
       )
@@ -367,7 +377,7 @@ async function handleNewMember(member) {
   const channel = await member.guild.channels.create(
     `👋-welcome-${username}_${discriminator}`,
     {
-      topic: `Membership application for ${username}#${discriminator}`,
+      topic: `Membership application for ${username}#${discriminator} (New Member ID: "${member.id}")`,
       reason: `To allow ${username}#${discriminator} to apply to join the community.`,
       parent: welcomeCategory,
       permissionOverwrites: [

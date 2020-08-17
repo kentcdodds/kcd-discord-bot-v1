@@ -9,3 +9,5 @@ package-lock.json
 yarn.lock
 
 .env.local
+
+*.ignored.*

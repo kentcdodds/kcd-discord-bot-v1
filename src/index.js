@@ -10,7 +10,27 @@ const memGot = pMemoize(got, {
 
 const editErrorMessagePrefix = `There's a problem with an edit that was just made. Please edit the answer again to fix it.`
 
-const steps = [
+const {CONVERT_KIT_API_SECRET, CONVERT_KIT_API_KEY} = process.env
+
+if (!CONVERT_KIT_API_SECRET) {
+  throw new Error('CONVERT_KIT_API_SECRET env variable is required')
+}
+if (!CONVERT_KIT_API_KEY) {
+  throw new Error('CONVERT_KIT_API_KEY env variable is required')
+}
+
+async function getConvertKitSubscriber(email) {
+  const url = new URL('https://api.convertkit.com/v3/subscribers')
+  url.searchParams.set('api_secret', CONVERT_KIT_API_SECRET)
+  url.searchParams.set('email_address', email)
+  const {
+    body: {subscribers: [subscriber] = []} = {},
+  } = await memGot(url.toString(), {responseType: 'json'})
+
+  return subscriber?.state === 'active' ? subscriber : null
+}
+
+const allSteps = [
   {
     name: 'name',
     question: `What's your first name?`,
@@ -30,10 +50,19 @@ const steps = [
   {
     name: 'email',
     question: `What's your email address? (This will add you to Kent's mailing list. You will receive a confirmation email.)`,
-    feedback: answers =>
-      `Awesome, when we're done here, you'll receive a confirmation email to: ${answers.email}.`,
+    feedback: async answers => {
+      if (await getConvertKitSubscriber(answers.email)) {
+        return `Oh, nice, ${answers.email} is already a part of Kent's mailing list (you rock 🤘), so you won't be getting a confirmation email after all.`
+      }
+      return `Awesome, when we're done here, you'll receive a confirmation email to: ${answers.email}.`
+    },
     getAnswer: messageContents =>
-      messageContents.match(/^Awesome.*confirmation email to: (.*?)\.$/)?.[1] ??
+      messageContents.match(
+        /^Awesome.*confirmation email to: (?<email>.+@.+?\..+?)\.$/,
+      )?.groups?.email ??
+      messageContents.match(
+        /^Oh, nice, (?<email>.+@.+?\..+?) is already a part/,
+      )?.groups?.email ??
       null,
     validate(response) {
       if (!/^.+@.+\..+$/.test(response)) {
@@ -63,7 +92,7 @@ Do you agree to abide by and uphold the code of conduct? **The only correct answ
   },
   {
     name: 'report',
-    question: `Based on what you read in the Code of Conduct, what's the email address you send Code of Conduct concerns and violations to? (If you're not sure, open the code of conduct to find out).`.trim(),
+    question: `**Based on what you read in the Code of Conduct**, what's the email address you send Code of Conduct concerns and violations to? (If you're not sure, open the code of conduct to find out).`.trim(),
     feedback: `That's right!`,
     getAnswer: messageContents =>
       /^That's right.$/.test(messageContents) ? true : null,
@@ -99,35 +128,58 @@ If you'd like to change any, simply edit your response. **If everything's correc
 
       await member.roles.remove(unconfirmedMemberRole)
       await member.roles.add(memberRole, 'New confirmed member')
-      const {body} = await got.post(
-        'https://app.convertkit.com/forms/1547100/subscriptions',
-        {
-          responseType: 'json',
-          json: {
-            first_name: answers.name,
-            email_address: answers.email,
+      const subscriber = await getConvertKitSubscriber(answers.email)
+      const discordTagId = '1747377'
+      const discordForm = '1547100'
+      let checkEmail = ''
+      if (subscriber) {
+        await got.post(
+          `https://api.convertkit.com/v3/tags/${discordTagId}/subscribe`,
+          {
+            responseType: 'json',
+            json: {
+              api_key: CONVERT_KIT_API_KEY,
+              api_secret: CONVERT_KIT_API_SECRET,
+              first_name: answers.name,
+              email: answers.email,
+              fields: {discord_user_id: member.id},
+            },
           },
-        },
-      )
-      if (body.status === 'quarantined') {
-        channel.send(
-          `
-Please verify your humanity here: ${body.url}
-
-Once you've done that, then you should be good to go!
-
-You now have access to the whole server. If you wanna hang out here for a bit longer, I can help you get started.
-          `.trim(),
         )
       } else {
-        channel.send(
-          `
-You should be good to go now. Don't forget to check ${answers.email} for a confirmation email.
-
-You now have access to the whole server. If you wanna hang out here for a bit longer, I can help you get started.
-          `.trim(),
+        // the main deifference in subscribing to a tag and subscribing to a
+        // form is that in the form's case, the user will get a double opt-in
+        // email before they're a confirmed subscriber. So we only add the
+        // tag to existing subscribers who have already confirmed.
+        await got.post(
+          `https://api.convertkit.com/v3/forms/${discordForm}/subscribe`,
+          {
+            responseType: 'json',
+            json: {
+              api_key: CONVERT_KIT_API_KEY,
+              api_secret: CONVERT_KIT_API_SECRET,
+              first_name: answers.name,
+              email: answers.email,
+              fields: {discord_user_id: member.id},
+              tags: [discordTagId],
+            },
+          },
         )
+        checkEmail = `Don't forget to check ${answers.email} for a confirmation email. 📬`
       }
+      // this is a gif of Kent doing a flip with the sub-text "SWEEEET!"
+      await channel.send(
+        'https://media.giphy.com/media/MDxjbPCg6DGf8JclbR/giphy.gif',
+      )
+      await channel.send(
+        `
+🎉 You should be good to go now. ${checkEmail}
+
+🎊 You now have access to the whole server. Welcome! 🎊
+
+**If you wanna hang out here for a bit longer, I can help you get going.**
+        `.trim(),
+      )
     },
     validate(response) {
       if (response.toLowerCase() !== 'yes') {
@@ -168,14 +220,11 @@ Here's how you set your avatar: https://support.discord.com/hc/en-us/articles/20
         ? `Great, thanks for adding your avatar.`
         : 'No worries, you can set your avatar later.'
     },
-    getAnswer: (messageContents, member) => {
+    shouldSkip: member => Boolean(member.user.avatar),
+    getAnswer: messageContents => {
       if (/adding your avatar/i.test(messageContents)) return 'ADDED'
       if (/set your avatar later/i.test(messageContents)) return 'SKIPPED'
 
-      // if we're trying to get the answer for this step and we haven't sent
-      // the feedback for it, but the avatar's already set, then we'll skip it
-      // se we'll return a value for this step.
-      if (member.user.avatar) return 'ALREADY_SET'
       return null
     },
     validate(response) {
@@ -185,49 +234,19 @@ Here's how you set your avatar: https://support.discord.com/hc/en-us/articles/20
     },
   },
   {
-    name: 'nickname',
-    question: answers =>
-      `I can set your nickname on this server. Would you like me to set it to ${answers.name}? (Reply "yes" or "no")`,
-    isQuestionMessage: messageContents =>
-      /^set your nickname/.test(messageContents),
-    feedback: answers => {
-      return answers.nickname?.toLowerCase() === 'yes'
-        ? `Super, I'll set your nickname for you.`
-        : `No worries, you can set your nickname in this server by typing \`/nick Your Name\`.`
-    },
-    action: (answers, member) => {
-      if (answers.nickname !== 'yes') return
-
-      return member.setNickname(
-        answers.name,
-        'Requested nickname change during onboarding',
-      )
-    },
-    getAnswer: messageContents => {
-      return /^Super, I'll set your nickname/i.test(messageContents)
-        ? 'yes'
-        : /^No worries, you can set your nickname/.test(messageContents)
-        ? 'no'
-        : null
-    },
-    validate(response) {
-      if (!['yes', 'no'].includes(response.toLowerCase())) {
-        return `Would you like me to set your nickname? Reply "yes" or "no".`
-      }
-    },
-  },
-  {
     name: 'liveStream',
     question: (answers, member) => {
       const kentLiveChannel = member.guild.channels.cache.find(
         ({name, type}) =>
-          name.toLowerCase().includes('kent live') && type === 'voice',
+          name.toLowerCase().includes('kent-live') && type === 'text',
       )
 
       return `Would you like to be notified when Kent starts live streaming in ${kentLiveChannel}?`
     },
     isQuestionMessage: messageContents =>
-      /notified when Kent starts live streaming/.test(messageContents),
+      /Would you like to be notified when Kent starts live streaming/.test(
+        messageContents,
+      ),
     feedback: answers => {
       return answers.liveStream?.toLowerCase() === 'yes'
         ? `Cool, when Kent starts live streaming, you'll get notified.`
@@ -263,7 +282,7 @@ Here's how you set your avatar: https://support.discord.com/hc/en-us/articles/20
     question: (answers, member) => {
       const officeHoursChannel = member.guild.channels.cache.find(
         ({name, type}) =>
-          name.toLowerCase().includes('office hours') && type === 'voice',
+          name.toLowerCase().includes('office-hours') && type === 'text',
       )
 
       return `Would you like to be notified when Kent starts https://kcd.im/office-hours in ${officeHoursChannel}?`
@@ -298,7 +317,39 @@ Here's how you set your avatar: https://support.discord.com/hc/en-us/articles/20
     },
     validate(response) {
       if (!['yes', 'no'].includes(response.toLowerCase())) {
-        return `You must answer "yes" or "no": Would you like to be notified when Kent starts live streaming?`
+        return `You must answer "yes" or "no": Would you like to be notified when Kent starts office hours?`
+      }
+    },
+  },
+  {
+    name: 'nickname',
+    question: answers =>
+      `I can set your nickname on this server. Would you like me to set it to ${answers.name}? (Reply "yes" or "no")`,
+    isQuestionMessage: messageContents =>
+      /^set your nickname/.test(messageContents),
+    feedback: answers => {
+      return answers.nickname?.toLowerCase() === 'yes'
+        ? `Super, I'll set your nickname for you.`
+        : `No worries, you can set your nickname in this server by typing \`/nick Your Name\`.`
+    },
+    action: (answers, member) => {
+      if (answers.nickname !== 'yes') return
+
+      return member.setNickname(
+        answers.name,
+        'Requested nickname change during onboarding',
+      )
+    },
+    getAnswer: messageContents => {
+      return /^Super, I'll set your nickname/i.test(messageContents)
+        ? 'yes'
+        : /^No worries, you can set your nickname/.test(messageContents)
+        ? 'no'
+        : null
+    },
+    validate(response) {
+      if (!['yes', 'no'].includes(response.toLowerCase())) {
+        return `Would you like me to set your nickname? Reply "yes" or "no".`
       }
     },
   },
@@ -343,10 +394,12 @@ async function getMessageContents(msg, answers, member) {
   }
 }
 
+const getSteps = member => allSteps.filter(s => !s.shouldSkip?.(member))
+
 function getAnswers(messages, member) {
   const answers = {}
   for (const message of messages) {
-    for (const step of steps) {
+    for (const step of getSteps(member)) {
       const answer = step.getAnswer(message.content, member)
       if (answer !== null) {
         answers[step.name] = answer
@@ -371,6 +424,8 @@ async function handleNewMessage(message) {
   const member = message.guild.members.cache.find(
     ({user}) => user.id === memberId,
   )
+
+  const steps = getSteps(member)
 
   if (message.content.toLowerCase() === 'delete') {
     const isUnconfirmed = !!member.roles.cache.find(
@@ -465,6 +520,8 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
   const member = newMessage.guild.members.cache.find(
     ({user}) => user.id === memberId,
   )
+
+  const steps = getSteps(member)
 
   const messages = Array.from(
     (await newMessage.channel.messages.fetch()).values(),
@@ -609,7 +666,7 @@ I'm a bot and I'm here to welcome you to the KCD Community on Discord! Before yo
 
 (Note, if you make a mistake, you can edit your responses).
 
-In less than 2 minutes, you'll have full access to this server. So, let's get started! Here's the first question:
+In less than 5 minutes, you'll have full access to this server. So, let's get started! Here's the first question:
     `.trim(),
   )
 
@@ -618,7 +675,7 @@ In less than 2 minutes, you'll have full access to this server. So, let's get st
     setTimeout(resolve, process.env.NODE_ENV === 'test' ? 0 : 500),
   )
 
-  await channel.send(steps[0].question)
+  await channel.send(getSteps(member)[0].question)
 }
 
 async function cleanup(guild) {
@@ -694,6 +751,7 @@ module.exports = {
 
 /*
 eslint
+  no-console: "off",
   consistent-return: "off",
   max-statements: ["error", 150],
   complexity: ["error", 20]

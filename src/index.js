@@ -164,7 +164,7 @@ Here's how you set your avatar: https://support.discord.com/hc/en-us/articles/20
     isQuestionMessage: messageContents =>
       /^Here's how you set your avatar/.test(messageContents),
     feedback: (answers, member) => {
-      return member.avatar
+      return member.user.avatar
         ? `Great, thanks for adding your avatar.`
         : 'No worries, you can set your avatar later.'
     },
@@ -175,7 +175,7 @@ Here's how you set your avatar: https://support.discord.com/hc/en-us/articles/20
       // if we're trying to get the answer for this step and we haven't sent
       // the feedback for it, but the avatar's already set, then we'll skip it
       // se we'll return a value for this step.
-      if (member.avatar) return 'ALREADY_SET'
+      if (member.user.avatar) return 'ALREADY_SET'
       return null
     },
     validate(response) {

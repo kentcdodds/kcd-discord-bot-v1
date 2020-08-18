@@ -441,7 +441,9 @@ async function handleNewMessage(message) {
     await currentStep.action(answers, member, message.channel)
   }
 
-  const nextStep = steps[steps.indexOf(currentStep) + 1]
+  const nextStep = steps
+    .slice(steps.indexOf(currentStep) + 1)
+    .find(step => !answers.hasOwnProperty(step.name))
   if (nextStep) {
     await message.channel.send(
       await getMessageContents(nextStep.question, answers, member),

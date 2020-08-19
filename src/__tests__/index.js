@@ -352,11 +352,11 @@ test('the typical flow', async () => {
 
   const name = 'Fred'
   const email = 'fred@example.com'
-  await send('Fred')
-  await send(email)
-  await send('yes')
-  await send('team@kentcdodds.com')
-  await send('yes')
+  await send(name) // What's your name
+  await send(email) // What's your email
+  await send('yes') // coc?
+  await send('team@kentcdodds.com') // coc check
+  await send('yes') // confirm
 
   // now they're subscribed
   server.use(
@@ -401,15 +401,16 @@ test('the typical flow', async () => {
     ),
   )
 
-  await send('done')
-  await send('yes')
-  await send('yes')
-  await send('anything else?')
   const techMessage = messages.find(msg =>
     msg.content.includes('the tech you are most interested in'),
   )
   await react(techMessage, 'jest')
   await react(techMessage, 'cypress')
+
+  await send('yes') // notified of live stream
+  await send('yes') // notified of office hours
+  await send('done') // avatar
+  await send('anything else?')
   await send('delete')
 
   expect(getMessageThread()).toMatchInlineSnapshot(`
@@ -453,9 +454,18 @@ test('the typical flow', async () => {
 
     🎊 You now have access to the whole server. Welcome!
     BOT: https://media.giphy.com/media/MDxjbPCg6DGf8JclbR/giphy.gif
-    BOT: ━━━━━━━━━━━━━━━━━━━━
+    BOT: 
+
+    ━━━━━━━━━━━━━━━━━━━━
 
     **If you wanna hang out here for a bit longer, I have a few questions that will help you get set up in this server a bit more.**
+    BOT: Click the icon of the tech you are most interested in right now (or want to learn about). Kent will use this to give you more relevant content in the future.
+    BOT: Would you like to be notified when Kent starts live streaming in channel_💻-kent-live-id?
+    Fred Joe: yes
+    BOT: Cool, when Kent starts live streaming, you'll get notified.
+    BOT: Would you like to be notified when Kent starts https://kcd.im/office-hours in channel_🏫-office-hours-id?
+    Fred Joe: yes
+    BOT: Great, you'll be notified when Kent's Office Hours start.
     BOT: It's more fun here when folks have an avatar. You can go ahead and set yours now 😄
 
     I got this image using your email address with gravatar.com. You can use it for your avatar if you like.
@@ -467,13 +477,6 @@ test('the typical flow', async () => {
     **When you're finished (or if you'd like to just move on), just say \\"done\\"**
     Fred Joe: done
     BOT: Ok, please do set your avatar later though. It helps keep everything human.
-    BOT: Would you like to be notified when Kent starts live streaming in channel_💻-kent-live-id?
-    Fred Joe: yes
-    BOT: Cool, when Kent starts live streaming, you'll get notified.
-    BOT: Would you like to be notified when Kent starts https://kcd.im/office-hours in channel_🏫-office-hours-id?
-    Fred Joe: yes
-    BOT: Great, you'll be notified when Kent's Office Hours start.
-    BOT: Click the icon of the tech you are most interested in right now (or want to learn about). Kent will use this to give you more relevant content in the future.
     BOT: Looks like we're all done! Go explore!
 
     We'd love to get to know you a bit. Tell us about you in channel_👶-introductions-id. Here's a template you can use:
@@ -647,29 +650,16 @@ test('typing and editing to an invalid value', async () => {
 
     🎊 You now have access to the whole server. Welcome!
     BOT: https://media.giphy.com/media/MDxjbPCg6DGf8JclbR/giphy.gif
-    BOT: ━━━━━━━━━━━━━━━━━━━━
+    BOT: 
+
+    ━━━━━━━━━━━━━━━━━━━━
 
     **If you wanna hang out here for a bit longer, I have a few questions that will help you get set up in this server a bit more.**
-    BOT: It's more fun here when folks have an avatar. You can go ahead and set yours now 😄
-
-    I got this image using your email address with gravatar.com. You can use it for your avatar if you like.
-
-    https://www.gravatar.com/avatar/53a99aa16438d50f6f7405749684b86e?s=128&d=404
-
-    Here's how you set your avatar: https://support.discord.com/hc/en-us/articles/204156688-How-do-I-change-my-avatar-
-
-    **When you're finished (or if you'd like to just move on), just say \\"done\\"**
+    BOT: Click the icon of the tech you are most interested in right now (or want to learn about). Kent will use this to give you more relevant content in the future.
+    BOT: Would you like to be notified when Kent starts live streaming in channel_💻-kent-live-id?
     BOT: _I've changed your nickname on this server to Freddy. If you'd like to change it back then type: \`/nick Fred\`_
     BOT: Thanks for fixing things up, now we can continue.
-    BOT: It's more fun here when folks have an avatar. You can go ahead and set yours now 😄
-
-    I got this image using your email address with gravatar.com. You can use it for your avatar if you like.
-
-    https://www.gravatar.com/avatar/53a99aa16438d50f6f7405749684b86e?s=128&d=404
-
-    Here's how you set your avatar: https://support.discord.com/hc/en-us/articles/204156688-How-do-I-change-my-avatar-
-
-    **When you're finished (or if you'd like to just move on), just say \\"done\\"**
+    BOT: Would you like to be notified when Kent starts live streaming in channel_💻-kent-live-id?
     Fred Joe: delete
     BOT: This channel is getting deleted for the following reason: Requested by the member
 
@@ -760,16 +750,18 @@ test('a new member with some info already', async () => {
 
     🎊 You now have access to the whole server. Welcome!
     BOT: https://media.giphy.com/media/MDxjbPCg6DGf8JclbR/giphy.gif
-    BOT: ━━━━━━━━━━━━━━━━━━━━
+    BOT: 
+
+    ━━━━━━━━━━━━━━━━━━━━
 
     **If you wanna hang out here for a bit longer, I have a few questions that will help you get set up in this server a bit more.**
+    BOT: Click the icon of the tech you are most interested in right now (or want to learn about). Kent will use this to give you more relevant content in the future.
     BOT: Would you like to be notified when Kent starts live streaming in channel_💻-kent-live-id?
     Fred Joe: yes
     BOT: Cool, when Kent starts live streaming, you'll get notified.
     BOT: Would you like to be notified when Kent starts https://kcd.im/office-hours in channel_🏫-office-hours-id?
     Fred Joe: yes
     BOT: Great, you'll be notified when Kent's Office Hours start.
-    BOT: Click the icon of the tech you are most interested in right now (or want to learn about). Kent will use this to give you more relevant content in the future.
     BOT: Looks like we're all done! Go explore!
 
     We'd love to get to know you a bit. Tell us about you in channel_👶-introductions-id. Here's a template you can use:

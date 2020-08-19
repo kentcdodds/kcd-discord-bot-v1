@@ -225,13 +225,13 @@ ${isEdit ? '' : `🎊 You now have access to the whole server. Welcome!`}
         // this is a gif of Kent doing a flip with the sub-text "SWEEEET!"
         await send('https://media.giphy.com/media/MDxjbPCg6DGf8JclbR/giphy.gif')
 
-        await send(
-          `
+        const moreStuffMessage = `
 ━━━━━━━━━━━━━━━━━━━━
 
 **If you wanna hang out here for a bit longer, I have a few questions that will help you get set up in this server a bit more.**
-          `.trim(),
-        )
+        `.trim()
+
+        await send(`\n\n${moreStuffMessage}`)
       }
     },
     validate(response) {
@@ -241,49 +241,50 @@ ${isEdit ? '' : `🎊 You now have access to the whole server. Welcome!`}
     },
   },
   {
-    name: 'avatar',
-    question: async answers => {
-      let message = `It's more fun here when folks have an avatar. You can go ahead and set yours now 😄`
-      try {
-        const emailHash = md5(answers.email)
-        const image = `https://www.gravatar.com/avatar/${emailHash}?s=128&d=404`
-        await memGot(image)
-        message = `
-${message}
+    actionOnlyStep: true,
+    action: async ({channel}) => {
+      const send = getSend(channel)
+      const message = await send(
+        `Click the icon of the tech you are most interested in right now (or want to learn about). Kent will use this to give you more relevant content in the future.`,
+      )
+      const emojis = [
+        'react',
+        'jest',
+        'cypress',
+        'reacttestinglibrary',
+        'domtestinglibrary',
+        'msw',
+        'js',
+        'css',
+        'html',
+        'node',
+        'reactquery',
+        'nextjs',
+        'gatsby',
+        'remix',
+        'graphql',
+      ]
 
-I got this image using your email address with gravatar.com. You can use it for your avatar if you like.
-
-${image}
-        `.trim()
-      } catch (error) {
-        // ignore the error
+      const reactionEmoji = emojis
+        .map(emojiName =>
+          message.guild.emojis.cache.find(
+            ({name}) => name.toLowerCase() === emojiName,
+          ),
+        )
+        // it's possible the emoji title changed or was removed
+        // we should fix the list above in that case, but we don't
+        // want to crash just because of that... So we'll filter out those.
+        .filter(Boolean)
+      for (const emoji of reactionEmoji) {
+        // we want them in order
+        // eslint-disable-next-line no-await-in-loop
+        await message.react(emoji)
       }
-      return `
-${message}
 
-Here's how you set your avatar: https://support.discord.com/hc/en-us/articles/204156688-How-do-I-change-my-avatar-
-
-**When you're finished (or if you'd like to just move on), just say "done"**
-      `.trim()
-    },
-    isQuestionMessage: messageContents =>
-      /^Here's how you set your avatar/.test(messageContents),
-    feedback: (answers, member) => {
-      return member.user.avatar
-        ? `Great, thanks for adding your avatar.`
-        : `Ok, please do set your avatar later though. It helps keep everything human.`
-    },
-    shouldSkip: member => Boolean(member.user.avatar),
-    getAnswer: messageContents => {
-      if (/adding your avatar/i.test(messageContents)) return 'ADDED'
-      if (/set your avatar later/i.test(messageContents)) return 'SKIPPED'
-
-      return null
-    },
-    validate(response) {
-      if (response.toLowerCase() !== 'done') {
-        return `Reply "done" when you're ready to continue.`
-      }
+      // just because adding the emoji takes a second and it looks funny
+      // to have the next message come so quickly after finishing adding
+      // all the reactions.
+      await sleep(2000)
     },
   },
   {
@@ -375,50 +376,49 @@ Here's how you set your avatar: https://support.discord.com/hc/en-us/articles/20
     },
   },
   {
-    actionOnlyStep: true,
-    action: async ({channel}) => {
-      const send = getSend(channel)
-      const message = await send(
-        `Click the icon of the tech you are most interested in right now (or want to learn about). Kent will use this to give you more relevant content in the future.`,
-      )
-      const emojis = [
-        'react',
-        'jest',
-        'cypress',
-        'reacttestinglibrary',
-        'domtestinglibrary',
-        'msw',
-        'js',
-        'css',
-        'html',
-        'node',
-        'reactquery',
-        'nextjs',
-        'gatsby',
-        'remix',
-        'graphql',
-      ]
+    name: 'avatar',
+    question: async answers => {
+      let message = `It's more fun here when folks have an avatar. You can go ahead and set yours now 😄`
+      try {
+        const emailHash = md5(answers.email)
+        const image = `https://www.gravatar.com/avatar/${emailHash}?s=128&d=404`
+        await memGot(image)
+        message = `
+${message}
 
-      const reactionEmoji = emojis
-        .map(emojiName =>
-          message.guild.emojis.cache.find(
-            ({name}) => name.toLowerCase() === emojiName,
-          ),
-        )
-        // it's possible the emoji title changed or was removed
-        // we should fix the list above in that case, but we don't
-        // want to crash just because of that... So we'll filter out those.
-        .filter(Boolean)
-      for (const emoji of reactionEmoji) {
-        // we want them in order
-        // eslint-disable-next-line no-await-in-loop
-        await message.react(emoji)
+I got this image using your email address with gravatar.com. You can use it for your avatar if you like.
+
+${image}
+        `.trim()
+      } catch (error) {
+        // ignore the error
       }
+      return `
+${message}
 
-      // just because adding the emoji takes a second and it looks funny
-      // to have the next message come so quickly after finishing adding
-      // all the reactions.
-      await sleep(1000)
+Here's how you set your avatar: https://support.discord.com/hc/en-us/articles/204156688-How-do-I-change-my-avatar-
+
+**When you're finished (or if you'd like to just move on), just say "done"**
+      `.trim()
+    },
+    isQuestionMessage: messageContents =>
+      /^Here's how you set your avatar/.test(messageContents),
+    feedback: (answers, member) => {
+      return member.user.avatar
+        ? `Great, thanks for adding your avatar.`
+        : `Ok, please do set your avatar later though. It helps keep everything human.`
+    },
+    shouldSkip: member => Boolean(member.user.avatar),
+    getAnswer: messageContents => {
+      if (/adding your avatar/i.test(messageContents)) return 'ADDED'
+      if (/set your avatar later/i.test(messageContents)) return 'SKIPPED'
+
+      return null
+    },
+    validate(response) {
+      if (response.toLowerCase() !== 'done') {
+        return `Reply "done" when you're ready to continue.`
+      }
     },
   },
   {
@@ -686,10 +686,14 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
   await Promise.all(promises)
 
   if (editErrorMessages.length === editErrorMessagesToDelete.length) {
-    const currentStep = steps.find(step => !answers.hasOwnProperty(step.name))
+    const currentStep = steps
+      .filter(s => !s.actionOnlyStep)
+      .find(step => !answers.hasOwnProperty(step.name))
     if (currentStep) {
       await send(`Thanks for fixing things up, now we can continue.`)
-      await send(await getMessageContents(currentStep.question, answers))
+      await send(
+        await getMessageContents(currentStep.question, answers, member),
+      )
     }
   }
 }

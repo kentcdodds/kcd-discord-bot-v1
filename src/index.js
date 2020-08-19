@@ -388,10 +388,20 @@ Enjoy the community!
     },
     isQuestionMessage: messageContents =>
       /^Looks like we're all done/.test(messageContents),
-    validate() {
+    validate(messageContent) {
       // there's no valid answer because this is the last step,
       // so we'll just keep saying this forever.
-      return `We're all done. This channel will get deleted automatically eventually, but if you want to delete it yourself, then say "delete".`
+      const message = `We're all done. This channel will get deleted automatically eventually, but if you want to delete it yourself, then say "delete".`
+      if (messageContent.toLowerCase().includes('thank')) {
+        return `
+You're very welcome! Thanks for your gratitude! High five ✋
+
+https://media.giphy.com/media/g3zttGo4Vo2M8/giphy.gif
+
+${message}
+        `.trim()
+      }
+      return message
     },
     getAnswer: () => null,
   },
@@ -407,6 +417,22 @@ async function getMessageContents(msg, answers, member) {
 }
 
 const getSteps = member => allSteps.filter(s => !s.shouldSkip?.(member))
+
+const getMemberId = channel =>
+  channel.topic.match(/\(New Member ID: "(?<memberId>.*?)"\)/)?.groups
+    ?.memberId ?? null
+
+function getMember(message) {
+  // message must have been sent from the new member
+  const memberId = getMemberId(message.channel)
+  if (message.author.id !== memberId) return null
+
+  const member = message.guild.members.cache.find(
+    ({user}) => user.id === memberId,
+  )
+
+  return member
+}
 
 function getAnswers(messages, member) {
   const answers = {}
@@ -430,13 +456,8 @@ async function handleNewMessage(message) {
   if (!channel.name.startsWith('👋-welcome-')) return
 
   // message must have been sent from the new member
-  const {memberId} =
-    channel.topic.match(/\(New Member ID: "(?<memberId>.*?)"\)/)?.groups ?? {}
-  if (message.author.id !== memberId) return
-
-  const member = message.guild.members.cache.find(
-    ({user}) => user.id === memberId,
-  )
+  const member = getMember(message)
+  if (!member) return
 
   const steps = getSteps(member)
 
@@ -520,14 +541,8 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
   // must be a welcome channel
   if (!channel.name.startsWith('👋-welcome-')) return
 
-  // message must have been sent from the new member
-  const {memberId} =
-    channel.topic.match(/\(New Member ID: "(?<memberId>.*?)"\)/)?.groups ?? {}
-  if (newMessage.author.id !== memberId) return
-
-  const member = newMessage.guild.members.cache.find(
-    ({user}) => user.id === memberId,
-  )
+  const member = getMember(newMessage)
+  if (!member) return
 
   const steps = getSteps(member)
 
@@ -696,10 +711,22 @@ async function cleanup(guild) {
         // load all the messages so we can get the last message
         await Promise.all([channel.messages.fetch(), channel.fetch()])
 
-        const {lastMessage, client, members} = channel
+        const {lastMessage, client} = channel
 
-        const unconfirmedMember = members.find(({roles}) =>
-          roles.cache.find(({name}) => name === 'Unconfirmed Member'),
+        const memberId = getMemberId(channel)
+        const member = guild.members.cache.find(
+          ({user}) => user.id === memberId,
+        )
+
+        // somehow the member is gone (maybe they left the server?)
+        // delete the channel
+        if (!member) {
+          await channel.delete()
+          return
+        }
+
+        const memberIsUnconfirmed = member.roles.cache.find(
+          ({name}) => name === 'Unconfirmed Member',
         )
 
         // if they're getting close to too many messages, give them a warning
@@ -707,18 +734,16 @@ async function cleanup(guild) {
           const hasWarned = channel.messages.cache.find(({content}) =>
             content.includes(spamWarningMessageContent),
           )
-          if (!hasWarned && unconfirmedMember) {
-            await send(
-              `Whoa ${unconfirmedMember.user}, ${spamWarningMessageContent}`,
-            )
+          if (!hasWarned && memberIsUnconfirmed) {
+            await send(`Whoa ${member.user}, ${spamWarningMessageContent}`)
           }
         }
 
         if (channel.messages.cache.size > tooManyMessages) {
           // they sent way too many messages... Spam probably...
           const promises = [channel.delete()]
-          if (unconfirmedMember) {
-            promises.push(unconfirmedMember.kick('Too many messages'))
+          if (memberIsUnconfirmed) {
+            promises.push(member.kick('Too many messages'))
           }
           return Promise.all(promises)
         }
@@ -728,19 +753,26 @@ async function cleanup(guild) {
           const timeSinceLastMessage = new Date() - lastMessage.createdAt
           if (timeSinceLastMessage > maxWaitingTime) {
             const promises = [channel.delete()]
-            if (unconfirmedMember) {
-              promises.push(unconfirmedMember.kick('Onboarding timed out'))
+            if (memberIsUnconfirmed) {
+              promises.push(member.kick('Onboarding timed out'))
             }
             return Promise.all(promises)
           } else if (timeSinceLastMessage > maxWaitingTime * 0.7) {
             if (
               !lastMessage.content.includes(timeoutWarningMessageContent) &&
-              unconfirmedMember
+              memberIsUnconfirmed
             ) {
-              return send(
-                `Hi ${unconfirmedMember.user}, ${timeoutWarningMessageContent}`,
-              )
+              return send(`Hi ${member.user}, ${timeoutWarningMessageContent}`)
             }
+          }
+        } else {
+          // they sent us something and we haven't responded yet
+          // this happens if the bot goes down for some reason (normally when we redeploy)
+          const timeSinceLastMessage = new Date() - lastMessage.createdAt
+          if (timeSinceLastMessage > 6 * 1000) {
+            // if it's been six seconds and we haven't handled the last message
+            // then let's handle it now.
+            await handleNewMessage(lastMessage)
           }
         }
       })()

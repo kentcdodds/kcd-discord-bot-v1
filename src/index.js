@@ -59,6 +59,14 @@ const allSteps = [
         return base.replace('{qualifier}', ` It's too long.`)
       }
     },
+    action: async ({answers, member, channel}) => {
+      const send = getSend(channel)
+      const previousNickname = member.nickname
+      await member.setNickname(answers.name, 'Set during onboarding')
+      await send(
+        `_I've changed your nickname on this server to ${answers.name}. If you'd like to change it back then type: \`/nick ${previousNickname}\`_`,
+      )
+    },
   },
   {
     name: 'email',
@@ -110,7 +118,7 @@ Do you agree to abide by and uphold the code of conduct? **The only correct answ
     getAnswer: messageContents =>
       /^That's right.$/.test(messageContents) ? true : null,
     validate(response) {
-      if (response.toLowerCase() !== 'team@kentcdodds.com') {
+      if (!response.toLowerCase().includes('team@kentcdodds.com')) {
         return `That's not right. Please open the code of conduct to find out. You're looking for the email address listed under the heading "Have questions/need to report an issue?" We take our code of conduct seriously, so I want to make sure you've opened it. Thanks!`
       }
     },
@@ -124,24 +132,29 @@ Here are your answers:
   Email: ${answers.email}
   Accepted Code of Conduct: ${answers.coc ? 'Yes' : 'No'}
 
-If you'd like to change any, simply edit your response. **If everything's correct, simply reply "yes"**.
+If you'd like to change any, then edit your responses above.
+
+**If everything's correct, simply reply "yes"**.
     `.trim(),
     isQuestionMessage: messageContents =>
       /^Here are your answers/.test(messageContents),
     feedback: `Awesome, welcome to the KCD Community on Discord!`,
     getAnswer: messageContents =>
       /^Awesome, welcome to the KCD/.test(messageContents) ? true : null,
-    action: async (answers, member, channel) => {
+    action: async ({answers, member, channel, isEdit}) => {
       const {guild} = member
       const send = getSend(channel)
 
-      const memberRole = guild.roles.cache.find(({name}) => name === 'Member')
-      const unconfirmedMemberRole = guild.roles.cache.find(
-        ({name}) => name === 'Unconfirmed Member',
-      )
+      if (!isEdit) {
+        const memberRole = guild.roles.cache.find(({name}) => name === 'Member')
+        const unconfirmedMemberRole = guild.roles.cache.find(
+          ({name}) => name === 'Unconfirmed Member',
+        )
 
-      await member.roles.remove(unconfirmedMemberRole)
-      await member.roles.add(memberRole, 'New confirmed member')
+        await member.roles.remove(unconfirmedMemberRole)
+        await member.roles.add(memberRole, 'New confirmed member')
+      }
+
       const subscriber = await getConvertKitSubscriber(answers.email)
       const discordTagId = '1747377'
       const discordForm = '1547100'
@@ -181,17 +194,26 @@ If you'd like to change any, simply edit your response. **If everything's correc
         )
         checkEmail = `Don't forget to check ${answers.email} for a confirmation email. 📬`
       }
-      // this is a gif of Kent doing a flip with the sub-text "SWEEEET!"
-      await send('https://media.giphy.com/media/MDxjbPCg6DGf8JclbR/giphy.gif')
       await send(
         `
 🎉 You should be good to go now. ${checkEmail}
 
-🎊 You now have access to the whole server. Welcome! 🎊
-
-**If you wanna hang out here for a bit longer, I can help you get going.**
+${isEdit ? '' : `🎊 You now have access to the whole server. Welcome!`}
         `.trim(),
       )
+
+      if (!isEdit) {
+        // this is a gif of Kent doing a flip with the sub-text "SWEEEET!"
+        await send('https://media.giphy.com/media/MDxjbPCg6DGf8JclbR/giphy.gif')
+
+        await send(
+          `
+━━━━━━━━━━━━━━━━━━━━
+
+**If you wanna hang out here for a bit longer, I have a few questions that will help you get set up in this server a bit more.**
+          `.trim(),
+        )
+      }
     },
     validate(response) {
       if (response.toLowerCase() !== 'yes') {
@@ -230,7 +252,7 @@ Here's how you set your avatar: https://support.discord.com/hc/en-us/articles/20
     feedback: (answers, member) => {
       return member.user.avatar
         ? `Great, thanks for adding your avatar.`
-        : 'No worries, you can set your avatar later.'
+        : `Ok, please do set your avatar later though. It helps keep everything human.`
     },
     shouldSkip: member => Boolean(member.user.avatar),
     getAnswer: messageContents => {
@@ -264,7 +286,7 @@ Here's how you set your avatar: https://support.discord.com/hc/en-us/articles/20
         ? `Cool, when Kent starts live streaming, you'll get notified.`
         : `Ok, you won't be notified when Kent starts live streaming.`
     },
-    action: async (answers, member) => {
+    action: async ({answers, member}) => {
       if (answers.liveStream !== 'yes') return
 
       await member.roles.add(
@@ -306,7 +328,7 @@ Here's how you set your avatar: https://support.discord.com/hc/en-us/articles/20
         ? `Great, you'll be notified when Kent's Office Hours start.`
         : `No worries, you won't be notified about Kent's Office Hours.`
     },
-    action: async (answers, member) => {
+    action: async ({answers, member}) => {
       if (answers.officeHours !== 'yes') return
 
       await member.roles.add(
@@ -330,38 +352,6 @@ Here's how you set your avatar: https://support.discord.com/hc/en-us/articles/20
     validate(response) {
       if (!['yes', 'no'].includes(response.toLowerCase())) {
         return `You must answer "yes" or "no": Would you like to be notified when Kent starts office hours?`
-      }
-    },
-  },
-  {
-    name: 'nickname',
-    question: answers =>
-      `I can set your nickname on this server. Would you like me to set it to ${answers.name}? (Reply "yes" or "no")`,
-    isQuestionMessage: messageContents =>
-      /^set your nickname/.test(messageContents),
-    feedback: answers => {
-      return answers.nickname?.toLowerCase() === 'yes'
-        ? `Super, I'll set your nickname for you.`
-        : `No worries, you can set your nickname in this server by typing \`/nick Your Name\`.`
-    },
-    action: (answers, member) => {
-      if (answers.nickname !== 'yes') return
-
-      return member.setNickname(
-        answers.name,
-        'Requested nickname change during onboarding',
-      )
-    },
-    getAnswer: messageContents => {
-      return /^Super, I'll set your nickname/i.test(messageContents)
-        ? 'yes'
-        : /^No worries, you can set your nickname/.test(messageContents)
-        ? 'no'
-        : null
-    },
-    validate(response) {
-      if (!['yes', 'no'].includes(response.toLowerCase())) {
-        return `Would you like me to set your nickname? Reply "yes" or "no".`
       }
     },
   },
@@ -522,9 +512,8 @@ async function handleNewMessage(message) {
   if (currentStep.feedback) {
     await send(await getMessageContents(currentStep.feedback, answers, member))
   }
-  if (currentStep.action) {
-    await currentStep.action(answers, member, message.channel)
-  }
+
+  await currentStep.action?.({answers, member, channel, isEdit: false})
 
   const nextStep = steps
     .slice(steps.indexOf(currentStep) + 1)
@@ -552,7 +541,8 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
   const botMessages = Array.from(messages).filter(
     ({author}) => author.id === newMessage.client.user.id,
   )
-  const answers = getAnswers(botMessages, member)
+  const previousAnswers = getAnswers(botMessages, member)
+  const answers = {...previousAnswers}
   const messageAfterEditedMessage = messages[messages.indexOf(newMessage) - 1]
   if (!messageAfterEditedMessage) return
 
@@ -599,29 +589,36 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
         // eslint-disable-next-line no-await-in-loop
         await getMessageContents(step.feedback, answers, member),
         messages.find(msg => step.getAnswer(msg.content, member)),
+        step,
       ],
     )
   }
-  for (const [newContent, msg] of contentAndMessages) {
+  for (const [newContent, msg, step] of contentAndMessages) {
     if (msg && msg.content !== newContent) {
-      promises.push(msg.edit(newContent))
-    }
-  }
-
-  if (editErrorMessages.length === editErrorMessagesToDelete.length) {
-    const currentStep = steps.find(step => !answers.hasOwnProperty(step.name))
-    if (currentStep) {
       promises.push(
-        newMessage.channel
-          .send(`Thanks for fixing things up, now we can continue.`)
-          .then(async () => {
-            send(await getMessageContents(currentStep.question, answers))
-          }),
+        (async () => {
+          await msg.edit(newContent)
+          await step?.action?.({
+            answers,
+            member,
+            channel,
+            previousAnswers,
+            isEdit: true,
+          })
+        })(),
       )
     }
   }
 
   await Promise.all(promises)
+
+  if (editErrorMessages.length === editErrorMessagesToDelete.length) {
+    const currentStep = steps.find(step => !answers.hasOwnProperty(step.name))
+    if (currentStep) {
+      await send(`Thanks for fixing things up, now we can continue.`)
+      await send(await getMessageContents(currentStep.question, answers))
+    }
+  }
 }
 
 async function handleNewMember(member) {

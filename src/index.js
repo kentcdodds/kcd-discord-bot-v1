@@ -8,6 +8,9 @@ const memGot = pMemoize(got, {
   maxAge: 1000 * 60 * 5,
 })
 
+const welcomeChannelPrefix =
+  process.env.NODE_ENV === 'production' ? '👋-welcome-' : '🌊-welcome-'
+
 const editErrorMessagePrefix = `There's a problem with an edit that was just made. Please edit the answer again to fix it.`
 
 const {CONVERT_KIT_API_SECRET, CONVERT_KIT_API_KEY} = process.env
@@ -32,10 +35,16 @@ const getSend = channel => async (...args) => {
   return result
 }
 
-async function getConvertKitSubscriber(email) {
+function getSubscriberEndpoint(email) {
   const url = new URL('https://api.convertkit.com/v3/subscribers')
   url.searchParams.set('api_secret', CONVERT_KIT_API_SECRET)
   url.searchParams.set('email_address', email)
+  return url.toString()
+}
+
+async function getConvertKitSubscriber(email) {
+  const url = getSubscriberEndpoint(email)
+
   const {
     body: {subscribers: [subscriber] = []} = {},
   } = await memGot(url.toString(), {responseType: 'json'})
@@ -60,12 +69,22 @@ const allSteps = [
       }
     },
     action: async ({answers, member, channel}) => {
-      const send = getSend(channel)
-      const previousNickname = member.nickname ?? 'Your Name'
-      await member.setNickname(answers.name, 'Set during onboarding')
-      await send(
-        `_I've changed your nickname on this server to ${answers.name}. If you'd like to change it back then type: \`/nick ${previousNickname}\`_`,
-      )
+      try {
+        const send = getSend(channel)
+        const previousNickname = member.nickname ?? 'Your Name'
+        await member.setNickname(answers.name, 'Set during onboarding')
+        await send(
+          `_I've changed your nickname on this server to ${answers.name}. If you'd like to change it back then type: \`/nick ${previousNickname}\`_`,
+        )
+      } catch (error) {
+        // not sure when this would fail, but if it does, it's not a huge deal.
+        // So let's just keep going.
+        // it failed on me locally so... 🤷‍♂️
+        console.error(
+          `Failed setting a nickname for ${member.id}:`,
+          error.message,
+        )
+      }
     },
   },
   {
@@ -356,6 +375,53 @@ Here's how you set your avatar: https://support.discord.com/hc/en-us/articles/20
     },
   },
   {
+    actionOnlyStep: true,
+    action: async ({channel}) => {
+      const send = getSend(channel)
+      const message = await send(
+        `Click the icon of the tech you are most interested in right now (or want to learn about). Kent will use this to give you more relevant content in the future.`,
+      )
+      const emojis = [
+        'react',
+        'jest',
+        'cypress',
+        'reacttestinglibrary',
+        'domtestinglibrary',
+        'msw',
+        'js',
+        'css',
+        'html',
+        'node',
+        'reactquery',
+        'nextjs',
+        'gatsby',
+        'remix',
+        'graphql',
+      ]
+
+      const reactionEmoji = emojis
+        .map(emojiName =>
+          message.guild.emojis.cache.find(
+            ({name}) => name.toLowerCase() === emojiName,
+          ),
+        )
+        // it's possible the emoji title changed or was removed
+        // we should fix the list above in that case, but we don't
+        // want to crash just because of that... So we'll filter out those.
+        .filter(Boolean)
+      for (const emoji of reactionEmoji) {
+        // we want them in order
+        // eslint-disable-next-line no-await-in-loop
+        await message.react(emoji)
+      }
+
+      // just because adding the emoji takes a second and it looks funny
+      // to have the next message come so quickly after finishing adding
+      // all the reactions.
+      await sleep(1000)
+    },
+  },
+  {
     name: 'finished',
     question: (answers, member) => {
       const introChannel = member.guild.channels.cache.find(
@@ -444,12 +510,15 @@ function getCurrentStep(steps, answers) {
     .find(step => !answers.hasOwnProperty(step.name))
 }
 
+const getBotMessages = messages =>
+  messages.filter(({author, client}) => author.id === client.user.id)
+
 async function handleNewMessage(message) {
   const {channel} = message
   const send = getSend(channel)
 
   // must be a welcome channel
-  if (!channel.name.startsWith('👋-welcome-')) return
+  if (!channel.name.startsWith(welcomeChannelPrefix)) return
 
   // message must have been sent from the new member
   const member = getMember(message)
@@ -458,22 +527,11 @@ async function handleNewMessage(message) {
   const steps = getSteps(member)
 
   if (message.content.toLowerCase() === 'delete') {
-    const isUnconfirmed = !!member.roles.cache.find(
-      ({name}) => name === 'Unconfirmed Member',
-    )
-    const promises = [channel.delete()]
-    if (isUnconfirmed) {
-      promises.push(
-        member.kick('Unconfirmed member deleted the onboarding channel.'),
-      )
-    }
-    return Promise.all(promises)
+    return deleteWelcomeChannel(channel, 'Requested by the member')
   }
 
   const messages = Array.from((await channel.messages.fetch()).values())
-  const botMessages = Array.from(messages).filter(
-    ({author}) => author.id === message.client.user.id,
-  )
+  const botMessages = getBotMessages(messages)
   const editErrorMessages = botMessages.filter(({content}) =>
     content.startsWith(editErrorMessagePrefix),
   )
@@ -545,7 +603,7 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
   const send = getSend(channel)
 
   // must be a welcome channel
-  if (!channel.name.startsWith('👋-welcome-')) return
+  if (!channel.name.startsWith(welcomeChannelPrefix)) return
 
   const member = getMember(newMessage)
   if (!member) return
@@ -555,9 +613,7 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
   const messages = Array.from(
     (await newMessage.channel.messages.fetch()).values(),
   )
-  const botMessages = Array.from(messages).filter(
-    ({author}) => author.id === newMessage.client.user.id,
-  )
+  const botMessages = getBotMessages(messages)
   const previousAnswers = getAnswers(botMessages, member)
   const answers = {...previousAnswers}
   const messageAfterEditedMessage = messages[messages.indexOf(newMessage) - 1]
@@ -661,7 +717,7 @@ async function handleNewMember(member) {
   )
 
   const channel = await member.guild.channels.create(
-    `👋-welcome-${username}_${discriminator}`,
+    `${welcomeChannelPrefix}${username}_${discriminator}`,
     {
       topic: `Membership application for ${username}#${discriminator} (New Member ID: "${member.id}")`,
       reason: `To allow ${username}#${discriminator} to apply to join the community.`,
@@ -712,13 +768,106 @@ In less than 5 minutes, you'll have full access to this server. So, let's get st
   await send(getSteps(member)[0].question)
 }
 
+async function deleteWelcomeChannel(channel, reason) {
+  const send = getSend(channel)
+  const memberId = getMemberId(channel)
+  const member = channel.guild.members.cache.find(
+    ({user}) => user.id === memberId,
+  )
+  const memberIsUnconfirmed = member.roles.cache.find(
+    ({name}) => name === 'Unconfirmed Member',
+  )
+  await send(
+    `
+This channel is getting deleted for the following reason: ${reason}
+
+Goodbye 👋
+    `.trim(),
+  )
+  const promises = []
+  if (memberIsUnconfirmed) {
+    await send(
+      `You're still an unconfirmed member so you'll be kicked from the server. But don't worry, you can try again later.`,
+    )
+    promises.push(
+      member.kick(
+        `Unconfirmed member with welcome channel deleted because: ${reason}`,
+      ),
+    )
+  } else {
+    // if they reacted with their preferred tech, update their info in convertkit
+    // to reflect those preferences
+    const messages = Array.from((await channel.messages.fetch()).values())
+    const reactionMessage = getBotMessages(messages).find(({content}) =>
+      /Click the icon of the tech/.test(content),
+    )
+    if (reactionMessage) {
+      const interests = reactionMessage.reactions.cache
+        // because the new member is the only one in the channel, the only
+        // way we could have more than 1 reaction to a message is if the bot
+        // listed it as an option AND the member selected it.
+        // doing things this way helps us avoid having to call
+        // `await reaction.users.fetch()` for every reaction
+        .filter(({count}) => count > 1)
+        .map(({emoji}) => emoji.name)
+        // sort alphabetically
+        .sort((a, z) => (a < z ? -1 : a > z ? 1 : 0))
+        .join(',')
+
+      if (interests.length) {
+        const botMessages = getBotMessages(messages)
+        const answers = getAnswers(botMessages, member)
+
+        promises.push(
+          (async () => {
+            const {body: {subscribers: [subscriber] = []} = {}} = await got(
+              getSubscriberEndpoint(answers.email),
+              {
+                responseType: 'json',
+              },
+            )
+
+            try {
+              await got.put(
+                `https://api.convertkit.com/v3/subscribers/${subscriber.id}`,
+                {
+                  responseType: 'json',
+                  json: {
+                    api_key: CONVERT_KIT_API_KEY,
+                    api_secret: CONVERT_KIT_API_SECRET,
+                    fields: {tech_interests: interests},
+                  },
+                },
+              )
+            } catch (error) {
+              // possibly a 404 because the subscriber was deleted
+              console.error(
+                `Error setting the subscriber's interests: `,
+                {
+                  interests,
+                  subscriberId: subscriber.id,
+                  memberId: member.id,
+                },
+                error.message,
+              )
+            }
+          })(),
+        )
+      }
+    }
+  }
+
+  await Promise.all(promises)
+  await channel.delete(reason)
+}
+
 async function cleanup(guild) {
   const maxWaitingTime = 1000 * 60 * 30
   const tooManyMessages = 100
   const timeoutWarningMessageContent = `it's been a while and I haven't heard from you. This channel will get automatically deleted and you'll be removed from the server after a while. Don't worry though, you can always try again later when you have time to finish: https://kcd.im/discord`
   const spamWarningMessageContent = `you're sending a lot of messages, this channel will get deleted automatically if you send too many.`
   const asyncStuff = guild.channels.cache
-    .filter(({name}) => name.startsWith('👋-welcome-'))
+    .filter(({name}) => name.startsWith(welcomeChannelPrefix))
     .mapValues(channel => {
       const send = getSend(channel)
       return (async () => {
@@ -735,7 +884,10 @@ async function cleanup(guild) {
         // somehow the member is gone (maybe they left the server?)
         // delete the channel
         if (!member) {
-          await channel.delete()
+          await deleteWelcomeChannel(
+            channel,
+            'Member is not in the server anymore. May have left the server.',
+          )
           return
         }
 
@@ -755,22 +907,14 @@ async function cleanup(guild) {
 
         if (channel.messages.cache.size > tooManyMessages) {
           // they sent way too many messages... Spam probably...
-          const promises = [channel.delete()]
-          if (memberIsUnconfirmed) {
-            promises.push(member.kick('Too many messages'))
-          }
-          return Promise.all(promises)
+          return deleteWelcomeChannel(channel, 'Too many messages')
         }
 
         if (lastMessage.author.id === client.user.id) {
           // we haven't heard from them in a while...
           const timeSinceLastMessage = new Date() - lastMessage.createdAt
           if (timeSinceLastMessage > maxWaitingTime) {
-            const promises = [channel.delete()]
-            if (memberIsUnconfirmed) {
-              promises.push(member.kick('Onboarding timed out'))
-            }
-            return Promise.all(promises)
+            return deleteWelcomeChannel(channel, 'Onboarding timed out')
           } else if (timeSinceLastMessage > maxWaitingTime * 0.7) {
             if (
               !lastMessage.content.includes(timeoutWarningMessageContent) &&

@@ -1,3 +1,4 @@
+const Discord = require('discord.js')
 const {rest} = require('msw')
 const {setupServer} = require('msw/node')
 const {handleNewMember, handleNewMessage, handleUpdatedMessage} = require('..')
@@ -123,10 +124,31 @@ async function setup() {
     return `<@${this.id}>`
   }
 
+  function createEmoji(name) {
+    return {
+      id: `emoji_${name}`,
+      name,
+    }
+  }
+
+  function reactToMessage(message, emoji, user) {
+    let re = message.reactions.cache.get(emoji.name)
+    if (!re) {
+      re = {
+        message,
+        emoji: {name: emoji.name},
+        users: {cache: new Discord.Collection()},
+      }
+      message.reactions.cache.set(emoji.name, re)
+    }
+    re.users.cache.set(user.id, user)
+  }
+
   function createChannel(name, options) {
     return {
       id: `channel_${name}`,
       name,
+      guild,
       toString: () => `channel_${name}-id`,
       client: mockClient,
       type: 'text',
@@ -141,6 +163,13 @@ async function setup() {
             guild,
             author,
             content,
+            reactions: {
+              cache: new Discord.Collection(),
+            },
+            react(emoji) {
+              reactToMessage(this, emoji, mockClient.user)
+              return Promise.resolve(this)
+            },
             edit(newContent) {
               return updateMessage(message, newContent)
             },
@@ -208,9 +237,30 @@ async function setup() {
         return channel
       },
     },
+    emojis: {
+      cache: new Discord.Collection(
+        Object.entries({
+          jest: createEmoji('jest'),
+          react: createEmoji('react'),
+          reactquery: createEmoji('reactquery'),
+          nextjs: createEmoji('nextjs'),
+          gatsby: createEmoji('gatsby'),
+          remix: createEmoji('remix'),
+          graphql: createEmoji('graphql'),
+          html: createEmoji('html'),
+          css: createEmoji('css'),
+          js: createEmoji('js'),
+          node: createEmoji('node'),
+          msw: createEmoji('msw'),
+          cypress: createEmoji('cypress'),
+          ReactTestingLibrary: createEmoji('ReactTestingLibrary'),
+          DOMTestingLibrary: createEmoji('DOMTestingLibrary'),
+        }),
+      ),
+    },
     roles: {
-      cache: {
-        _roles: {
+      cache: new Discord.Collection(
+        Object.entries({
           everyone: {name: '@everyone', id: 'everyone-role-id'},
           member: {name: 'Member', id: 'member-role-id'},
           unconfirmedMember: {
@@ -225,22 +275,23 @@ async function setup() {
             name: 'Notify: Office Hours',
             id: 'notify-office-hours',
           },
-        },
-        find(cb) {
-          for (const role of Object.values(this._roles)) {
-            if (cb(role)) return role
-          }
-          return null
-        },
-      },
+        }),
+      ),
     },
   })
 
   await handleNewMember(mockMember)
 
   expect(mockMember.roles.cache._roles).toEqual([
-    guild.roles.cache._roles.unconfirmedMember,
+    guild.roles.cache.get('unconfirmedMember'),
   ])
+
+  async function reactFromUser(message, reactionName) {
+    const emoji = guild.emojis.cache.find(({name}) => reactionName === name)
+    reactToMessage(message, emoji, mockMember.user)
+    await message.react(emoji)
+    return message
+  }
 
   async function sendFromUser(content) {
     const message = channel.messages._create({author: mockMember, content})
@@ -284,6 +335,7 @@ ${chan.messages._messages
   }
 
   return {
+    react: reactFromUser,
     send: sendFromUser,
     update: updateMessage,
     member: mockMember,
@@ -294,21 +346,74 @@ ${chan.messages._messages
   }
 }
 
+// eslint-disable-next-line max-lines-per-function
 test('the typical flow', async () => {
-  const {send, getMessageThread, member} = await setup()
+  const {send, react, getMessageThread, messages, member} = await setup()
 
+  const name = 'Fred'
+  const email = 'fred@example.com'
   await send('Fred')
-  await send('fred@example.com')
+  await send(email)
   await send('yes')
   await send('team@kentcdodds.com')
   await send('yes')
+
+  // now they're subscribed
+  server.use(
+    rest.get('https://api.convertkit.com/v3/subscribers', (req, res, ctx) => {
+      return res(
+        ctx.json({
+          total_subscribers: 1,
+          page: 1,
+          total_pages: 1,
+          subscribers: [
+            {
+              id: 363855345,
+              first_name: name,
+              email_address: email,
+              state: 'inactive',
+              created_at: new Date().toJSON(),
+              fields: {},
+            },
+          ],
+        }),
+      )
+    }),
+    rest.put(
+      'https://api.convertkit.com/v3/subscribers/:subscriberId',
+      (req, res, ctx) => {
+        expect(req.body.fields).toEqual({tech_interests: 'cypress,jest'})
+        return res(
+          ctx.json({
+            subscriber: {
+              id: req.params.subscriberId,
+              first_name: name,
+              email_address: email,
+              state: 'inactive',
+              created_at: new Date().toJSON(),
+              fields: {
+                tech_interests: req.body.fields,
+              },
+            },
+          }),
+        )
+      },
+    ),
+  )
+
   await send('done')
   await send('yes')
   await send('yes')
   await send('anything else?')
+  const techMessage = messages.find(msg =>
+    msg.content.includes('the tech you are most interested in'),
+  )
+  await react(techMessage, 'jest')
+  await react(techMessage, 'cypress')
+  await send('delete')
 
   expect(getMessageThread()).toMatchInlineSnapshot(`
-    "Messages in 👋-welcome-fredjoe_1234
+    "Messages in 🌊-welcome-fredjoe_1234
 
     BOT: Hello <@mock-user> 👋
 
@@ -368,6 +473,7 @@ test('the typical flow', async () => {
     BOT: Would you like to be notified when Kent starts https://kcd.im/office-hours in channel_🏫-office-hours-id?
     Fred Joe: yes
     BOT: Great, you'll be notified when Kent's Office Hours start.
+    BOT: Click the icon of the tech you are most interested in right now (or want to learn about). Kent will use this to give you more relevant content in the future.
     BOT: Looks like we're all done! Go explore!
 
     We'd love to get to know you a bit. Tell us about you in channel_👶-introductions-id. Here's a template you can use:
@@ -380,11 +486,15 @@ test('the typical flow', async () => {
 
     Enjoy the community!
     Fred Joe: anything else?
-    BOT: We're all done. This channel will get deleted automatically eventually, but if you want to delete it yourself, then say \\"delete\\"."
+    BOT: We're all done. This channel will get deleted automatically eventually, but if you want to delete it yourself, then say \\"delete\\".
+    Fred Joe: delete
+    BOT: This channel is getting deleted for the following reason: Requested by the member
+
+    Goodbye 👋"
   `)
 
   expect(
-    member.roles.cache._roles.map(({name}) => name).join(', '),
+    member.roles.cache._roles.map(role => role.name).join(', '),
   ).toMatchInlineSnapshot(`"Member, Notify: Kent Live, Notify: Office Hours"`)
 })
 
@@ -484,7 +594,7 @@ test('typing and editing to an invalid value', async () => {
   await send('delete')
 
   expect(getMessageThread()).toMatchInlineSnapshot(`
-    "Messages in 👋-welcome-fredjoe_1234
+    "Messages in 🌊-welcome-fredjoe_1234
 
     BOT: Hello <@mock-user> 👋
 
@@ -560,7 +670,10 @@ test('typing and editing to an invalid value', async () => {
     Here's how you set your avatar: https://support.discord.com/hc/en-us/articles/204156688-How-do-I-change-my-avatar-
 
     **When you're finished (or if you'd like to just move on), just say \\"done\\"**
-    Fred Joe: delete"
+    Fred Joe: delete
+    BOT: This channel is getting deleted for the following reason: Requested by the member
+
+    Goodbye 👋"
   `)
 
   expect(
@@ -607,7 +720,7 @@ test('a new member with some info already', async () => {
   await send('anything else?')
 
   expect(getMessageThread()).toMatchInlineSnapshot(`
-    "Messages in 👋-welcome-fredjoe_1234
+    "Messages in 🌊-welcome-fredjoe_1234
 
     BOT: Hello <@mock-user> 👋
 
@@ -656,6 +769,7 @@ test('a new member with some info already', async () => {
     BOT: Would you like to be notified when Kent starts https://kcd.im/office-hours in channel_🏫-office-hours-id?
     Fred Joe: yes
     BOT: Great, you'll be notified when Kent's Office Hours start.
+    BOT: Click the icon of the tech you are most interested in right now (or want to learn about). Kent will use this to give you more relevant content in the future.
     BOT: Looks like we're all done! Go explore!
 
     We'd love to get to know you a bit. Tell us about you in channel_👶-introductions-id. Here's a template you can use:

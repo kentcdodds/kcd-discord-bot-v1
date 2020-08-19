@@ -61,7 +61,7 @@ const allSteps = [
     },
     action: async ({answers, member, channel}) => {
       const send = getSend(channel)
-      const previousNickname = member.nickname
+      const previousNickname = member.nickname ?? 'Your Name'
       await member.setNickname(answers.name, 'Set during onboarding')
       await send(
         `_I've changed your nickname on this server to ${answers.name}. If you'd like to change it back then type: \`/nick ${previousNickname}\`_`,
@@ -427,7 +427,7 @@ function getMember(message) {
 function getAnswers(messages, member) {
   const answers = {}
   for (const message of messages) {
-    for (const step of getSteps(member)) {
+    for (const step of getSteps(member).filter(s => !s.actionOnlyStep)) {
       const answer = step.getAnswer(message.content, member)
       if (answer !== null) {
         answers[step.name] = answer
@@ -436,6 +436,12 @@ function getAnswers(messages, member) {
     }
   }
   return answers
+}
+
+function getCurrentStep(steps, answers) {
+  return steps
+    .filter(s => !s.actionOnlyStep)
+    .find(step => !answers.hasOwnProperty(step.name))
 }
 
 async function handleNewMessage(message) {
@@ -481,7 +487,7 @@ async function handleNewMessage(message) {
   const answers = getAnswers(botMessages, member)
 
   // find the first step with no answer
-  const currentStep = steps.find(step => !answers.hasOwnProperty(step.name))
+  const currentStep = getCurrentStep(steps, answers)
 
   if (!currentStep) {
     // there aren't any answers yet, so let's send the first feedback
@@ -515,8 +521,19 @@ async function handleNewMessage(message) {
 
   await currentStep.action?.({answers, member, channel, isEdit: false})
 
+  // run action-only steps
+  let currentStepIndex = steps.indexOf(currentStep)
+  while (steps[currentStepIndex + 1].actionOnlyStep) {
+    currentStepIndex = currentStepIndex + 1
+    const actionOnlyStep = steps[currentStepIndex]
+    // we want these run one at a time, not in parallel
+    // eslint-disable-next-line no-await-in-loop
+    await actionOnlyStep.action({answers, member, channel, isEdit: false})
+  }
+
+  // run next question step without an answer
   const nextStep = steps
-    .slice(steps.indexOf(currentStep) + 1)
+    .slice(currentStepIndex + 1)
     .find(step => !answers.hasOwnProperty(step.name))
   if (nextStep) {
     await send(await getMessageContents(nextStep.question, answers, member))
@@ -572,7 +589,7 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
   answers[editedStep.name] = newMessage.content
 
   const contentAndMessages = []
-  for (const step of steps) {
+  for (const step of steps.filter(s => !s.actionOnlyStep)) {
     contentAndMessages.push(
       [
         // eslint-disable-next-line no-await-in-loop

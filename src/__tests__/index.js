@@ -133,6 +133,9 @@ async function setup() {
       messages: {
         _messages: [],
         _create({content, author}) {
+          if (!content) {
+            throw new Error('Trying to send a message with no content')
+          }
           const message = {
             client: mockClient,
             guild,

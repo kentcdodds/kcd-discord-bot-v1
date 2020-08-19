@@ -700,13 +700,13 @@ test('a new member with some info already', async () => {
     }),
   )
 
-  await send('Fred')
-  await send(email)
-  await send('yes')
-  await send('team@kentcdodds.com')
-  await send('yes')
-  await send('yes')
-  await send('yes')
+  await send('Fred') // name
+  await send(email) // email
+  await send('yes') // coc
+  await send('team@kentcdodds.com') // coc verify
+  await send('yes') // confirm
+  await send('yes') // live stream
+  await send('yes') // office hours
   await send('anything else?')
 
   expect(getMessageThread()).toMatchInlineSnapshot(`

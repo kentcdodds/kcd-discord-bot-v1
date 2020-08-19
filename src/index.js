@@ -778,9 +778,10 @@ async function deleteWelcomeChannel(channel, reason) {
   const member = channel.guild.members.cache.find(
     ({user}) => user.id === memberId,
   )
-  const memberIsUnconfirmed = member.roles.cache.find(
-    ({name}) => name === 'Unconfirmed Member',
-  )
+
+  const memberIsUnconfirmed =
+    !member ||
+    member.roles.cache.find(({name}) => name === 'Unconfirmed Member')
   await send(
     `
 This channel is getting deleted for the following reason: ${reason}
@@ -794,7 +795,7 @@ Goodbye 👋
       `You're still an unconfirmed member so you'll be kicked from the server. But don't worry, you can try again later.`,
     )
     promises.push(
-      member.kick(
+      member?.kick(
         `Unconfirmed member with welcome channel deleted because: ${reason}`,
       ),
     )
@@ -850,7 +851,7 @@ Goodbye 👋
                 {
                   interests,
                   subscriberId: subscriber.id,
-                  memberId: member.id,
+                  memberId: member?.id,
                 },
                 error.message,
               )
@@ -895,17 +896,17 @@ async function cleanup(guild) {
           return
         }
 
-        const memberIsUnconfirmed = member.roles.cache.find(
-          ({name}) => name === 'Unconfirmed Member',
-        )
+        const memberIsUnconfirmed =
+          !member ||
+          member.roles.cache.find(({name}) => name === 'Unconfirmed Member')
 
         // if they're getting close to too many messages, give them a warning
         if (channel.messages.cache.size > tooManyMessages * 0.7) {
           const hasWarned = channel.messages.cache.find(({content}) =>
             content.includes(spamWarningMessageContent),
           )
-          if (!hasWarned && memberIsUnconfirmed) {
-            await send(`Whoa ${member.user}, ${spamWarningMessageContent}`)
+          if (!hasWarned) {
+            await send(`Whoa ${member?.user}, ${spamWarningMessageContent}`)
           }
         }
 
@@ -924,7 +925,7 @@ async function cleanup(guild) {
               !lastMessage.content.includes(timeoutWarningMessageContent) &&
               memberIsUnconfirmed
             ) {
-              return send(`Hi ${member.user}, ${timeoutWarningMessageContent}`)
+              return send(`Hi ${member?.user}, ${timeoutWarningMessageContent}`)
             }
           }
         } else {

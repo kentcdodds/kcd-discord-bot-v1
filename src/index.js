@@ -790,12 +790,12 @@ Goodbye 👋
     `.trim(),
   )
   const promises = []
-  if (memberIsUnconfirmed) {
+  if (memberIsUnconfirmed && member) {
     await send(
       `You're still an unconfirmed member so you'll be kicked from the server. But don't worry, you can try again later.`,
     )
     promises.push(
-      member?.kick(
+      member.kick(
         `Unconfirmed member with welcome channel deleted because: ${reason}`,
       ),
     )

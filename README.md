@@ -9,8 +9,6 @@
 <!-- prettier-ignore-start -->
 [![Build Status][build-badge]][build]
 [![Code Coverage][coverage-badge]][coverage]
-[![MIT License][license-badge]][license]
-
 [![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
 [![PRs Welcome][prs-badge]][prs]
 [![Code of Conduct][coc-badge]][coc]
@@ -18,11 +16,13 @@
 
 ## The problem
 
-// TODO
+The KCD Community on discord needs a bot to automate onboarding and other
+things.
 
 ## This solution
 
-// TODO
+I built this bot specific to my use cases. Feel free to fork if you want to
+maintain your own similar bot.
 
 ## Table of Contents
 
@@ -31,8 +31,6 @@
 
 - [Installation](#installation)
 - [Usage](#usage)
-- [Inspiration](#inspiration)
-- [Other Solutions](#other-solutions)
 - [Issues](#issues)
   - [🐛 Bugs](#-bugs)
   - [💡 Feature Requests](#-feature-requests)
@@ -52,16 +50,7 @@ npm install --save kcd-discord-bot
 
 ## Usage
 
-// TODO
-
-## Inspiration
-
-// TODO
-
-## Other Solutions
-
-I'm not aware of any, if you are please [make a pull request][prs] and add it
-here!
+I deploy this on [Heroku](https://heroku.com/).
 
 ## Issues
 

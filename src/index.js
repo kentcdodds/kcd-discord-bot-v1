@@ -19,6 +19,19 @@ if (!CONVERT_KIT_API_KEY) {
   throw new Error('CONVERT_KIT_API_KEY env variable is required')
 }
 
+const sleep = t =>
+  new Promise(resolve =>
+    setTimeout(resolve, process.env.NODE_ENV === 'test' ? 0 : t),
+  )
+
+const getSend = channel => async (...args) => {
+  const result = await channel.send(...args)
+  // wait a brief moment before continuing because channel.send doesn't
+  // always resolve after the message is actually sent.
+  await sleep(200)
+  return result
+}
+
 async function getConvertKitSubscriber(email) {
   const url = new URL('https://api.convertkit.com/v3/subscribers')
   url.searchParams.set('api_secret', CONVERT_KIT_API_SECRET)
@@ -120,6 +133,7 @@ If you'd like to change any, simply edit your response. **If everything's correc
       /^Awesome, welcome to the KCD/.test(messageContents) ? true : null,
     action: async (answers, member, channel) => {
       const {guild} = member
+      const send = getSend(channel)
 
       const memberRole = guild.roles.cache.find(({name}) => name === 'Member')
       const unconfirmedMemberRole = guild.roles.cache.find(
@@ -168,10 +182,8 @@ If you'd like to change any, simply edit your response. **If everything's correc
         checkEmail = `Don't forget to check ${answers.email} for a confirmation email. 📬`
       }
       // this is a gif of Kent doing a flip with the sub-text "SWEEEET!"
-      await channel.send(
-        'https://media.giphy.com/media/MDxjbPCg6DGf8JclbR/giphy.gif',
-      )
-      await channel.send(
+      await send('https://media.giphy.com/media/MDxjbPCg6DGf8JclbR/giphy.gif')
+      await send(
         `
 🎉 You should be good to go now. ${checkEmail}
 
@@ -412,6 +424,7 @@ function getAnswers(messages, member) {
 
 async function handleNewMessage(message) {
   const {channel} = message
+  const send = getSend(channel)
 
   // must be a welcome channel
   if (!channel.name.startsWith('👋-welcome-')) return
@@ -448,7 +461,7 @@ async function handleNewMessage(message) {
     content.startsWith(editErrorMessagePrefix),
   )
   if (editErrorMessages.length) {
-    await channel.send(
+    await send(
       `There are existing errors with your previous answers, please edit your answer above before continuing.`,
     )
     return
@@ -461,9 +474,7 @@ async function handleNewMessage(message) {
 
   if (!currentStep) {
     // there aren't any answers yet, so let's send the first feedback
-    await channel.send(
-      await getMessageContents(steps[0].feedback, answers, member),
-    )
+    await send(await getMessageContents(steps[0].feedback, answers, member))
     return
   }
 
@@ -476,21 +487,19 @@ async function handleNewMessage(message) {
     ({content}) => currentStepQuestionContent === content,
   )
   if (!questionHasBeenAsked) {
-    await channel.send(currentStepQuestionContent)
+    await send(currentStepQuestionContent)
     return
   }
 
   const error = currentStep.validate(message.content)
   if (error) {
-    await channel.send(error)
+    await send(error)
     return
   }
 
   answers[currentStep.name] = message.content
   if (currentStep.feedback) {
-    await channel.send(
-      await getMessageContents(currentStep.feedback, answers, member),
-    )
+    await send(await getMessageContents(currentStep.feedback, answers, member))
   }
   if (currentStep.action) {
     await currentStep.action(answers, member, message.channel)
@@ -500,14 +509,13 @@ async function handleNewMessage(message) {
     .slice(steps.indexOf(currentStep) + 1)
     .find(step => !answers.hasOwnProperty(step.name))
   if (nextStep) {
-    await message.channel.send(
-      await getMessageContents(nextStep.question, answers, member),
-    )
+    await send(await getMessageContents(nextStep.question, answers, member))
   }
 }
 
 async function handleUpdatedMessage(oldMessage, newMessage) {
   const {channel} = newMessage
+  const send = getSend(channel)
 
   // must be a welcome channel
   if (!channel.name.startsWith('👋-welcome-')) return
@@ -540,7 +548,7 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
 
   const error = editedStep.validate(newMessage.content)
   if (error) {
-    await newMessage.channel.send(`${editErrorMessagePrefix} ${error}`)
+    await send(`${editErrorMessagePrefix} ${error}`)
     return
   }
 
@@ -592,9 +600,7 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
         newMessage.channel
           .send(`Thanks for fixing things up, now we can continue.`)
           .then(async () => {
-            newMessage.channel.send(
-              await getMessageContents(currentStep.question, answers),
-            )
+            send(await getMessageContents(currentStep.question, answers))
           }),
       )
     }
@@ -657,8 +663,9 @@ async function handleNewMember(member) {
       ],
     },
   )
+  const send = getSend(channel)
 
-  await channel.send(
+  await send(
     `
 Hello ${user} 👋
 
@@ -671,11 +678,9 @@ In less than 5 minutes, you'll have full access to this server. So, let's get st
   )
 
   // wait a brief moment because sometimes the first message happens *after* the second
-  await new Promise(resolve =>
-    setTimeout(resolve, process.env.NODE_ENV === 'test' ? 0 : 500),
-  )
+  await sleep(500)
 
-  await channel.send(getSteps(member)[0].question)
+  await send(getSteps(member)[0].question)
 }
 
 async function cleanup(guild) {
@@ -686,6 +691,7 @@ async function cleanup(guild) {
   const asyncStuff = guild.channels.cache
     .filter(({name}) => name.startsWith('👋-welcome-'))
     .mapValues(channel => {
+      const send = getSend(channel)
       return (async () => {
         // load all the messages so we can get the last message
         await Promise.all([channel.messages.fetch(), channel.fetch()])
@@ -702,7 +708,7 @@ async function cleanup(guild) {
             content.includes(spamWarningMessageContent),
           )
           if (!hasWarned && unconfirmedMember) {
-            await channel.send(
+            await send(
               `Whoa ${unconfirmedMember.user}, ${spamWarningMessageContent}`,
             )
           }
@@ -731,7 +737,7 @@ async function cleanup(guild) {
               !lastMessage.content.includes(timeoutWarningMessageContent) &&
               unconfirmedMember
             ) {
-              return channel.send(
+              return send(
                 `Hi ${unconfirmedMember.user}, ${timeoutWarningMessageContent}`,
               )
             }

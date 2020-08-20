@@ -888,7 +888,7 @@ async function cleanup(guild) {
 
         // somehow the member is gone (maybe they left the server?)
         // delete the channel
-        if (!member) {
+        if (!member || !lastMessage) {
           await deleteWelcomeChannel(
             channel,
             'Member is not in the server anymore. May have left the server.',

@@ -874,8 +874,9 @@ Goodbye 👋
 
   await Promise.all(promises)
 
-  // wait for 5 seconds so folks can read the messages before it's deleted
-  await sleep(5000)
+  // wait for 3 seconds so folks can read the messages before it's deleted
+  // note: don't do 5 seconds or more because that's how long the interval is set to
+  await sleep(3000)
   await channel.delete(reason)
 }
 

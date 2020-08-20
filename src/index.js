@@ -895,6 +895,7 @@ async function cleanup(guild) {
     )
   const oldMembersKicks = guild.members.cache
     .filter(
+      // no roles and joined over a minute ago
       ({roles, joinedAt}) =>
         !roles.cache.size && joinedAt < Date.now() - 1000 * 60,
     )

@@ -89,7 +89,7 @@ const allSteps = [
   },
   {
     name: 'email',
-    question: `What's your email address? (This will add you to Kent's mailing list. You will receive a confirmation email.)`,
+    question: `What's your email address? (This will look you up on Kent's mailing list. If you're not already on it, you'll be added and will receive a confirmation email.)`,
     feedback: async answers => {
       if (await getConvertKitSubscriber(answers.email)) {
         return `Oh, nice, ${answers.email} is already a part of Kent's mailing list (you rock 🤘), so you won't be getting a confirmation email after all.`

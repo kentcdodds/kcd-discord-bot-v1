@@ -427,7 +427,7 @@ test('the typical flow', async () => {
     Fred Joe: Fred
     BOT: Great, hi Fred 👋
     BOT: _I've changed your nickname on this server to Fred. If you'd like to change it back then type: \`/nick fred\`_
-    BOT: What's your email address? (This will add you to Kent's mailing list. You will receive a confirmation email.)
+    BOT: What's your email address? (This will look you up on Kent's mailing list. If you're not already on it, you'll be added and will receive a confirmation email.)
     Fred Joe: fred@example.com
     BOT: Awesome, when we're done here, you'll receive a confirmation email to: fred@example.com.
     BOT: Our community is commited to certain standards of behavior and we enforce that behavior to ensure it's a nice place to spend time.
@@ -610,7 +610,7 @@ test('typing and editing to an invalid value', async () => {
     Fred Joe: Freddy
     BOT: Great, hi Freddy 👋
     BOT: _I've changed your nickname on this server to Fred. If you'd like to change it back then type: \`/nick fred\`_
-    BOT: What's your email address? (This will add you to Kent's mailing list. You will receive a confirmation email.)
+    BOT: What's your email address? (This will look you up on Kent's mailing list. If you're not already on it, you'll be added and will receive a confirmation email.)
     Fred Joe: not an email
     BOT: That doesn't look like an email address. Please provide a proper email address.
     Fred Joe: fred@acme.com
@@ -723,7 +723,7 @@ test('a new member with some info already', async () => {
     Fred Joe: Fred
     BOT: Great, hi Fred 👋
     BOT: _I've changed your nickname on this server to Fred. If you'd like to change it back then type: \`/nick fred\`_
-    BOT: What's your email address? (This will add you to Kent's mailing list. You will receive a confirmation email.)
+    BOT: What's your email address? (This will look you up on Kent's mailing list. If you're not already on it, you'll be added and will receive a confirmation email.)
     Fred Joe: fred+already-subscribed@example.com
     BOT: Oh, nice, fred+already-subscribed@example.com is already a part of Kent's mailing list (you rock 🤘), so you won't be getting a confirmation email after all.
     BOT: Our community is commited to certain standards of behavior and we enforce that behavior to ensure it's a nice place to spend time.

@@ -867,8 +867,11 @@ Goodbye 👋
 const getWelcomeChannels = guild =>
   guild.channels.cache.filter(({name}) => name.startsWith(welcomeChannelPrefix))
 
-const isMemberUnconfirmed = member =>
-  member.roles.cache.some(({name}) => name === 'Unconfirmed Member')
+const isMemberUnconfirmed = member => {
+  return member.roles.cache.some(({name}) => {
+    return name === 'Unconfirmed Member'
+  })
+}
 
 const getMemberWelcomeChannel = member =>
   getWelcomeChannels(member.guild).find(
@@ -884,20 +887,20 @@ async function cleanup(guild) {
   await guild.members.fetch()
 
   const welcomeChannels = getWelcomeChannels(guild)
-  const unconfirmedMembers = guild.members.cache.filter(isMemberUnconfirmed)
+  const homelessUnconfirmedMembersKicks = guild.members.cache
+    .filter(isMemberUnconfirmed)
+    .filter(member => !getMemberWelcomeChannel(member))
+    .mapValues(member =>
+      member.kick(`Unconfirmed member with no welcome channel`),
+    )
+  const oldMembersKicks = guild.members.cache
+    .filter(
+      ({roles, joinedAt}) =>
+        !roles.cache.size && joinedAt < Date.now() - 1000 * 60,
+    )
+    .mapValues(member => member.kick(`Old member with no roles`))
 
-  const memberAsyncStuff = unconfirmedMembers.mapValues(member => {
-    if (!getMemberWelcomeChannel(member)) {
-      return member.kick(`Unconfirmed member with no welcome channel`)
-    }
-    if (
-      !member.roles.cache.length &&
-      member.joinedAt > Date.now() - 1000 * 60
-    ) {
-//      return member.kick(`Member with no roles at all`)
-    }
-  })
-  const channelAsyncStuff = welcomeChannels.mapValues(channel => {
+  const channelDeletes = welcomeChannels.mapValues(channel => {
     const send = getSend(channel)
     return (async () => {
       // load all the messages so we can get the last message
@@ -960,7 +963,12 @@ async function cleanup(guild) {
       }
     })()
   })
-  await Promise.all([...channelAsyncStuff, ...memberAsyncStuff])
+
+  await Promise.all([
+    ...channelDeletes,
+    ...homelessUnconfirmedMembersKicks,
+    ...oldMembersKicks,
+  ])
 }
 
 module.exports = {

@@ -520,15 +520,15 @@ async function handleNewMessage(message) {
   // must be a welcome channel
   if (!channel.name.startsWith(welcomeChannelPrefix)) return
 
+  if (message.content.toLowerCase() === 'delete') {
+    return deleteWelcomeChannel(channel, 'Requested by the member')
+  }
+
   // message must have been sent from the new member
   const member = getMember(message)
   if (!member) return
 
   const steps = getSteps(member)
-
-  if (message.content.toLowerCase() === 'delete') {
-    return deleteWelcomeChannel(channel, 'Requested by the member')
-  }
 
   const messages = Array.from((await channel.messages.fetch()).values())
   const botMessages = getBotMessages(messages)

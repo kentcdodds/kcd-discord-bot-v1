@@ -894,7 +894,7 @@ async function cleanup(guild) {
       !member.roles.cache.length &&
       member.joinedAt > Date.now() - 1000 * 60
     ) {
-      return member.kick(`Member with no roles at all`)
+//      return member.kick(`Member with no roles at all`)
     }
   })
   const channelAsyncStuff = welcomeChannels.mapValues(channel => {

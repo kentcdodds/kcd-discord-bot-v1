@@ -641,7 +641,11 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
   const editErrorMessagesToDelete = editErrorMessages.filter(({content}) =>
     content.includes(stepErrorMessage),
   )
-  promises.push(...editErrorMessagesToDelete.map(m => m.delete()))
+  promises.push(
+    ...editErrorMessagesToDelete.map(m =>
+      m.delete({reason: 'Edit error resolved.'}),
+    ),
+  )
 
   answers[editedStep.name] = newMessage.content
 
@@ -861,6 +865,9 @@ Goodbye 👋
   }
 
   await Promise.all(promises)
+
+  // wait for 5 seconds so folks can read the messages before it's deleted
+  await sleep(5000)
   await channel.delete(reason)
 }
 

@@ -880,6 +880,9 @@ async function cleanup(guild) {
   const tooManyMessages = 100
   const timeoutWarningMessageContent = `it's been a while and I haven't heard from you. This channel will get automatically deleted and you'll be removed from the server after a while. Don't worry though, you can always try again later when you have time to finish: https://kcd.im/discord`
   const spamWarningMessageContent = `you're sending a lot of messages, this channel will get deleted automatically if you send too many.`
+  // prime the cache
+  await guild.members.fetch()
+
   const welcomeChannels = getWelcomeChannels(guild)
   const unconfirmedMembers = guild.members.cache.filter(isMemberUnconfirmed)
 

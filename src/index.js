@@ -906,7 +906,7 @@ async function cleanup(guild) {
       // load all the messages so we can get the last message
       await Promise.all([channel.messages.fetch(), channel.fetch()])
 
-      const {lastMessage, client} = channel
+      const {lastMessage} = channel
 
       const memberId = getMemberId(channel)
       const member = guild.members.cache.find(({user}) => user.id === memberId)
@@ -920,8 +920,6 @@ async function cleanup(guild) {
         )
         return
       }
-
-      const memberIsUnconfirmed = !member || isMemberUnconfirmed(member)
 
       // if they're getting close to too many messages, give them a warning
       if (channel.messages.cache.size > tooManyMessages * 0.7) {
@@ -938,20 +936,7 @@ async function cleanup(guild) {
         return deleteWelcomeChannel(channel, 'Too many messages')
       }
 
-      if (lastMessage.author.id === client.user.id) {
-        // we haven't heard from them in a while...
-        const timeSinceLastMessage = new Date() - lastMessage.createdAt
-        if (timeSinceLastMessage > maxWaitingTime) {
-          return deleteWelcomeChannel(channel, 'Onboarding timed out')
-        } else if (timeSinceLastMessage > maxWaitingTime * 0.7) {
-          if (
-            !lastMessage.content.includes(timeoutWarningMessageContent) &&
-            memberIsUnconfirmed
-          ) {
-            return send(`Hi ${member?.user}, ${timeoutWarningMessageContent}`)
-          }
-        }
-      } else {
+      if (lastMessage.author.id === member.id) {
         // they sent us something and we haven't responded yet
         // this happens if the bot goes down for some reason (normally when we redeploy)
         const timeSinceLastMessage = new Date() - lastMessage.createdAt
@@ -959,6 +944,19 @@ async function cleanup(guild) {
           // if it's been six seconds and we haven't handled the last message
           // then let's handle it now.
           await handleNewMessage(lastMessage)
+        }
+      } else {
+        // we haven't heard from them in a while...
+        const timeSinceLastMessage = new Date() - lastMessage.createdAt
+        if (timeSinceLastMessage > maxWaitingTime) {
+          return deleteWelcomeChannel(channel, 'Onboarding timed out')
+        } else if (timeSinceLastMessage > maxWaitingTime * 0.7) {
+          if (
+            !lastMessage.content.includes(timeoutWarningMessageContent) &&
+            isMemberUnconfirmed(member)
+          ) {
+            return send(`Hi ${member.user}, ${timeoutWarningMessageContent}`)
+          }
         }
       }
     })()

@@ -255,6 +255,7 @@ ${isEdit ? '' : `🎊 You now have access to the whole server. Welcome!`}
         'domtestinglibrary',
         'msw',
         'js',
+        'ts',
         'css',
         'html',
         'node',
@@ -863,81 +864,100 @@ Goodbye 👋
   await channel.delete(reason)
 }
 
+const getWelcomeChannels = guild =>
+  guild.channels.cache.filter(({name}) => name.startsWith(welcomeChannelPrefix))
+
+const isMemberUnconfirmed = member =>
+  member.roles.cache.some(({name}) => name === 'Unconfirmed Member')
+
+const getMemberWelcomeChannel = member =>
+  getWelcomeChannels(member.guild).find(
+    channel => getMemberId(channel) === member.id,
+  )
+
 async function cleanup(guild) {
   const maxWaitingTime = 1000 * 60 * 10
   const tooManyMessages = 100
   const timeoutWarningMessageContent = `it's been a while and I haven't heard from you. This channel will get automatically deleted and you'll be removed from the server after a while. Don't worry though, you can always try again later when you have time to finish: https://kcd.im/discord`
   const spamWarningMessageContent = `you're sending a lot of messages, this channel will get deleted automatically if you send too many.`
-  const asyncStuff = guild.channels.cache
-    .filter(({name}) => name.startsWith(welcomeChannelPrefix))
-    .mapValues(channel => {
-      const send = getSend(channel)
-      return (async () => {
-        // load all the messages so we can get the last message
-        await Promise.all([channel.messages.fetch(), channel.fetch()])
+  const welcomeChannels = getWelcomeChannels(guild)
+  const unconfirmedMembers = guild.members.cache.filter(isMemberUnconfirmed)
 
-        const {lastMessage, client} = channel
+  const memberAsyncStuff = unconfirmedMembers.mapValues(member => {
+    if (!getMemberWelcomeChannel(member)) {
+      return member.kick(`Unconfirmed member with no welcome channel`)
+    }
+    if (
+      !member.roles.cache.length &&
+      member.joinedAt > Date.now() - 1000 * 60
+    ) {
+      return member.kick(`Member with no roles at all`)
+    }
+  })
+  const channelAsyncStuff = welcomeChannels.mapValues(channel => {
+    const send = getSend(channel)
+    return (async () => {
+      // load all the messages so we can get the last message
+      await Promise.all([channel.messages.fetch(), channel.fetch()])
 
-        const memberId = getMemberId(channel)
-        const member = guild.members.cache.find(
-          ({user}) => user.id === memberId,
+      const {lastMessage, client} = channel
+
+      const memberId = getMemberId(channel)
+      const member = guild.members.cache.find(({user}) => user.id === memberId)
+
+      // somehow the member is gone (maybe they left the server?)
+      // delete the channel
+      if (!member || !lastMessage) {
+        await deleteWelcomeChannel(
+          channel,
+          'Member is not in the server anymore. May have left the server.',
         )
+        return
+      }
 
-        // somehow the member is gone (maybe they left the server?)
-        // delete the channel
-        if (!member || !lastMessage) {
-          await deleteWelcomeChannel(
-            channel,
-            'Member is not in the server anymore. May have left the server.',
-          )
-          return
+      const memberIsUnconfirmed = !member || isMemberUnconfirmed(member)
+
+      // if they're getting close to too many messages, give them a warning
+      if (channel.messages.cache.size > tooManyMessages * 0.7) {
+        const hasWarned = channel.messages.cache.find(({content}) =>
+          content.includes(spamWarningMessageContent),
+        )
+        if (!hasWarned) {
+          await send(`Whoa ${member?.user}, ${spamWarningMessageContent}`)
         }
+      }
 
-        const memberIsUnconfirmed =
-          !member ||
-          member.roles.cache.find(({name}) => name === 'Unconfirmed Member')
+      if (channel.messages.cache.size > tooManyMessages) {
+        // they sent way too many messages... Spam probably...
+        return deleteWelcomeChannel(channel, 'Too many messages')
+      }
 
-        // if they're getting close to too many messages, give them a warning
-        if (channel.messages.cache.size > tooManyMessages * 0.7) {
-          const hasWarned = channel.messages.cache.find(({content}) =>
-            content.includes(spamWarningMessageContent),
-          )
-          if (!hasWarned) {
-            await send(`Whoa ${member?.user}, ${spamWarningMessageContent}`)
+      if (lastMessage.author.id === client.user.id) {
+        // we haven't heard from them in a while...
+        const timeSinceLastMessage = new Date() - lastMessage.createdAt
+        if (timeSinceLastMessage > maxWaitingTime) {
+          return deleteWelcomeChannel(channel, 'Onboarding timed out')
+        } else if (timeSinceLastMessage > maxWaitingTime * 0.7) {
+          if (
+            !lastMessage.content.includes(timeoutWarningMessageContent) &&
+            memberIsUnconfirmed
+          ) {
+            return send(`Hi ${member?.user}, ${timeoutWarningMessageContent}`)
           }
         }
-
-        if (channel.messages.cache.size > tooManyMessages) {
-          // they sent way too many messages... Spam probably...
-          return deleteWelcomeChannel(channel, 'Too many messages')
+      } else {
+        // they sent us something and we haven't responded yet
+        // this happens if the bot goes down for some reason (normally when we redeploy)
+        const timeSinceLastMessage = new Date() - lastMessage.createdAt
+        if (timeSinceLastMessage > 6 * 1000) {
+          // if it's been six seconds and we haven't handled the last message
+          // then let's handle it now.
+          await handleNewMessage(lastMessage)
         }
-
-        if (lastMessage.author.id === client.user.id) {
-          // we haven't heard from them in a while...
-          const timeSinceLastMessage = new Date() - lastMessage.createdAt
-          if (timeSinceLastMessage > maxWaitingTime) {
-            return deleteWelcomeChannel(channel, 'Onboarding timed out')
-          } else if (timeSinceLastMessage > maxWaitingTime * 0.7) {
-            if (
-              !lastMessage.content.includes(timeoutWarningMessageContent) &&
-              memberIsUnconfirmed
-            ) {
-              return send(`Hi ${member?.user}, ${timeoutWarningMessageContent}`)
-            }
-          }
-        } else {
-          // they sent us something and we haven't responded yet
-          // this happens if the bot goes down for some reason (normally when we redeploy)
-          const timeSinceLastMessage = new Date() - lastMessage.createdAt
-          if (timeSinceLastMessage > 6 * 1000) {
-            // if it's been six seconds and we haven't handled the last message
-            // then let's handle it now.
-            await handleNewMessage(lastMessage)
-          }
-        }
-      })()
-    })
-  await Promise.all(asyncStuff)
+      }
+    })()
+  })
+  await Promise.all([...channelAsyncStuff, ...memberAsyncStuff])
 }
 
 module.exports = {

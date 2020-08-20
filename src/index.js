@@ -136,9 +136,14 @@ Do you agree to abide by and uphold the code of conduct? **The only correct answ
     feedback: `That's right!`,
     getAnswer: messageContents =>
       /^That's right.$/.test(messageContents) ? true : null,
-    validate(response) {
+    validate(response, answers) {
+      const sameEmail =
+        response === answers.email
+          ? `Please note, I'm not looking for *your* email address again. I'm looking for the email address that's listed in the code of conduct`
+          : ''
       if (!response.toLowerCase().includes('team@kentcdodds.com')) {
-        return `That's not right. Please open the code of conduct to find out. You're looking for the email address listed under the heading "Have questions/need to report an issue?" We take our code of conduct seriously, so I want to make sure you've opened it. Thanks!`
+        const mainMessage = `That's not right. Please **open the code of conduct** to find out. You're looking for the email address listed under the heading "Have questions/need to report an issue?" We take our code of conduct seriously, so I want to make sure you've opened it. Thanks!`
+        return `${mainMessage} ${sameEmail}`
       }
     },
   },
@@ -445,11 +450,11 @@ Enjoy the community!
     },
     isQuestionMessage: messageContents =>
       /^Looks like we're all done/.test(messageContents),
-    validate(messageContent) {
+    validate(response) {
       // there's no valid answer because this is the last step,
       // so we'll just keep saying this forever.
       const message = `We're all done. This channel will get deleted automatically eventually, but if you want to delete it yourself, then say "delete".`
-      if (messageContent.toLowerCase().includes('thank')) {
+      if (response.toLowerCase().includes('thank')) {
         return `
 You're very welcome! Thanks for your gratitude! High five ✋
 
@@ -567,7 +572,7 @@ async function handleNewMessage(message) {
     return
   }
 
-  const error = currentStep.validate(message.content)
+  const error = currentStep.validate(message.content, answers)
   if (error) {
     await send(error)
     return
@@ -616,7 +621,6 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
   )
   const botMessages = getBotMessages(messages)
   const previousAnswers = getAnswers(botMessages, member)
-  const answers = {...previousAnswers}
   const messageAfterEditedMessage = messages[messages.indexOf(newMessage) - 1]
   if (!messageAfterEditedMessage) return
 
@@ -625,7 +629,7 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
   )
   if (!editedStep) return
 
-  const error = editedStep.validate(newMessage.content)
+  const error = editedStep.validate(newMessage.content, previousAnswers)
   if (error) {
     await send(`${editErrorMessagePrefix} ${error}`)
     return
@@ -634,7 +638,10 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
   const promises = []
 
   // get the error message we printed previously due to any bad edits
-  const stepErrorMessage = editedStep.validate(oldMessage.content)
+  const stepErrorMessage = editedStep.validate(
+    oldMessage.content,
+    previousAnswers,
+  )
   const editErrorMessages = botMessages.filter(({content}) =>
     content.startsWith(editErrorMessagePrefix),
   )
@@ -647,6 +654,7 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
     ),
   )
 
+  const answers = {...previousAnswers}
   answers[editedStep.name] = newMessage.content
 
   const contentAndMessages = []

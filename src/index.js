@@ -860,7 +860,7 @@ Goodbye 👋
                 `Error setting the subscriber's interests: `,
                 {
                   interests,
-                  subscriberId: subscriber.id,
+                  subscriberId: subscriber?.id,
                   memberId: member?.id,
                 },
                 error.message,

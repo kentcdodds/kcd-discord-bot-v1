@@ -1,5 +1,5 @@
 const Discord = require('discord.js')
-const {onboarding} = require('./src')
+const {onboarding, commands} = require('./src')
 
 require('dotenv').config({
   path: `.env.${process.env.NODE_ENV || 'local'}`,
@@ -11,12 +11,7 @@ console.log('logging in discord client')
 client.login(process.env.DISCORD_BOT_TOKEN)
 
 client.on('message', onboarding.handleNewMessage)
-client.on('message', async message => {
-  // just a way to check that the bot is running
-  if (message.content.toLowerCase() === '?ping') {
-    await message.channel.send('pong')
-  }
-})
+client.on('message', commands.handleNewMessage)
 client.on('messageUpdate', onboarding.handleUpdatedMessage)
 client.on('guildMemberAdd', onboarding.handleNewMember)
 

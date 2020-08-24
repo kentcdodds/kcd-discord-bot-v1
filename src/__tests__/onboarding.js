@@ -1,7 +1,9 @@
 const Discord = require('discord.js')
 const {rest} = require('msw')
 const {setupServer} = require('msw/node')
-const {handleNewMember, handleNewMessage, handleUpdatedMessage} = require('..')
+const {
+  onboarding: {handleNewMember, handleNewMessage, handleUpdatedMessage},
+} = require('..')
 
 const server = setupServer(
   rest.get('https://api.convertkit.com/v3/subscribers', (req, res, ctx) => {

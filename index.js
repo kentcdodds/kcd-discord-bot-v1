@@ -1,10 +1,5 @@
 const Discord = require('discord.js')
-const {
-  handleNewMessage,
-  handleUpdatedMessage,
-  handleNewMember,
-  cleanup,
-} = require('./src')
+const {onboarding} = require('./src')
 
 require('dotenv').config({
   path: `.env.${process.env.NODE_ENV || 'local'}`,
@@ -15,15 +10,15 @@ const client = new Discord.Client()
 console.log('logging in discord client')
 client.login(process.env.DISCORD_BOT_TOKEN)
 
-client.on('message', handleNewMessage)
+client.on('message', onboarding.handleNewMessage)
 client.on('message', async message => {
   // just a way to check that the bot is running
   if (message.content.toLowerCase() === '?ping') {
     await message.channel.send('pong')
   }
 })
-client.on('messageUpdate', handleUpdatedMessage)
-client.on('guildMemberAdd', handleNewMember)
+client.on('messageUpdate', onboarding.handleUpdatedMessage)
+client.on('guildMemberAdd', onboarding.handleNewMember)
 
 client.on('ready', error => {
   if (error) {
@@ -33,7 +28,7 @@ client.on('ready', error => {
     console.log('client logged in')
     setInterval(() => {
       client.guilds.cache.forEach(guild => {
-        cleanup(guild)
+        onboarding.cleanup(guild)
       })
     }, 5000)
   }

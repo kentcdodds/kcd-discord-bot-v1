@@ -6,10 +6,12 @@ require('dotenv').config({
 })
 
 const {
-  handleNewMessage,
-  handleUpdatedMessage,
-  handleNewMember,
-  // cleanup,
+  onboarding: {
+    handleNewMessage,
+    handleUpdatedMessage,
+    handleNewMember,
+    // cleanup,
+  },
 } = require('.')
 
 const client = new Discord.Client()

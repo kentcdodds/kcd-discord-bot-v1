@@ -43,7 +43,17 @@
   "eslintConfig": {
     "extends": "./node_modules/kcd-scripts/eslint.js",
     "rules": {
-      "babel/camelcase": "off"
+      "babel/camelcase": "off",
+      "no-console": "off",
+      "consistent-return": "off",
+      "max-statements": [
+        "error",
+        150
+      ],
+      "complexity": [
+        "error",
+        20
+      ]
     }
   },
   "eslintIgnore": [

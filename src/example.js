@@ -12,6 +12,7 @@ const {
     handleNewMember,
     // cleanup,
   },
+  commands,
 } = require('.')
 
 const client = new Discord.Client()
@@ -19,6 +20,7 @@ const client = new Discord.Client()
 client.login(process.env.DISCORD_BOT_TOKEN)
 
 client.on('message', handleNewMessage)
+client.on('message', commands.handleNewMessage)
 client.on('messageUpdate', handleUpdatedMessage)
 // client.on('guildMemberAdd', handleNewMember)
 

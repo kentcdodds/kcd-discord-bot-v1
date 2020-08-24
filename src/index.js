@@ -841,6 +841,10 @@ Goodbye 👋
                 responseType: 'json',
               },
             )
+            if (!subscriber) {
+              // they got deleted quickly or something
+              return
+            }
 
             try {
               await got.put(
@@ -860,7 +864,7 @@ Goodbye 👋
                 `Error setting the subscriber's interests: `,
                 {
                   interests,
-                  subscriberId: subscriber?.id,
+                  subscriberId: subscriber.id,
                   memberId: member?.id,
                 },
                 error.message,

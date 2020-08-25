@@ -2,10 +2,10 @@ const {
   isMemberUnconfirmed,
   getMemberWelcomeChannel,
   getWelcomeChannels,
-  deleteWelcomeChannel,
   getMemberId,
   getSend,
 } = require('./utils')
+const {deleteWelcomeChannel} = require('./delete-welcome-channel')
 const {handleNewMessage} = require('./handle-new-message')
 
 async function cleanup(guild) {

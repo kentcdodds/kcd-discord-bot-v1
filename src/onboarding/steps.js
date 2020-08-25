@@ -184,7 +184,11 @@ If you'd like to change any, then edit your responses above.
               first_name: answers.name,
               email: answers.email,
               fields: {discord_user_id: member.id},
-              tags: [discordTagId],
+              // It would make sense to include the tag here, however, doing this
+              // will auto-confirm this new subscriber (no double-opt-in) which
+              // we do not want to do. Luckily, the discordForm adds this tag
+              // automatically so we don't need it anyway.
+              // tags: [discordTagId],
             },
           },
         )

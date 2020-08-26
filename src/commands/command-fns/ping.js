@@ -7,8 +7,8 @@ async function ping(message) {
   const result = await message.channel.send(`pong ${args}`.trim())
   return result
 }
+ping.commandName = 'ping'
 ping.description = 'Just helps you make sure the bot is running'
 ping.help = message =>
   message.channel.send(`Replies with "pong" and whatever you send`)
-ping.commandName = 'ping'
 module.exports = ping

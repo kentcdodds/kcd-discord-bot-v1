@@ -1,9 +1,8 @@
-const Discord = require('discord.js')
-const {onboarding, commands} = require('./src')
-
 require('dotenv').config({
   path: `.env.${process.env.NODE_ENV || 'local'}`,
 })
+const Discord = require('discord.js')
+const {onboarding, commands} = require('./src')
 
 const client = new Discord.Client()
 

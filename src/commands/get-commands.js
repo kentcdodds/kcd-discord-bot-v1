@@ -7,7 +7,8 @@ const commandNames = fs
   .filter(cmd => cmd.endsWith('.js'))
   .map(cmd => cmd.slice(0, cmd.length - 3))
 for (const name of commandNames) {
-  commands[name] = require(`./command-fns/${name}`)
+  const command = require(`./command-fns/${name}`)
+  commands[command.commandName] = command
 }
 
 function getCommand(commandName) {

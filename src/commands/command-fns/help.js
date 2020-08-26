@@ -23,5 +23,5 @@ Here are the available commands:
   }
 }
 help.description = 'Lists available commands'
-
+help.commandName = 'help'
 module.exports = help

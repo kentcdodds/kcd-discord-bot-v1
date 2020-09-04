@@ -15,6 +15,10 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
   // must be a new club channel
   if (!channel.name.startsWith(newClubChannelPrefix)) return
 
+  // when a link is expanded, that counts as an edit, but the content
+  // doesn't change, so we'll ignore it.
+  if (oldMessage.content === newMessage.content) return
+
   const member = getCaptainFromMessage(newMessage)
   if (!member) return
 

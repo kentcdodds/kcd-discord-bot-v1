@@ -24,6 +24,7 @@
   "scripts": {
     "start": "node .",
     "lint": "kcd-scripts lint",
+    "dev": "node ./src/example",
     "setup": "npm install && npm run validate -s",
     "test": "kcd-scripts test",
     "test:update": "npm test -- --updateSnapshot --coverage",

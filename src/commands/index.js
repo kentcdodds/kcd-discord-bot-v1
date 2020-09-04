@@ -1,14 +1,18 @@
 const {regex: commandRegex} = require('./command-regex')
-const {getCommand} = require('./get-commands')
+const commands = require('./commands')
 
 function handleNewMessage(message) {
   const {command} = message.content.match(commandRegex)?.groups ?? {}
   if (!command) return
 
-  const commandFn = getCommand(command)
+  const commandFn = commands[command]
   if (!commandFn) return
 
   return commandFn(message)
 }
 
-module.exports = {handleNewMessage}
+function setup(client) {
+  client.on('message', handleNewMessage)
+}
+
+module.exports = {handleNewMessage, setup}

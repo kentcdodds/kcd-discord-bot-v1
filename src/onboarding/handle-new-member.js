@@ -27,7 +27,7 @@ async function handleNewMember(member) {
   const channel = await member.guild.channels.create(
     `${welcomeChannelPrefix}${username}_${discriminator}`,
     {
-      topic: `Membership application for ${username}#${discriminator} (New Member ID: "${member.id}")`,
+      topic: `Membership application for ${username}#${discriminator} (Member ID: "${member.id}")`,
       reason: `To allow ${username}#${discriminator} to apply to join the community.`,
       parent: welcomeCategory,
       permissionOverwrites: [

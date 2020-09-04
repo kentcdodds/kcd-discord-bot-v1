@@ -4,7 +4,7 @@ const {getArgs} = require('../command-regex')
 
 async function help(message) {
   const args = getArgs(message.content)
-  const {commands} = require('../get-commands')
+  const commands = require('../commands')
   const [arg1] = args.split(' ')
   if (arg1 && commands[arg1] && commands[arg1].help) {
     const result = commands[arg1].help(message)

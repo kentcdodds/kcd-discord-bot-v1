@@ -1,3 +1,5 @@
+const {sleep, getSend, getMemberIdFromChannel} = require('../utils')
+
 const editErrorMessagePrefix = `There's a problem with an edit that was just made. Please edit the answer again to fix it.`
 
 const {CONVERT_KIT_API_SECRET, CONVERT_KIT_API_KEY} = process.env
@@ -19,19 +21,6 @@ function getSubscriberEndpoint(email) {
   return url.toString()
 }
 
-const sleep = t =>
-  new Promise(resolve =>
-    setTimeout(resolve, process.env.NODE_ENV === 'test' ? 0 : t),
-  )
-
-const getSend = channel => async (...args) => {
-  const result = await channel.send(...args)
-  // wait a brief moment before continuing because channel.send doesn't
-  // always resolve after the message is actually sent.
-  await sleep(200)
-  return result
-}
-
 async function getMessageContents(msg, answers, member) {
   if (typeof msg === 'function') {
     const result = await msg(answers, member)
@@ -41,19 +30,9 @@ async function getMessageContents(msg, answers, member) {
   }
 }
 
-const getBotMessages = messages =>
-  messages.filter(({author, client}) => author.id === client.user.id)
-
-function getMemberId(channel) {
-  return (
-    channel.topic.match(/\(New Member ID: "(?<memberId>.*?)"\)/)?.groups
-      ?.memberId ?? null
-  )
-}
-
 function getMember(message) {
   // message must have been sent from the new member
-  const memberId = getMemberId(message.channel)
+  const memberId = getMemberIdFromChannel(message.channel)
   if (message.author.id !== memberId) return null
 
   const member = message.guild.members.cache.find(
@@ -74,10 +53,11 @@ const isMemberUnconfirmed = member => {
 
 const getMemberWelcomeChannel = member =>
   getWelcomeChannels(member.guild).find(
-    channel => getMemberId(channel) === member.id,
+    channel => getMemberIdFromChannel(channel) === member.id,
   )
 
 module.exports = {
+  ...require('../utils'),
   editErrorMessagePrefix,
   getSubscriberEndpoint,
   CONVERT_KIT_API_SECRET,
@@ -87,9 +67,8 @@ module.exports = {
   isMemberUnconfirmed,
   getMemberWelcomeChannel,
   getMessageContents,
-  getBotMessages,
   getMember,
-  getMemberId,
+  getMemberIdFromChannel,
   getSend,
   sleep,
 }

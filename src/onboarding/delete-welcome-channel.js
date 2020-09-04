@@ -4,7 +4,7 @@ const {
   CONVERT_KIT_API_SECRET,
   CONVERT_KIT_API_KEY,
   getBotMessages,
-  getMemberId,
+  getMemberIdFromChannel,
   getSend,
   sleep,
 } = require('./utils')
@@ -12,7 +12,7 @@ const {getAnswers} = require('./steps')
 
 async function deleteWelcomeChannel(channel, reason) {
   const send = getSend(channel)
-  const memberId = getMemberId(channel)
+  const memberId = getMemberIdFromChannel(channel)
   const member = channel.guild.members.cache.find(
     ({user}) => user.id === memberId,
   )

@@ -465,7 +465,7 @@ test('the typical flow', async () => {
     BOT: Would you like to be notified when Kent starts live streaming in channel_💻-kent-live-id?
     Fred Joe: yes
     BOT: Cool, when Kent starts live streaming, you'll get notified.
-    BOT: Would you like to be notified when Kent starts https://kcd.im/office-hours in channel_🏫-office-hours-id?
+    BOT: Would you like to be notified when Kent starts <https://kcd.im/office-hours> in channel_🏫-office-hours-id?
     Fred Joe: yes
     BOT: Great, you'll be notified when Kent's Office Hours start.
     BOT: It's more fun here when folks have an avatar. You can go ahead and set yours now 😄
@@ -474,7 +474,7 @@ test('the typical flow', async () => {
 
     https://www.gravatar.com/avatar/6255165076a5e31273cbda50bb9f9636?s=128&d=404
 
-    Here's how you set your avatar: https://support.discord.com/hc/en-us/articles/204156688-How-do-I-change-my-avatar-
+    Here's how you set your avatar: <https://support.discord.com/hc/en-us/articles/204156688-How-do-I-change-my-avatar->
 
     **When you're finished (or if you'd like to just move on), just say \\"done\\"**
     Fred Joe: done
@@ -487,7 +487,7 @@ test('the typical flow', async () => {
     🏢 I work at:
     💻 I work with this tech:
     🍎 I snack on:
-    🤪 I'm unique because:
+    🤪 I really enjoy:
 
     Enjoy the community!
     Fred Joe: anything else?
@@ -761,7 +761,7 @@ test('a new member with some info already', async () => {
     BOT: Would you like to be notified when Kent starts live streaming in channel_💻-kent-live-id?
     Fred Joe: yes
     BOT: Cool, when Kent starts live streaming, you'll get notified.
-    BOT: Would you like to be notified when Kent starts https://kcd.im/office-hours in channel_🏫-office-hours-id?
+    BOT: Would you like to be notified when Kent starts <https://kcd.im/office-hours> in channel_🏫-office-hours-id?
     Fred Joe: yes
     BOT: Great, you'll be notified when Kent's Office Hours start.
     BOT: Looks like we're all done! Go explore!
@@ -772,7 +772,7 @@ test('a new member with some info already', async () => {
     🏢 I work at:
     💻 I work with this tech:
     🍎 I snack on:
-    🤪 I'm unique because:
+    🤪 I really enjoy:
 
     Enjoy the community!
     Fred Joe: anything else?

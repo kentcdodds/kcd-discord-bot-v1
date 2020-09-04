@@ -2,7 +2,7 @@ const {
   isMemberUnconfirmed,
   getMemberWelcomeChannel,
   getWelcomeChannels,
-  getMemberId,
+  getMemberIdFromChannel,
   getSend,
 } = require('./utils')
 const {deleteWelcomeChannel} = require('./delete-welcome-channel')
@@ -39,7 +39,7 @@ async function cleanup(guild) {
 
       const {lastMessage} = channel
 
-      const memberId = getMemberId(channel)
+      const memberId = getMemberIdFromChannel(channel)
       const member = guild.members.cache.find(({user}) => user.id === memberId)
 
       // somehow the member is gone (maybe they left the server?)
@@ -71,8 +71,8 @@ async function cleanup(guild) {
         // they sent us something and we haven't responded yet
         // this happens if the bot goes down for some reason (normally when we redeploy)
         const timeSinceLastMessage = new Date() - lastMessage.createdAt
-        if (timeSinceLastMessage > 6 * 1000) {
-          // if it's been six seconds and we haven't handled the last message
+        if (timeSinceLastMessage > 2 * 1000) {
+          // if it's been a while and we haven't handled the last message
           // then let's handle it now.
           await handleNewMessage(lastMessage)
         }

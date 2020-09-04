@@ -46,6 +46,7 @@
       "babel/camelcase": "off",
       "no-console": "off",
       "consistent-return": "off",
+      "require-await": "off",
       "max-statements": [
         "error",
         150

@@ -321,7 +321,7 @@ ${isEdit ? '' : `🎊 You now have access to the whole server. Welcome!`}
           name.toLowerCase().includes('office-hours') && type === 'text',
       )
 
-      return `Would you like to be notified when Kent starts https://kcd.im/office-hours in ${officeHoursChannel}?`
+      return `Would you like to be notified when Kent starts <https://kcd.im/office-hours> in ${officeHoursChannel}?`
     },
     isQuestionMessage: messageContents =>
       /kcd.im\/office-hours/.test(messageContents),
@@ -378,7 +378,7 @@ ${image}
       return `
 ${message}
 
-Here's how you set your avatar: https://support.discord.com/hc/en-us/articles/204156688-How-do-I-change-my-avatar-
+Here's how you set your avatar: <https://support.discord.com/hc/en-us/articles/204156688-How-do-I-change-my-avatar->
 
 **When you're finished (or if you'd like to just move on), just say "done"**
       `.trim()
@@ -419,7 +419,7 @@ We'd love to get to know you a bit. Tell us about you in ${introChannel}. Here's
 🏢 I work at:
 💻 I work with this tech:
 🍎 I snack on:
-🤪 I'm unique because:
+🤪 I really enjoy:
 
 Enjoy the community!
       `.trim()

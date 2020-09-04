@@ -76,7 +76,7 @@ If you don't have one yet, reply with "I don't have one".
     },
     validate: async response => {
       if (response.toLowerCase().includes(`i don't have one`)) {
-        return `Ok, you can't start a club before you have a registration form, so learn more about how to create one from <https://kentcdodds.com/clubs#registration-form>, then come back and try again.`
+        return `Ok, you can't start a club before you have a registration form, so learn more about how to create one from <https://kentcdodds.com/clubs#joining-or-starting-a-learning-club>, then come back and try again.`
       }
       try {
         if (new URL(response).hostname === 'docs.google.com') return

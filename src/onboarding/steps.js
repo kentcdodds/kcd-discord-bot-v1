@@ -114,8 +114,9 @@ Do you agree to abide by and uphold the code of conduct? **The only correct answ
           ? `Please note, I'm not looking for *your* email address again. I'm looking for the email address that's listed in the code of conduct`
           : ''
       if (!response.toLowerCase().includes('team@kentcdodds.com')) {
-        const mainMessage = `That's not right. Please **open the code of conduct** to find out. You're looking for the email address listed under the heading "Have questions/need to report an issue?" We take our code of conduct seriously, so I want to make sure you've opened it. Thanks!`
-        return `${mainMessage} ${sameEmail}`
+        const mainMessage = `That's not right. **I'm testing you to make sure you actually opened the code of conduct**. Please **open the code of conduct** and copy/paste the email address listed under the heading "Have questions/need to report an issue?" We take our code of conduct seriously, so I want to make sure you've opened it. Thanks!`
+        const openCoc = `Now, please open <https://kentcdodds.com/conduct> and copy/paste the email address that's listed on that page.`
+        return [mainMessage, sameEmail, openCoc].filter(Boolean).join('\n\n')
       }
     },
   },

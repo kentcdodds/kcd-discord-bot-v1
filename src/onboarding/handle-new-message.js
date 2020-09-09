@@ -62,7 +62,7 @@ async function handleNewMessage(message) {
     return
   }
 
-  const error = currentStep.validate(message.content, answers)
+  const error = currentStep.validate({message, answers})
   if (error) {
     await send(error)
     return

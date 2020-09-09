@@ -35,7 +35,8 @@
     "dotenv": "^8.2.0",
     "got": "^11.5.1",
     "md5-hash": "^1.0.1",
-    "p-memoize": "^4.0.0"
+    "p-memoize": "^4.0.0",
+    "redent": "^3.0.0"
   },
   "devDependencies": {
     "kcd-scripts": "^6.0.0",

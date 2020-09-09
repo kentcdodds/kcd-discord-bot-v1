@@ -1,22 +1,58 @@
+const got = require('got')
+const redent = require('redent')
 const {getSend, finalMessage} = require('./utils')
+
+const httpify = link => (link.startsWith('http') ? link : `https://${link}`)
 
 function getActiveClubMessage(answers, member) {
   return `
-📝 Club looking for members: ${answers.name}
+🎊 New club looking for members 🎉
+
+**Club Name:** ${answers.name}
+
+**Club Curriculum:** ${answers.curriculumLink}
 
 **Club Captain:** ${member.user}
 
 **Learning Goal Summary:** ${answers.summary}
 
-**Club Meeting Time:** <${answers.meetingTimeLink}>
+**Club Schedule:**
+${redent(answers.schedule, 6)}
 
 **Club Registration Form:** <${answers.registrationForm}>
 
-If you can't make that meeting time, then feel free to start your own club with the same registration. Learn more here: <https://kcd.im/clubs>
+If this schedule doesn't work well for you, then feel free to start your own club with the same registration. Learn more here: <https://kcd.im/clubs>
   `.trim()
 }
 
 const allSteps = [
+  {
+    name: 'curriculumLink',
+    question: `Please give me a link to the curriculum you plan to go through with this club.`,
+    feedback: answers => {
+      return `Nice, I'll tell people about this awesome curriculum: <${httpify(
+        answers.curriculumLink,
+      )}>`
+    },
+    getAnswer: messageContents =>
+      messageContents.match(/awesome curriculum: <(?<curriculumLink>\S+?)>/i)
+        ?.groups?.curriculumLink ?? null,
+    validate: async ({message}) => {
+      let url
+      try {
+        url = new URL(httpify(message.content))
+      } catch {
+        return `Sorry, I don't think that's a URL. Please provide a link to the course/github repo/book/etc. your group plans to go through.`
+      }
+      try {
+        const res = await got.head(url)
+        if (res.statusCode === 200) return
+      } catch {
+        // ignore
+      }
+      return `Sorry, I couldn't verify that link is is accepting traffic. It doesn't respond with a status code of success (HTTP code 200) when I ping it with a HEAD request.`
+    },
+  },
   {
     name: 'name',
     question: `What's the name of your club?`,
@@ -24,7 +60,8 @@ const allSteps = [
     getAnswer: messageContents =>
       messageContents.match(/^Awesome, your club name is (.*?) 👍/)?.[1] ??
       null,
-    validate(response) {
+    validate({message}) {
+      const response = message.content
       if (response.toLowerCase().includes('club')) {
         return `Club names do not need the word "club" in them. It's a bit redundant 😅. Try again please.`
       }
@@ -43,7 +80,8 @@ const allSteps = [
       `Great, here's what I got for your learning goal summary:\n\n> ${answers.summary}`,
     getAnswer: messageContents =>
       messageContents.match(/learning goal summary:\n\n> (.+)$/)?.[1] ?? null,
-    validate(response) {
+    validate({message}) {
+      const response = message.content
       if (response.includes('\n')) {
         return `Newline characters aren't allowed in club summaries. It should all be on one line.`
       }
@@ -74,7 +112,8 @@ If you don't have one yet, reply with "I don't have one".
       }
       return null
     },
-    validate: async response => {
+    validate: async ({message}) => {
+      const response = message.content
       if (response.toLowerCase().includes(`i don't have one`)) {
         return `Ok, you can't start a club before you have a registration form, so learn more about how to create one from <https://kentcdodds.com/clubs#joining-or-starting-a-learning-club>, then come back and try again.`
       }
@@ -89,23 +128,44 @@ If you don't have one yet, reply with "I don't have one".
     },
   },
   {
-    name: 'meetingTimeLink',
+    name: 'schedule',
     question: `
-When will your club meet each week?
+What's your club schedule?
 
-Please go to <https://everytimezone.com> and drag the line to the day of the week and time of day when you're club will meet. Then give me that link.
+Please make sure to include a time and timezone if you're planning on having meetings.
+
+Your registration form should probably have this in it, so you should be able to copy/paste it from there.
+
+Find good example schedules here: <https://kentcdodds.com/clubs#example-schedules>
     `.trim(),
     feedback: answers =>
-      `Ok, I'll let people know of the time using <${answers.meetingTimeLink}>`,
-    getAnswer: messageContents =>
-      messageContents.match(/know of the time using <(.+?)>$/)?.[1] ?? null,
-    validate(response) {
-      try {
-        if (new URL(response).hostname === 'everytimezone.com') return
-      } catch {
-        // ignore
+      `Fantastic, here's what I'll say about the schedule:\n\n${
+        answers.schedule?.trim() ?? ''
+      }`,
+    getAnswer(messageContents) {
+      // I could use regex with the "s" flag, but VSCode syntax highlighting didn't
+      // like that... And... I'm enough of a slave of my tools that I rewrote the code
+      // so I don't have to deal wit that... 😭
+      if (!messageContents.includes('know about the schedule:')) return
+      return messageContents.slice('schedule:\n\n')[1].trim()
+    },
+    validate({message}) {
+      const response = message.content
+      if (response.toLowerCase().startsWith('check the registration form')) {
+        return
       }
-      return `Sorry, that doesn't look like an everytimezone.com link.`
+      if (message.attachments.size > 0) {
+        return `Looks like you have a big schedule! That's great. Unfortuantely we can't show that to folks, so instead, either make it shorter or reply with \`Check the registration form\``
+      }
+      if (!response.includes('\n')) {
+        return `Your schedule doesn't include newlines... It's probably not thorough enough.`
+      }
+      if (response.length < 100) {
+        return `That's too short, please make your schedule more thorough.`
+      }
+      if (response.length > 1500) {
+        return `That's too long. If your schedule is really long, then reply: \`Check the registration form\``
+      }
     },
   },
   {
@@ -131,7 +191,8 @@ This post will be **automatically deleted** after _one week_. If you are still l
       /^Awesome, let's get this thing rolling/.test(messageContents)
         ? true
         : null,
-    validate(response) {
+    validate({message}) {
+      const response = message.content
       if (response.toLowerCase() !== 'yes') {
         return `Feel free to edit any of the answers where you gave them above. Reply "yes" when we're good to go.`
       }

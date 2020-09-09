@@ -37,7 +37,10 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
   )
   if (!editedStep) return
 
-  const error = editedStep.validate(newMessage.content, previousAnswers)
+  const error = editedStep.validate({
+    message: newMessage,
+    answers: previousAnswers,
+  })
   if (error) {
     await send(`${editErrorMessagePrefix} ${error}`)
     return
@@ -46,10 +49,10 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
   const promises = []
 
   // get the error message we printed previously due to any bad edits
-  const stepErrorMessage = editedStep.validate(
-    oldMessage.content,
-    previousAnswers,
-  )
+  const stepErrorMessage = editedStep.validate({
+    message: oldMessage,
+    answers: previousAnswers,
+  })
   const editErrorMessages = botMessages.filter(({content}) =>
     content.startsWith(editErrorMessagePrefix),
   )

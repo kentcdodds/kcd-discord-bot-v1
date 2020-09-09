@@ -31,7 +31,8 @@ const allSteps = [
     feedback: answers => `Great, hi ${answers.name} 👋`,
     getAnswer: messageContents =>
       messageContents.match(/^Great, hi (.*?) 👋/)?.[1] ?? null,
-    validate(response) {
+    validate({message}) {
+      const response = message.content
       const base = `That does not look like a first name.{qualifier} I need to know what to call you. What's your real first name?`
       if (response.length < 0) {
         return base.replace('{qualifier}', ` It's too short.`)
@@ -76,7 +77,8 @@ const allSteps = [
         /^Oh, nice, (?<email>.+@.+?\..+?) is already a part/,
       )?.groups?.email ??
       null,
-    validate(response) {
+    validate({message}) {
+      const response = message.content
       if (!/^.+@.+\..+$/.test(response)) {
         return `That doesn't look like an email address. Please provide a proper email address.`
       }
@@ -96,7 +98,8 @@ Do you agree to abide by and uphold the code of conduct? **The only correct answ
       /^Great, thanks.*awesome place to be.$/.test(messageContents)
         ? true
         : null,
-    validate(response) {
+    validate({message}) {
+      const response = message.content
       if (response.toLowerCase() !== 'yes') {
         return `You must agree to the code of conduct to join this community. Do you agree to abide by and uphold the code of conduct? (The answer must be "yes")`
       }
@@ -108,7 +111,8 @@ Do you agree to abide by and uphold the code of conduct? **The only correct answ
     feedback: `That's right!`,
     getAnswer: messageContents =>
       /^That's right.$/.test(messageContents) ? true : null,
-    validate(response, answers) {
+    validate({message, answers}) {
+      const response = message.content
       const sameEmail =
         response === answers.email
           ? `Please note, I'm not looking for *your* email address again. I'm looking for the email address that's listed in the code of conduct`
@@ -216,7 +220,8 @@ ${isEdit ? '' : `🎊 You now have access to the whole server. Welcome!`}
         await send(`\n\n${moreStuffMessage}`)
       }
     },
-    validate(response) {
+    validate({message}) {
+      const response = message.content
       if (response.toLowerCase() !== 'yes') {
         return `Feel free to edit any of the answers. Reply "yes" when we're good to go.`
       }
@@ -308,7 +313,8 @@ ${isEdit ? '' : `🎊 You now have access to the whole server. Welcome!`}
         ? 'no'
         : null
     },
-    validate(response) {
+    validate({message}) {
+      const response = message.content
       if (!['yes', 'no'].includes(response.toLowerCase())) {
         return `You must answer "yes" or "no": Would you like to be notified when Kent starts live streaming?`
       }
@@ -352,7 +358,8 @@ ${isEdit ? '' : `🎊 You now have access to the whole server. Welcome!`}
         ? 'no'
         : null
     },
-    validate(response) {
+    validate({message}) {
+      const response = message.content
       if (!['yes', 'no'].includes(response.toLowerCase())) {
         return `You must answer "yes" or "no": Would you like to be notified when Kent starts office hours?`
       }
@@ -398,7 +405,8 @@ Here's how you set your avatar: <https://support.discord.com/hc/en-us/articles/2
 
       return null
     },
-    validate(response) {
+    validate({message}) {
+      const response = message.content
       if (response.toLowerCase() !== 'done') {
         return `Reply "done" when you're ready to continue.`
       }
@@ -427,20 +435,20 @@ Enjoy the community!
     },
     isQuestionMessage: messageContents =>
       /^Looks like we're all done/.test(messageContents),
-    validate(response) {
+    validate({message}) {
       // there's no valid answer because this is the last step,
       // so we'll just keep saying this forever.
-      const message = `We're all done. This channel will get deleted automatically eventually, but if you want to delete it yourself, then say "delete".`
-      if (response.toLowerCase().includes('thank')) {
+      const response = `We're all done. This channel will get deleted automatically eventually, but if you want to delete it yourself, then say "delete".`
+      if (message.content.toLowerCase().includes('thank')) {
         return `
 You're very welcome! Thanks for your gratitude! High five ✋
 
 https://media.giphy.com/media/g3zttGo4Vo2M8/giphy.gif
 
-${message}
+${response}
         `.trim()
       }
-      return message
+      return response
     },
     getAnswer: () => null,
   },

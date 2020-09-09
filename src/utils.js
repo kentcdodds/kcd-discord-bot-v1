@@ -1,7 +1,3 @@
-const joinClubReaction = process.env.NODE_ENV === 'production' ? '✋' : '🐾'
-const newClubChannelPrefix =
-  process.env.NODE_ENV === 'production' ? '🐣-new-club-' : '🐶-new-club-'
-
 const sleep = t =>
   new Promise(resolve =>
     setTimeout(resolve, process.env.NODE_ENV === 'test' ? 0 : t),
@@ -29,7 +25,5 @@ module.exports = {
   sleep,
   getSend,
   getMemberIdFromChannel,
-  newClubChannelPrefix,
-  joinClubReaction,
   getBotMessages,
 }

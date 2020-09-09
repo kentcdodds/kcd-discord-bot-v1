@@ -1,80 +1,213 @@
 // Command purpose:
-// to automate management of learning clubs https://kcd.im/clubs
-const Discord = require('discord.js')
-const {getSend, newClubChannelPrefix} = require('./utils')
+// to automate creating new learning clubs https://kcd.im/clubs
+const got = require('got')
+const redent = require('redent')
+const ogs = require('open-graph-scraper')
+const {getArgs} = require('../../command-regex')
+
+const httpify = link => (link.startsWith('http') ? link : `https://${link}`)
+const getMessageLink = msg =>
+  `https://discordapp.com/channels/${msg.guild.id}/${msg.channel.id}/${msg.id}`
+
+const formDataMarkers = {
+  summary: {before: 'Learning Goal:', after: 'Learning Curriculum:'},
+  curriculumLink: {
+    before: 'Learning Curriculum:',
+    after: 'Special Requirements:',
+  },
+  requirements: {before: 'Special Requirements:', after: 'Schedule:'},
+  schedule: {before: 'Schedule:', after: 'Meetings are Sync:'},
+  sync: {before: 'Meetings are Sync:', after: 'Club Captain:'},
+}
+
+const formDataValidators = []
+for (const key of Object.keys(formDataMarkers)) {
+  formDataValidators.push(formData =>
+    formData.hasOwnProperty(key)
+      ? null
+      : `Can't find ${formDataMarkers[key].before} (make sure everything is in the correct order)`,
+  )
+}
+
+const validators = [
+  ({summary}) => {
+    if (summary.length < 10) {
+      return `That's too short, please be more specific.`
+    }
+    if (summary.length > 1000) {
+      return `That's too long, please be more succinct.`
+    }
+  },
+  async ({curriculumLink}) => {
+    let url
+    try {
+      url = new URL(httpify(curriculumLink))
+    } catch {
+      return `Sorry, the "Learning Curriculum" of "${curriculumLink}" is not a URL. Please provide a link to the course/github repo/book/etc. your group plans to go through.`
+    }
+    try {
+      const res = await got.head(url)
+      if (res.statusCode === 200) return
+    } catch {
+      // ignore
+    }
+    return `Sorry, I couldn't verify the "Learning Curriculum" link of "<${curriculumLink}>" is accepting traffic. It doesn't respond with a status code of success (HTTP code 200) when I ping it with a HEAD request.`
+  },
+  ({schedule, sync}) => {
+    if (schedule.length < 100) {
+      return `The schedule is too short, please make your schedule more thorough.`
+    }
+    if (schedule.length > 10000) {
+      return `The schedule is too long. It would probably be better to split this into more than one learning club.`
+    }
+    if (/yes/i.test(sync) && !/\d{1,2}:\d{2}/.test(schedule)) {
+      return `Because this club has sync meetings, please make sure to include the time and timezone of the meetings.`
+    }
+  },
+]
 
 async function createClub(message) {
-  const {guild} = message
-  const member = guild.members.cache.find(
+  const member = message.guild.members.cache.find(
     ({user}) => user.id === message.author.id,
   )
-  const {
-    user,
-    user: {username, discriminator},
-  } = member
+  const [, formLink] = getArgs(message.content).split(' ')
+  const invalidLinkResponse = `
+Please send a Google Form link along with this command. For example:
+  \`?clubs create https://docs.google.com/forms/d/e/...2jk4.../viewform?usp=sf_link\`
 
-  const clubCategory = guild.channels.cache.find(
-    ({type, name}) =>
-      type === 'category' && name.toLowerCase().includes('clubs'),
+Find an example and template here: <https://kcd.im/kcd-learning-club-docs>
+  `.trim()
+  try {
+    if (
+      new URL(formLink).hostname !== 'docs.google.com' &&
+      new URL(formLink).hostname !== 'forms.gle'
+    ) {
+      await message.channel.send(invalidLinkResponse)
+      return
+    }
+  } catch {
+    await message.channel.send(invalidLinkResponse)
+    return
+  }
+
+  let formData
+  try {
+    formData = await getFormData(formLink)
+  } catch (error) {
+    console.log(error.message)
+    await message.channel.send(error.message)
+    return
+  }
+
+  console.log(formData)
+
+  const missingDataKeys = Object.keys(formDataMarkers).filter(
+    key => !formData.hasOwnProperty(key),
   )
 
-  const everyoneRole = member.guild.roles.cache.find(
-    ({name}) => name === '@everyone',
-  )
-  const allPermissions = Object.keys(Discord.Permissions.FLAGS)
-
-  const channel = await guild.channels.create(
-    `${newClubChannelPrefix}${username}_${discriminator}`,
-    {
-      topic: `
-New KCD Learning Club application for ${username}#${discriminator}
-
-Club Captain: ${username}_${discriminator} (Member ID: "${member.id}")
+  if (missingDataKeys.length) {
+    const missingKeyLines = missingDataKeys.map(
+      key =>
+        `Can't find data for "${formDataMarkers[key].before}" (make sure it comes before "${formDataMarkers[key].after})"`,
+    )
+    await message.channel.send(
+      `
+I couldn't find all the required data for this club. Please make sure the Google Form Summary has all the data (and in the right order). Here's what I'm missing:
+- ${missingKeyLines.join('\n- ')}
       `.trim(),
-      reason: `To create a new learning club`,
-      parent: clubCategory,
-      permissionOverwrites: [
-        {
-          type: 'role',
-          id: everyoneRole.id,
-          deny: allPermissions,
-        },
-        {
-          type: 'member',
-          id: member.id,
-          allow: [
-            'ADD_REACTIONS',
-            'VIEW_CHANNEL',
-            'MENTION_EVERYONE',
-            'SEND_MESSAGES',
-            'SEND_TTS_MESSAGES',
-            'READ_MESSAGE_HISTORY',
-            'CHANGE_NICKNAME',
-          ],
-        },
-        {
-          type: 'member',
-          id: member.client.user.id,
-          allow: allPermissions,
-        },
-      ],
-    },
+    )
+    return
+  }
+
+  const allErrorResults = await Promise.all(validators.map(v => v(formData)))
+  const errors = allErrorResults.filter(Boolean)
+  if (errors.length) {
+    const issues = errors.length === 1 ? 'an issue' : 'some issues'
+    const problems = errors.length === 1 ? 'problem' : 'problems'
+    await message.channel.send(
+      `
+I found ${issues} with that club registration form:
+- ${errors.join('\n- ')}
+
+Please fix the ${problems} above and try again. Please be sure to follow the template: <https://kcd.im/kcd-learning-club-docs>
+    `.trim(),
+    )
+    return
+  }
+
+  // we're good! Let's make this thing!
+  const activeClubsChannel = member.guild.channels.cache.find(
+    ({name, type}) =>
+      name.toLowerCase().includes('active-clubs') && type === 'text',
   )
-  const send = getSend(channel)
 
-  await send(
+  const activeClubMessage = await activeClubsChannel.send(
+    getActiveClubMessage({formLink, formData, member}),
+  )
+  const activeClubMessageLink = getMessageLink(activeClubMessage)
+  await message.channel.send(
     `
-Hello ${user} 👋
+Ok Captain ${member.user}! Congrats on starting your new club. I've posted all about it in ${activeClubsChannel}: <${activeClubMessageLink}>.
 
-Let's get this learning club going! I need to ask you a few questions before we can get rolling.
+We're all set! Please prepare to accept member's friend requests and registrations and add them to a Group DM (learn more: <https://support.discord.com/hc/en-us/articles/223657667-Group-Chat-and-Calls>)
 
-(If you created this by mistake, type "delete" at any time to remove this channel)
+Keep in mind, this that listing will be **automatically deleted** after _one week_. If you are still looking for new members after that time, feel free to do this again. If your club fills up and you want the message removed, simply add a 🏁 reaction to it, and I'll delete it.
     `.trim(),
   )
+}
 
-  await message.channel.send(
-    `Hi ${user}! I created ${channel} for us to get this club going! Join me there please.`,
-  )
+async function getFormData(formLink) {
+  const {error, result} = await ogs({url: formLink})
+  if (error) {
+    throw new Error(
+      result.message ??
+        'There was a problem retrieving information about this form.',
+    )
+  }
+
+  const description = result.ogDescription
+
+  const data = {title: result.ogTitle}
+  for (const key of Object.keys(formDataMarkers)) {
+    const {before, after} = formDataMarkers[key]
+    const beforeIndex = description.indexOf(before)
+    const afterIndex = description.indexOf(after)
+    if (beforeIndex !== -1 && afterIndex !== -1) {
+      const value = description
+        .slice(beforeIndex + before.length, afterIndex)
+        .trim()
+      data[key] = value
+    }
+  }
+
+  return data
+}
+
+const clipLongText = (text, max) =>
+  text.length > max ? `${text.slice(0, max - 3)}...` : text
+
+function getActiveClubMessage({formLink, formData, member}) {
+  return `
+🎊 New club looking for members 🎉
+
+**${formData.title}**
+
+**Club Curriculum:** ${httpify(formData.curriculumLink)}
+
+**Club Captain:** ${member.user}
+
+**Learning Goal Summary:** ${clipLongText(formData.summary, 500)}
+
+**Requirements:**
+${redent(clipLongText(formData.requirements, 200), 6)}
+
+**Club Schedule:**
+${redent(clipLongText(formData.schedule, 900), 6)}
+
+**Club Registration Form:** <${formLink}>
+
+If this schedule doesn't work well for you, then feel free to start your own club with the same registration. Learn more here: <https://kcd.im/clubs>
+  `.trim()
 }
 
 module.exports = {createClub}

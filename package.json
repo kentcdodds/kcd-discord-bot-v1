@@ -35,6 +35,7 @@
     "dotenv": "^8.2.0",
     "got": "^11.5.1",
     "md5-hash": "^1.0.1",
+    "open-graph-scraper": "^4.5.1",
     "p-memoize": "^4.0.0",
     "redent": "^3.0.0"
   },

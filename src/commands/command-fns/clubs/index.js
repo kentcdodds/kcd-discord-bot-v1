@@ -5,7 +5,7 @@ const {createClub} = require('./create')
 
 async function clubs(message) {
   const subcommand = getArgs(message.content)
-  if (subcommand === 'create') {
+  if (subcommand.startsWith('create')) {
     return createClub(message)
   }
 }

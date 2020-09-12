@@ -3,7 +3,7 @@
 const {getArgs} = require('../command-regex')
 
 const kifs = {
-  sweeet: 'https://giphy.com/gifs/sweet-flip-roller-blades-MDxjbPCg6DGf8JclbR',
+  sweet: 'https://giphy.com/gifs/sweet-flip-roller-blades-MDxjbPCg6DGf8JclbR',
   thanks: 'https://giphy.com/gifs/thank-you-kentcdodds-hV7Vz9VwUaedWJZIxp',
   agreed: 'https://giphy.com/gifs/agreed-kentcdodds-IcudIFZssABGjEeceT',
   agree: 'https://giphy.com/gifs/agreed-kentcdodds-IcudIFZssABGjEeceT',
@@ -25,7 +25,7 @@ function kif(message) {
   if (kifs[args]) {
     return message.channel.send(kifs[args])
   }
-  return message.channel.send(`Couldn't find a keme for: "${args}"`)
+  return message.channel.send(`Couldn't find a kif for: "${args}"`)
 }
 kif.description = 'Send a KCD gif'
 kif.help = message =>

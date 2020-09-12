@@ -14,15 +14,16 @@ const quarter = month * 3
 const year = day * 365.25
 
 function getAppropriateTimeframe(ms) {
-  const fix = n => Number(n.toFixed(1))
+  const fix = n => Number(n.toFixed(2))
+  const abs = Math.abs(ms)
 
-  if (Math.abs(ms) > year) return rtf.format(fix(ms / year), 'year')
-  if (Math.abs(ms) > quarter) return rtf.format(fix(ms / quarter), 'quarter')
-  if (Math.abs(ms) > month) return rtf.format(fix(ms / month), 'month')
-  if (Math.abs(ms) > week) return rtf.format(fix(ms / week), 'week')
-  if (Math.abs(ms) > day) return rtf.format(fix(ms / day), 'day')
-  if (Math.abs(ms) > hour) return rtf.format(fix(ms / hour), 'hour')
-  if (Math.abs(ms) > minute) return rtf.format(fix(ms / minute), 'minute')
+  if (abs > year) return rtf.format(fix(ms / year), 'year')
+  if (abs > quarter) return rtf.format(fix(ms / quarter), 'quarter')
+  if (abs > month) return rtf.format(fix(ms / month), 'month')
+  if (abs > week) return rtf.format(fix(ms / week), 'week')
+  if (abs > day) return rtf.format(fix(ms / day), 'day')
+  if (abs > hour) return rtf.format(fix(ms / hour), 'hour')
+  if (abs > minute) return rtf.format(fix(ms / minute), 'minute')
 
   return rtf.format(fix(ms / second), 'second')
 }

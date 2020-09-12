@@ -23,7 +23,7 @@ test('prints useful info', async () => {
   expect(send.mock.calls[0][0]).toMatchInlineSnapshot(`
     "Here's some info about the currently running bot:
 
-      Deployed at: Sun, 18 Oct 2020 04:35:12 GMT (3.1 days ago)"
+      Deployed at: Sun, 18 Oct 2020 04:35:12 GMT (3.11 days ago)"
   `)
   expect(send).toHaveBeenCalledTimes(1)
 })

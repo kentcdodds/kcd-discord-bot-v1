@@ -3,6 +3,7 @@
 const got = require('got')
 const redent = require('redent')
 const ogs = require('open-graph-scraper')
+const rollbar = require('../../../rollbar')
 const {getArgs} = require('../../command-regex')
 
 const httpify = link => (link.startsWith('http') ? link : `https://${link}`)
@@ -94,12 +95,13 @@ Find an example and template here: <https://kcd.im/kcd-learning-club-docs>
   try {
     formData = await getFormData(formLink)
   } catch (error) {
-    console.log(error.message)
+    rollbar.log('error getting the form data when creating a club', {
+      errorMessage: error.message,
+      formLink,
+    })
     await message.channel.send(error.message)
     return
   }
-
-  console.log(formData)
 
   const missingDataKeys = Object.keys(formDataMarkers).filter(
     key => !formData.hasOwnProperty(key),

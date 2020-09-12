@@ -1,6 +1,7 @@
 const onboarding = require('./onboarding')
 const commands = require('./commands')
 const clubApplication = require('./club-application')
+const rollbar = require('./rollbar')
 
 function setup(client) {
   onboarding.setup(client)
@@ -13,4 +14,5 @@ module.exports = {
   commands,
   clubApplication,
   setup,
+  rollbar,
 }

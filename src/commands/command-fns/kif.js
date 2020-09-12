@@ -29,6 +29,6 @@ function kif(message) {
 }
 kif.description = 'Send a KCD gif'
 kif.help = message =>
-  message.channel.send(`Available kifs are: ${kifs.join(', ')}`)
+  message.channel.send(`Available kifs are: ${Object.keys(kifs).join(', ')}`)
 
 module.exports = kif

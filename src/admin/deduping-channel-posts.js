@@ -3,7 +3,8 @@ export function dedupeMessages(client) {
     const getMessages = msg => {
       return (
         msg.content.toLowerCase() === message.content.toLowerCase() &&
-        msg.author === message.author
+        msg.author === message.author &&
+        msg.content.length > 50
       )
     }
 

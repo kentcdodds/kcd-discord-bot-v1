@@ -420,7 +420,7 @@ test('the typical flow', async () => {
 
     BOT: Hello <@mock-user> 👋
 
-    I'm a bot and I'm here to welcome you to the KCD Community on Discord! Before you can join in the fun, I need to ask you a few questions. If you have any trouble, please email team@kentcdodds.com with your discord username (\`fredjoe#1234\`) and we'll get things fixed up for you.
+    I'm a bot and I'm here to welcome you to the KCD Community on Discord! Before you can join in the fun, I need to ask you a few questions. If you have any trouble, please email team@kentcdodds.com with your discord username (\`fredjoe#1234\`) and an explanation of the trouble and a screenshot of the conversation. And we'll get things fixed up for you.
 
     (Note, if you make a mistake, you can edit your responses).
 
@@ -603,7 +603,7 @@ test('typing and editing to an invalid value', async () => {
 
     BOT: Hello <@mock-user> 👋
 
-    I'm a bot and I'm here to welcome you to the KCD Community on Discord! Before you can join in the fun, I need to ask you a few questions. If you have any trouble, please email team@kentcdodds.com with your discord username (\`fredjoe#1234\`) and we'll get things fixed up for you.
+    I'm a bot and I'm here to welcome you to the KCD Community on Discord! Before you can join in the fun, I need to ask you a few questions. If you have any trouble, please email team@kentcdodds.com with your discord username (\`fredjoe#1234\`) and an explanation of the trouble and a screenshot of the conversation. And we'll get things fixed up for you.
 
     (Note, if you make a mistake, you can edit your responses).
 
@@ -716,7 +716,7 @@ test('a new member with some info already', async () => {
 
     BOT: Hello <@mock-user> 👋
 
-    I'm a bot and I'm here to welcome you to the KCD Community on Discord! Before you can join in the fun, I need to ask you a few questions. If you have any trouble, please email team@kentcdodds.com with your discord username (\`fredjoe#1234\`) and we'll get things fixed up for you.
+    I'm a bot and I'm here to welcome you to the KCD Community on Discord! Before you can join in the fun, I need to ask you a few questions. If you have any trouble, please email team@kentcdodds.com with your discord username (\`fredjoe#1234\`) and an explanation of the trouble and a screenshot of the conversation. And we'll get things fixed up for you.
 
     (Note, if you make a mistake, you can edit your responses).
 

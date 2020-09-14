@@ -52,7 +52,26 @@ const kifs = {
   'peace fall':
     'https://giphy.com/gifs/fall-peace-kentcdodds-U3nGECxxmHugNeAm6n',
 }
-
+const kifsEmojis = {
+  '🍬': 'sweet',
+  '🙏': 'thanks',
+  '🤯': 'mind blown',
+  '👏': 'applause',
+  '🤩': 'excited',
+  '🧑‍🍳': 'chefs kiss',
+  '🥺': 'adorable',
+  '😮': 'oh',
+  '😈': 'heehee',
+  '👋': 'hi',
+  '😕': 'laugh huh',
+  '🙅': 'no',
+  '⛰️': 'peak',
+  '☝️': 'this',
+  '🏃': 'hurry',
+  '👍': 'yes',
+  '☮️': 'peace',
+}
+const emojiRegEx = /(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])/gim
 const kifKeys = Object.keys(kifs)
 
 function getCloseMatches(search) {
@@ -85,6 +104,10 @@ const listify = (array, joiner) =>
 
 function kif(message) {
   const args = getArgs(message.content)
+  if (args.match(emojiRegEx) && kifsEmojis[args]) {
+    // convert emoji into relevant key kif string then compute kif object
+    return message.channel.send(kifs[kifsEmojis[args]])
+  }
   if (kifs[args]) {
     return message.channel.send(kifs[args])
   }

@@ -398,7 +398,7 @@ Here's how you set your avatar: <https://support.discord.com/hc/en-us/articles/2
         ? `Great, thanks for adding your avatar.`
         : `Ok, please do set your avatar later though. It helps keep everything human.`
     },
-    shouldSkip: member => Boolean(member.user.avatar),
+    shouldSkip: member => Boolean(member?.user.avatar),
     getAnswer: messageContents => {
       if (/adding your avatar/i.test(messageContents)) return 'ADDED'
       if (/set your avatar later/i.test(messageContents)) return 'SKIPPED'

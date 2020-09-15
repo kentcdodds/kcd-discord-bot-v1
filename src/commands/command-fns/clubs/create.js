@@ -141,7 +141,7 @@ Please fix the ${problems} above and try again. Please be sure to follow the tem
   const activeClubsChannel = getChannel(member.guild, {name: 'active-clubs'})
   const captainsRole = getRole(member.guild, {name: 'Club Captains'})
 
-  const isAlreadyACaptain = member.roles.cache.has(captainsRole)
+  const isAlreadyACaptain = member.roles.cache.has(captainsRole.id)
   if (!isAlreadyACaptain) {
     await member.roles.add(captainsRole, `Captaining this club: ${formLink}`)
   }

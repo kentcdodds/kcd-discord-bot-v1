@@ -27,7 +27,7 @@ function handleNewMessage(message) {
   if (!member) return
 
   const memberRole = getRole(message.guild, {name: 'Member'})
-  if (!member.roles.cache.has(memberRole)) {
+  if (!member.roles.cache.has(memberRole.id)) {
     return message.channel.send(
       `
 Sorry, only members can issue commands. Please, finish the onboarding process, then you can use the commands.

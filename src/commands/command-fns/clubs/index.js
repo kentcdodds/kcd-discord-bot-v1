@@ -10,6 +10,6 @@ async function clubs(message) {
   }
 }
 clubs.description =
-  'Create a club with `?clubs create LINK_TO_GOOGLE_FORM` (learn more: https://kcd.im/clubs)'
+  'Create a club with `?clubs create LINK_TO_GOOGLE_FORM` (learn more: <https://kcd.im/clubs>)'
 
 module.exports = clubs

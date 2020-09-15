@@ -2,7 +2,7 @@
 // this command is just to make sure the bot is running
 const leven = require('leven')
 const {default: matchSorter} = require('match-sorter')
-const {getCommandArgs} = require('../utils')
+const {getCommandArgs, listify} = require('../utils')
 
 const kifsBase = {
   sweet: 'https://giphy.com/gifs/sweet-flip-roller-blades-MDxjbPCg6DGf8JclbR',
@@ -115,16 +115,6 @@ function getCloseMatches(search) {
     ]),
   ).slice(0, 6)
 }
-
-const listify = (array, joiner) =>
-  array.reduce((list, item, index) => {
-    if (index === 0) return `"${item}"`
-    if (index === array.length - 1) {
-      if (index === 1) return `${list} ${joiner} "${item}"`
-      else return `${list}, ${joiner} "${item}"`
-    }
-    return `${list}, "${item}"`
-  }, '')
 
 function kif(message) {
   const args = getCommandArgs(message.content)

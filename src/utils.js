@@ -66,6 +66,16 @@ const getCommandArgs = string =>
   string.match(commandRegex)?.groups?.args ?? null
 const isCommand = string => commandRegex.test(string)
 
+const listify = (array, joiner = 'and') =>
+  array.reduce((list, item, index) => {
+    if (index === 0) return `"${item}"`
+    if (index === array.length - 1) {
+      if (index === 1) return `${list} ${joiner} "${item}"`
+      else return `${list}, ${joiner} "${item}"`
+    }
+    return `${list}, "${item}"`
+  }, '')
+
 module.exports = {
   sleep,
   getSend,
@@ -78,4 +88,5 @@ module.exports = {
   getCommandArgs,
   isCommand,
   getMember,
+  listify,
 }

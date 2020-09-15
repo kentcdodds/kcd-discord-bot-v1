@@ -38,7 +38,8 @@ test('prints useful info', async () => {
   expect(send.mock.calls[0][0]).toMatchInlineSnapshot(`
     "Here's some info about the currently running bot:
 
-      Deployed at: Sun, 18 Oct 2020 04:35:12 GMT (3.1 days ago)
+      Started at: Wed, 21 Oct 2020 07:20:15 GMT (now)
+      Built at: Sun, 18 Oct 2020 04:35:12 GMT (3.1 days ago)
       Commit:
         author: Kent C. Dodds
         date: Sat, 17 Oct 2020 18:01:47 GMT (3.6 days ago)

@@ -3,6 +3,8 @@
 
 const redent = require('redent')
 
+const startDate = new Date()
+
 let buildInfo = {}
 try {
   buildInfo = require('../../../build-info.json')
@@ -36,16 +38,21 @@ function getAppropriateTimeframe(ms) {
   return rtf.format(fix(ms / second), 'second')
 }
 
-function getDeployTimeLine() {
+function getBuildTimeLine() {
   if (buildInfo.buildTime) {
     const buildDate = new Date(buildInfo.buildTime)
     const relativeDeployTime = getAppropriateTimeframe(
       buildInfo.buildTime - Date.now(),
     )
-    return `Deployed at: ${buildDate.toUTCString()} (${relativeDeployTime})`
+    return `Built at: ${buildDate.toUTCString()} (${relativeDeployTime})`
   } else {
-    return `Deployed at: Unknown`
+    return `Built at: Unknown`
   }
+}
+
+function getStartTimeLine() {
+  const relativeStartTime = getAppropriateTimeframe(startDate - Date.now())
+  return `Started at: ${startDate.toUTCString()} (${relativeStartTime})`
 }
 
 function getCommitLine() {
@@ -69,7 +76,10 @@ async function info(message) {
     `
 Here's some info about the currently running bot:
 
-${redent([getDeployTimeLine(), getCommitLine()].join('\n'), 2)}
+${redent(
+  [getStartTimeLine(), getBuildTimeLine(), getCommitLine()].join('\n'),
+  2,
+)}
   `.trim(),
   )
   return result

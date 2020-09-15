@@ -9,7 +9,8 @@ async function clubs(message) {
     return createClub(message)
   }
 }
-clubs.description = 'Interact with the learning clubs'
+clubs.description =
+  'Create a club with `?clubs create LINK_TO_GOOGLE_FORM` (learn more: https://kcd.im/clubs)'
 
 // handle reactions to open clubs
 // ✋ - add to role (removing reaction removes role)

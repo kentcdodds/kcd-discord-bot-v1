@@ -1,7 +1,13 @@
 // Command purpose:
 // provide information about the bot itself
 
-const deployDate = new Date()
+let buildInfo = {}
+try {
+  buildInfo = require('../../../build-info.json')
+} catch {
+  // no build info
+}
+
 const rtf = new Intl.RelativeTimeFormat('en', {style: 'long', numeric: 'auto'})
 
 const second = 1000
@@ -14,30 +20,39 @@ const quarter = month * 3
 const year = day * 365.25
 
 function getAppropriateTimeframe(ms) {
-  const fix = n => Number(n.toFixed(2))
+  const fix = (n, precision = 0) => Number(n.toFixed(precision))
   const abs = Math.abs(ms)
 
-  if (abs > year) return rtf.format(fix(ms / year), 'year')
-  if (abs > quarter) return rtf.format(fix(ms / quarter), 'quarter')
-  if (abs > month) return rtf.format(fix(ms / month), 'month')
-  if (abs > week) return rtf.format(fix(ms / week), 'week')
-  if (abs > day) return rtf.format(fix(ms / day), 'day')
+  if (abs > year) return rtf.format(fix(ms / year, 2), 'year')
+  if (abs > quarter) return rtf.format(fix(ms / quarter, 2), 'quarter')
+  if (abs > month) return rtf.format(fix(ms / month, 2), 'month')
+  if (abs > week) return rtf.format(fix(ms / week, 1), 'week')
+  if (abs > day) return rtf.format(fix(ms / day, 1), 'day')
   if (abs > hour) return rtf.format(fix(ms / hour), 'hour')
   if (abs > minute) return rtf.format(fix(ms / minute), 'minute')
 
   return rtf.format(fix(ms / second), 'second')
 }
 
-async function info(message) {
-  const relativeDeployTime = getAppropriateTimeframe(
-    deployDate.getTime() - new Date(),
-  )
+function getDeployTimeLine() {
+  if (buildInfo.buildTime) {
+    const buildDate = new Date(buildInfo.buildTime)
+    const relativeDeployTime = getAppropriateTimeframe(
+      buildInfo.buildTime - Date.now(),
+    )
+    return `Deployed at: ${buildDate.toUTCString()} (${relativeDeployTime})`
+  } else {
+    return `Deployed at: Unknown`
+  }
+}
 
+async function info(message) {
   const result = await message.channel.send(
     `
 Here's some info about the currently running bot:
 
-  Deployed at: ${deployDate.toUTCString()} (${relativeDeployTime})
+  ${getDeployTimeLine()}
+  Commit: ${buildInfo.commit || 'Unknown'}
   `.trim(),
   )
   return result

@@ -23,6 +23,7 @@
   ],
   "scripts": {
     "start": "node .",
+    "build": "node ./other/generate-build-info.js",
     "lint": "kcd-scripts lint",
     "dev": "node ./src/example",
     "setup": "npm install && npm run validate -s",

@@ -6,3 +6,5 @@ dist
 .env.local
 
 *.ignored.*
+
+build-info.json

@@ -21,6 +21,12 @@ function getMemberIdFromChannel(channel) {
   )
 }
 
+function getMember(guild, memberId) {
+  const member = guild.members.cache.find(({user}) => user.id === memberId)
+
+  return member
+}
+
 /**
  * The name will be lowercased and the first channel that includes the given
  * name will be returned
@@ -46,6 +52,20 @@ function getRole(guild, {name}) {
   )
 }
 
+const prodRegex = /^\?(?<command>\S+?)($| )(?<args>(.|\n)*)/
+const devRegex = /^~(?<command>\S+?)($| )(?<args>(.|\n)*)/
+const commandPrefix =
+  process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'test'
+    ? '?'
+    : '~'
+const commandRegex =
+  process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'test'
+    ? prodRegex
+    : devRegex
+const getCommandArgs = string =>
+  string.match(commandRegex)?.groups?.args ?? null
+const isCommand = string => commandRegex.test(string)
+
 module.exports = {
   sleep,
   getSend,
@@ -53,4 +73,9 @@ module.exports = {
   getBotMessages,
   getChannel,
   getRole,
+  commandPrefix,
+  commandRegex,
+  getCommandArgs,
+  isCommand,
+  getMember,
 }

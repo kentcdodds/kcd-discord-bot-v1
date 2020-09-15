@@ -458,6 +458,10 @@ test('the typical flow', async () => {
     BOT: https://media.giphy.com/media/MDxjbPCg6DGf8JclbR/giphy.gif
     BOT: 
 
+    👆 that's Kent!
+
+    I'm a pretty neat bot. Learn more about what commands you can give me by sending \`?help\`.
+
     ━━━━━━━━━━━━━━━━━━━━
 
     **If you wanna hang out here for a bit longer, I have a few questions that will help you get set up in this server a bit more.**
@@ -654,6 +658,10 @@ test('typing and editing to an invalid value', async () => {
     BOT: https://media.giphy.com/media/MDxjbPCg6DGf8JclbR/giphy.gif
     BOT: 
 
+    👆 that's Kent!
+
+    I'm a pretty neat bot. Learn more about what commands you can give me by sending \`?help\`.
+
     ━━━━━━━━━━━━━━━━━━━━
 
     **If you wanna hang out here for a bit longer, I have a few questions that will help you get set up in this server a bit more.**
@@ -753,6 +761,10 @@ test('a new member with some info already', async () => {
     🎊 You now have access to the whole server. Welcome!
     BOT: https://media.giphy.com/media/MDxjbPCg6DGf8JclbR/giphy.gif
     BOT: 
+
+    👆 that's Kent!
+
+    I'm a pretty neat bot. Learn more about what commands you can give me by sending \`?help\`.
 
     ━━━━━━━━━━━━━━━━━━━━
 

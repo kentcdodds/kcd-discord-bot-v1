@@ -212,6 +212,10 @@ ${isEdit ? '' : `🎊 You now have access to the whole server. Welcome!`}
         await send('https://media.giphy.com/media/MDxjbPCg6DGf8JclbR/giphy.gif')
 
         const moreStuffMessage = `
+👆 that's Kent!
+
+I'm a pretty neat bot. Learn more about what commands you can give me by sending \`?help\`.
+
 ━━━━━━━━━━━━━━━━━━━━
 
 **If you wanna hang out here for a bit longer, I have a few questions that will help you get set up in this server a bit more.**

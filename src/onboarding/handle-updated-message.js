@@ -5,6 +5,8 @@ const {
   getMessageContents,
   getMember,
   editErrorMessagePrefix,
+  isCommand,
+  getMemberIdFromChannel,
 } = require('./utils')
 const {getSteps, getAnswers} = require('./steps')
 
@@ -15,7 +17,14 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
   // must be a welcome channel
   if (!channel.name.startsWith(welcomeChannelPrefix)) return
 
-  const member = getMember(newMessage)
+  // allow commands to be handled somewhere else
+  if (isCommand(newMessage.content)) return
+
+  // message must have been sent from the new member
+  const memberId = getMemberIdFromChannel(newMessage.channel)
+  if (newMessage.author.id !== memberId) return null
+
+  const member = getMember(newMessage.guild, memberId)
   if (!member) return
 
   const steps = getSteps(member)

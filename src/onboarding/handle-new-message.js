@@ -5,6 +5,8 @@ const {
   welcomeChannelPrefix,
   editErrorMessagePrefix,
   getMessageContents,
+  getMemberIdFromChannel,
+  isCommand,
 } = require('./utils')
 const {getSteps, getAnswers, getCurrentStep} = require('./steps')
 const {deleteWelcomeChannel} = require('./delete-welcome-channel')
@@ -20,8 +22,14 @@ async function handleNewMessage(message) {
     return deleteWelcomeChannel(channel, 'Requested by the member')
   }
 
+  // allow commands to be handled somewhere else
+  if (isCommand(message.content)) return
+
   // message must have been sent from the new member
-  const member = getMember(message)
+  const memberId = getMemberIdFromChannel(message.channel)
+  if (message.author.id !== memberId) return null
+
+  const member = getMember(message.guild, memberId)
   if (!member) return
 
   const steps = getSteps(member)

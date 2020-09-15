@@ -1,9 +1,9 @@
 // Command purpose:
 // this command is just to make sure the bot is running
-const {getArgs} = require('../command-regex')
+const {getCommandArgs} = require('../utils')
 
 async function ping(message) {
-  const args = getArgs(message.content)
+  const args = getCommandArgs(message.content)
   const result = await message.channel.send(`pong ${args}`.trim())
   return result
 }

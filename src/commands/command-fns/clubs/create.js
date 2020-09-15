@@ -4,8 +4,7 @@ const got = require('got')
 const redent = require('redent')
 const ogs = require('open-graph-scraper')
 const rollbar = require('../../../rollbar')
-const {getChannel, getRole} = require('../../../utils')
-const {getArgs} = require('../../command-regex')
+const {getChannel, getRole, getCommandArgs} = require('../../utils')
 
 const httpify = link => (link.startsWith('http') ? link : `https://${link}`)
 const getMessageLink = msg =>
@@ -72,7 +71,7 @@ async function createClub(message) {
   const member = message.guild.members.cache.find(
     ({user}) => user.id === message.author.id,
   )
-  const [, formLink] = getArgs(message.content).split(' ')
+  const [, formLink] = getCommandArgs(message.content).split(' ')
   const invalidLinkResponse = `
 Please send a Google Form link along with this command. For example:
   \`?clubs create https://docs.google.com/forms/d/e/...2jk4.../viewform?usp=sf_link\`

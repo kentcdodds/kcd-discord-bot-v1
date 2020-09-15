@@ -30,18 +30,6 @@ async function getMessageContents(msg, answers, member) {
   }
 }
 
-function getMember(message) {
-  // message must have been sent from the new member
-  const memberId = getMemberIdFromChannel(message.channel)
-  if (message.author.id !== memberId) return null
-
-  const member = message.guild.members.cache.find(
-    ({user}) => user.id === memberId,
-  )
-
-  return member
-}
-
 const getWelcomeChannels = guild =>
   guild.channels.cache.filter(({name}) => name.startsWith(welcomeChannelPrefix))
 
@@ -67,7 +55,6 @@ module.exports = {
   isMemberUnconfirmed,
   getMemberWelcomeChannel,
   getMessageContents,
-  getMember,
   getMemberIdFromChannel,
   getSend,
   sleep,

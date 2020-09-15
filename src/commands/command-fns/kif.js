@@ -2,7 +2,7 @@
 // this command is just to make sure the bot is running
 const leven = require('leven')
 const {default: matchSorter} = require('match-sorter')
-const {getArgs} = require('../command-regex')
+const {getCommandArgs} = require('../utils')
 
 const kifsBase = {
   sweet: 'https://giphy.com/gifs/sweet-flip-roller-blades-MDxjbPCg6DGf8JclbR',
@@ -127,7 +127,7 @@ const listify = (array, joiner) =>
   }, '')
 
 function kif(message) {
-  const args = getArgs(message.content)
+  const args = getCommandArgs(message.content)
   if (kifs[args]) {
     return message.channel.send(kifs[args])
   }

@@ -1,10 +1,10 @@
 // Command purpose:
 // to automate management of learning clubs https://kcd.im/clubs
-const {getArgs} = require('../../command-regex')
+const {getCommandArgs} = require('../../utils')
 const {createClub} = require('./create')
 
 async function clubs(message) {
-  const subcommand = getArgs(message.content)
+  const subcommand = getCommandArgs(message.content)
   if (subcommand.startsWith('create')) {
     return createClub(message)
   }

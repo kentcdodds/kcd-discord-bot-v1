@@ -1,9 +1,9 @@
 // Command purpose:
 // lists all available commands
-const {getArgs} = require('../command-regex')
+const {getCommandArgs} = require('../utils')
 
 async function help(message) {
-  const args = getArgs(message.content)
+  const args = getCommandArgs(message.content)
   const commands = require('../commands')
   const [arg1] = args.split(' ')
   const commandFn = commands[arg1]

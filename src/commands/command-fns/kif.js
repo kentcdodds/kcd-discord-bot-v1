@@ -15,6 +15,24 @@ const kifsBase = {
     'https://giphy.com/gifs/youre-awesome-kentcdodds-SXlgWqXyqddHfGCc8n',
   'aw, thanks':
     'https://giphy.com/gifs/thanks-aw-kentcdodds-W6QJfAyl7hFezUcXvd',
+  'aw, shucks':
+    'https://giphy.com/gifs/koala-bear-kody-kentcdodds-kC3NfswHHg0AXtsywr',
+  celebration:
+    'https://giphy.com/gifs/yes-celebration-kentcdodds-ZczZ5nkk2Cj5CRfea3',
+  'just do it':
+    'https://giphy.com/gifs/just-do-it-kentcdodds-H3Ga5LUGmDv6Fs87ZJ',
+  'just do it 2':
+    'https://giphy.com/gifs/just-do-it-kentcdodds-KAGuvir2lVZGkfjRgJ',
+  'just do it 3':
+    'https://giphy.com/gifs/just-do-it-kentcdodds-Y3wtkcaQHITp0Mj8oB',
+  'just do it 4':
+    'https://giphy.com/gifs/just-do-it-kentcdodds-lqLude9QGxiaNfy8gZ',
+  laugh: 'https://giphy.com/gifs/laughing-kentcdodds-dAu6gql3xTuhDz9oHE',
+  idea: 'https://giphy.com/gifs/idea-kentcdodds-dstfj1vQEvgTVzbTu9',
+  sleepy: 'https://giphy.com/gifs/sleepy-kentcdodds-QZnjmY73FndhhjcAVe',
+  nono: 'https://giphy.com/gifs/no-kentcdodds-VdPN7kzA25Fi45D2we',
+  speechless:
+    'https://giphy.com/gifs/speechless-loss-for-words-kentcdodds-lSD7CQN1clJXOsrPNU',
   spinning: 'https://giphy.com/gifs/space-react-kentcdodds-S6fwymvLr3hfFCEIU9',
   rar: 'https://giphy.com/gifs/jumping-react-kentcdodds-iHt6BBLEFNqS2HWoi7',
   excited: 'https://giphy.com/gifs/excited-kentcdodds-cjPz6B53w0VvI0Oi4G',
@@ -41,6 +59,7 @@ const kifsBase = {
 
 const aliases = {
   agree: ['agreed'],
+  celebration: ['hooray', 'wahoo'],
   no: ['🙅', 'noo', 'nooo'],
   sweet: ['🍬'],
   thanks: ['🙏'],
@@ -51,11 +70,17 @@ const aliases = {
   adorable: ['🥺', 'cute', 'aw'],
   oh: ['😮', 'duh'],
   heehee: ['😈'],
+  'aw, shucks': ['🐨', '😊'],
   hi: ['👋'],
+  speechless: ['🤔', '😐', '😒'],
   'laugh huh': ['😕'],
+  laugh: ['😆', '🤣', '😂'],
+  nono: ['trouble', '😠'],
+  sleepy: ['😩', '🛌', '😴', '💤', '😪', 'sleep', 'tired'],
   peak: ['slide'],
   this: ['☝️'],
   hurry: ['🏃', 'waiting'],
+  idea: ['💡'],
   hm: ['hmm', 'hmmm'],
   yes: ['👍', 'awesome'],
   peace: ['☮️', 'goodbye'],

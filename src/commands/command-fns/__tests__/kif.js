@@ -22,17 +22,17 @@ test('suggests similar item', async () => {
   expect(send).toHaveBeenCalledTimes(1)
 })
 
-// test('suggests two items', async () => {
-//   const send = jest.fn(() => Promise.resolve())
-//   const message = {content: '?kif laughs', channel: {send}}
-//   await kif(message)
-//   expect(send.mock.calls[0][0]).toMatchInlineSnapshot(`
-//     "Couldn't find a kif for: \\"laugh\\"
+test('suggests two items', async () => {
+  const send = jest.fn(() => Promise.resolve())
+  const message = {content: '?kif peac', channel: {send}}
+  await kif(message)
+  expect(send.mock.calls[0][0]).toMatchInlineSnapshot(`
+    "Couldn't find a kif for: \\"peac\\"
 
-//     Did you mean \\"laugh cry\\" or \\"laugh huh\\"?"
-//   `)
-//   expect(send).toHaveBeenCalledTimes(1)
-// })
+    Did you mean \\"peace\\" or \\"peace fall\\"?"
+  `)
+  expect(send).toHaveBeenCalledTimes(1)
+})
 
 test('suggests several items (but no more than 6)', async () => {
   const send = jest.fn(() => Promise.resolve())

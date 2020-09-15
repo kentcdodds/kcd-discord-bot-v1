@@ -31,6 +31,7 @@ const kifsBase = {
   idea: 'https://giphy.com/gifs/idea-kentcdodds-dstfj1vQEvgTVzbTu9',
   sleepy: 'https://giphy.com/gifs/sleepy-kentcdodds-QZnjmY73FndhhjcAVe',
   nono: 'https://giphy.com/gifs/no-kentcdodds-VdPN7kzA25Fi45D2we',
+  'kody no': 'https://giphy.com/gifs/no-kody-kentcdodds-LNrtJbKxfANBRO1mDk',
   speechless:
     'https://giphy.com/gifs/speechless-loss-for-words-kentcdodds-lSD7CQN1clJXOsrPNU',
   spinning: 'https://giphy.com/gifs/space-react-kentcdodds-S6fwymvLr3hfFCEIU9',
@@ -71,6 +72,7 @@ const aliases = {
   oh: ['😮', 'duh'],
   heehee: ['😈'],
   'aw, shucks': ['🐨', '😊'],
+  'kody no': ['🐨🙅‍♂️'],
   hi: ['👋'],
   speechless: ['🤔', '😐', '😒'],
   'laugh huh': ['😕'],

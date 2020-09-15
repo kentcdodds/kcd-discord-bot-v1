@@ -2,8 +2,14 @@ const {buildTime} = require('../../../../build-info.json')
 
 jest.mock('../../../../build-info.json', () => ({
   buildTime: new Date('2020-10-18 04:35:12 GMT').getTime(),
-  commit:
-    'https://github.com/kentcdodds/kcd-discord-bot/commit/fab041f by Kent C. Dodds 38 minutes ago: improve kif logic',
+  commit: {
+    sha: 'b84d60ca5507ebf73c8fd2fe620a8ad1cdf1958e',
+    author: 'Kent C. Dodds',
+    date: '2020-10-17T18:01:47Z',
+    message: 'improve the info command',
+    link:
+      'https://github.com/kentcdodds/kcd-discord-bot/commit/b84d60ca5507ebf73c8fd2fe620a8ad1cdf1958e',
+  },
 }))
 
 beforeEach(() => {
@@ -33,7 +39,11 @@ test('prints useful info', async () => {
     "Here's some info about the currently running bot:
 
       Deployed at: Sun, 18 Oct 2020 04:35:12 GMT (3.1 days ago)
-      Commit: https://github.com/kentcdodds/kcd-discord-bot/commit/fab041f by Kent C. Dodds 38 minutes ago: improve kif logic"
+      Commit:
+        author: Kent C. Dodds
+        date: Sat, 17 Oct 2020 18:01:47 GMT (3.6 days ago)
+        message: improve the info command
+        link: <https://github.com/kentcdodds/kcd-discord-bot/commit/b84d60ca5507ebf73c8fd2fe620a8ad1cdf1958e>"
   `)
   expect(send).toHaveBeenCalledTimes(1)
 })

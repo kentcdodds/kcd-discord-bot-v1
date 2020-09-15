@@ -1,6 +1,8 @@
 // Command purpose:
 // provide information about the bot itself
 
+const redent = require('redent')
+
 let buildInfo = {}
 try {
   buildInfo = require('../../../build-info.json')
@@ -46,13 +48,28 @@ function getDeployTimeLine() {
   }
 }
 
+function getCommitLine() {
+  const {commit} = buildInfo
+  if (!commit) return `Commit: info unavailable`
+
+  const commitDate = new Date(commit.date)
+  const relativeCommitDate = getAppropriateTimeframe(commitDate - Date.now())
+
+  return `
+Commit:
+  author: ${commit.author}
+  date: ${commitDate.toUTCString()} (${relativeCommitDate})
+  message: ${commit.message.trim().split('\n')[0]}
+  link: <${commit.link}>
+  `.trim()
+}
+
 async function info(message) {
   const result = await message.channel.send(
     `
 Here's some info about the currently running bot:
 
-  ${getDeployTimeLine()}
-  Commit: ${buildInfo.commit || 'Unknown'}
+${redent([getDeployTimeLine(), getCommitLine()].join('\n'), 2)}
   `.trim(),
   )
   return result

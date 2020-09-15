@@ -4,6 +4,7 @@ const got = require('got')
 const redent = require('redent')
 const ogs = require('open-graph-scraper')
 const rollbar = require('../../../rollbar')
+const {getChannel, getRole} = require('../../../utils')
 const {getArgs} = require('../../command-regex')
 
 const httpify = link => (link.startsWith('http') ? link : `https://${link}`)
@@ -138,10 +139,13 @@ Please fix the ${problems} above and try again. Please be sure to follow the tem
   }
 
   // we're good! Let's make this thing!
-  const activeClubsChannel = member.guild.channels.cache.find(
-    ({name, type}) =>
-      name.toLowerCase().includes('active-clubs') && type === 'text',
-  )
+  const activeClubsChannel = getChannel(member.guild, {name: 'active-clubs'})
+  const captainsRole = getRole(member.guild, {name: 'Club Captains'})
+
+  const isAlreadyACaptain = member.roles.cache.has(captainsRole)
+  if (!isAlreadyACaptain) {
+    await member.roles.add(captainsRole, `Captaining this club: ${formLink}`)
+  }
 
   const activeClubMessage = await activeClubsChannel.send(
     getActiveClubMessage({formLink, formData, member}),
@@ -149,13 +153,23 @@ Please fix the ${problems} above and try again. Please be sure to follow the tem
   const activeClubMessageLink = getMessageLink(activeClubMessage)
   await message.channel.send(
     `
-Ok Captain ${member.user}! Congrats on starting your new club. I've posted all about it in ${activeClubsChannel}: <${activeClubMessageLink}>.
-
-We're all set! Please prepare to accept member's friend requests and registrations and add them to a Group DM (learn more: <https://support.discord.com/hc/en-us/articles/223657667-Group-Chat-and-Calls>)
-
-Keep in mind, this that listing will be **automatically deleted** after _one week_. If you are still looking for new members after that time, feel free to do this again. If your club fills up and you want the message removed, simply add a 🏁 reaction to it, and I'll delete it.
+      Ok Captain ${member.user}! Congrats on starting your new club. I've posted all about it in ${activeClubsChannel}: <${activeClubMessageLink}>.
+      
+      We're all set! Please prepare to accept member's friend requests and registrations and add them to a Group DM (learn more: <https://support.discord.com/hc/en-us/articles/223657667-Group-Chat-and-Calls>)
+      
+      Keep in mind, this that listing will be **automatically deleted** after _one week_. If you are still looking for new members after that time, feel free to do this again. If your club fills up and you want the message removed, simply add a 🏁 reaction to it, and I'll delete it.
     `.trim(),
   )
+  if (!isAlreadyACaptain) {
+    const captainsChannel = getChannel(member.guild, {name: 'club-captains'})
+    await captainsChannel.send(
+      `
+Hi everyone, I want to introduce you to ${member.user}, our newest club captain 🎉
+
+Congratulations on your new club ${member.user}!  You can chat with other club captains about captaining clubs in this channel.
+      `.trim(),
+    )
+  }
 }
 
 async function getFormData(formLink) {

@@ -21,9 +21,36 @@ function getMemberIdFromChannel(channel) {
   )
 }
 
+/**
+ * The name will be lowercased and the first channel that includes the given
+ * name will be returned
+ * @param {*} guild the guild to find the channel in
+ * @param {{name: string, type: 'text' | 'voice'}} searchOptions
+ */
+function getChannel(guild, {name, type = 'text'}) {
+  return guild.channels.cache.find(
+    ch =>
+      ch.name.toLowerCase().includes(name.toLowerCase()) && type === ch.type,
+  )
+}
+
+/**
+ * The name will be lowercased and the first channel with a lowercased name that
+ * equals it will be returned.
+ * @param {*} guild the guild to find the role in
+ * @param {{name: string}} searchOptions
+ */
+function getRole(guild, {name}) {
+  return guild.roles.cache.find(
+    r => r.name.toLowerCase() === name.toLowerCase(),
+  )
+}
+
 module.exports = {
   sleep,
   getSend,
   getMemberIdFromChannel,
   getBotMessages,
+  getChannel,
+  getRole,
 }

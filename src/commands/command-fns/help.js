@@ -6,9 +6,13 @@ async function help(message) {
   const args = getArgs(message.content)
   const commands = require('../commands')
   const [arg1] = args.split(' ')
-  if (arg1 && commands[arg1] && commands[arg1].help) {
-    const result = commands[arg1].help(message)
-    return result
+  const commandFn = commands[arg1]
+  if (commandFn) {
+    if (commandFn.help) {
+      return commandFn.help(message)
+    } else if (commandFn.description) {
+      return message.channel.send(commandFn.description)
+    }
   } else {
     const result = await message.channel.send(
       `

@@ -1,14 +1,8 @@
-const {commandRegex, getRole, getMember, commandPrefix} = require('./utils')
+const {commandRegex, getRole, getMember} = require('./utils')
 const commands = require('./commands')
 
 function handleNewMessage(message) {
-  let {command, args} = message.content.match(commandRegex)?.groups ?? {}
-
-  // a nice little shortcut
-  if (message.content.trim() === commandPrefix) {
-    command = 'help'
-    args = ''
-  }
+  const {command, args} = message.content.match(commandRegex)?.groups ?? {}
 
   if (!command) return
 

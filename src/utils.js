@@ -66,15 +66,21 @@ const getCommandArgs = string =>
   string.match(commandRegex)?.groups?.args ?? null
 const isCommand = string => commandRegex.test(string)
 
-const listify = (array, joiner = 'and') =>
+const listify = (
+  array,
+  {conjunction = 'and ', stringify = JSON.stringify} = {},
+) =>
   array.reduce((list, item, index) => {
-    if (index === 0) return `"${item}"`
+    if (index === 0) return stringify(item)
     if (index === array.length - 1) {
-      if (index === 1) return `${list} ${joiner} "${item}"`
-      else return `${list}, ${joiner} "${item}"`
+      if (index === 1) return `${list} ${conjunction}${stringify(item)}`
+      else return `${list}, ${conjunction}${stringify(item)}`
     }
-    return `${list}, "${item}"`
+    return `${list}, ${stringify(item)}`
   }, '')
+
+const getMessageLink = msg =>
+  `https://discordapp.com/channels/${msg.guild.id}/${msg.channel.id}/${msg.id}`
 
 module.exports = {
   sleep,
@@ -89,4 +95,5 @@ module.exports = {
   isCommand,
   getMember,
   listify,
+  getMessageLink,
 }

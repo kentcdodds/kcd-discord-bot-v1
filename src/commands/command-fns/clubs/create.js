@@ -4,11 +4,14 @@ const got = require('got')
 const redent = require('redent')
 const ogs = require('open-graph-scraper')
 const rollbar = require('../../../rollbar')
-const {getChannel, getRole, getCommandArgs} = require('../../utils')
+const {
+  getChannel,
+  getRole,
+  getCommandArgs,
+  getMessageLink,
+} = require('../../utils')
 
 const httpify = link => (link.startsWith('http') ? link : `https://${link}`)
-const getMessageLink = msg =>
-  `https://discordapp.com/channels/${msg.guild.id}/${msg.channel.id}/${msg.id}`
 
 const formDataMarkers = {
   summary: {before: 'Learning Goal:', after: 'Learning Curriculum:'},

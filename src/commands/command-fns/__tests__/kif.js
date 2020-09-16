@@ -41,17 +41,17 @@ test('suggests several items (but no more than 6)', async () => {
   expect(send.mock.calls[0][0]).toMatchInlineSnapshot(`
     "Couldn't find a kif for: \\"a\\"
 
-    Did you mean \\"aw\\", \\"adorable\\", \\"agree\\", \\"agreed\\", \\"applause\\", or \\"aw, shucks\\"?"
+    Did you mean \\"aw\\", \\"adorable\\", \\"agree\\", \\"agreed\\", \\"applause\\", or \\"aw shucks\\"?"
   `)
   expect(send).toHaveBeenCalledTimes(1)
 })
 
 test(`says it can't find something if it can't`, async () => {
   const send = jest.fn(() => Promise.resolve())
-  const message = {content: '?kif blah', channel: {send}}
+  const message = {content: '?kif djskfjdlakfjewoifdjd', channel: {send}}
   await kif(message)
   expect(send.mock.calls[0][0]).toMatchInlineSnapshot(
-    `"Couldn't find a kif for: \\"blah\\""`,
+    `"Couldn't find a kif for: \\"djskfjdlakfjewoifdjd\\""`,
   )
   expect(send).toHaveBeenCalledTimes(1)
 })

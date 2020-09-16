@@ -17,8 +17,8 @@ const getKcdGuild = () => client.guilds.cache.find(({name}) => name === 'KCD')
 
 client.on('ready', () => {
   console.log('ready to go')
-  // commands.setup(client)
+  commands.setup(client)
   // clubApplication.setup(client)
-  admin.setup(client)
+  // admin.setup(client)
   // onboarding.setup(client)
 })

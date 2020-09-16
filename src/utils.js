@@ -1,3 +1,4 @@
+const rollbar = require('./rollbar')
 const sleep = t =>
   new Promise(resolve =>
     setTimeout(resolve, process.env.NODE_ENV === 'test' ? 0 : t),
@@ -87,6 +88,7 @@ const getMessageLink = msg =>
   `https://discordapp.com/channels/${msg.guild.id}/${msg.channel.id}/${msg.id}`
 
 module.exports = {
+  rollbar,
   sleep,
   getSend,
   getMemberIdFromChannel,

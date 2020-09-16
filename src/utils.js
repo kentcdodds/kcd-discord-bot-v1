@@ -3,6 +3,10 @@ const sleep = t =>
     setTimeout(resolve, process.env.NODE_ENV === 'test' ? 0 : t),
   )
 
+const welcomeChannelPrefix =
+  process.env.NODE_ENV === 'production' ? '👋-welcome-' : '🌊-welcome-'
+
+const isWelcomeChannel = ch => ch.name.startsWith(welcomeChannelPrefix)
 const getSend = channel => async (...args) => {
   const result = await channel.send(...args)
   // wait a brief moment before continuing because channel.send doesn't
@@ -96,4 +100,6 @@ module.exports = {
   getMember,
   listify,
   getMessageLink,
+  isWelcomeChannel,
+  welcomeChannelPrefix,
 }

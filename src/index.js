@@ -17,4 +17,5 @@ module.exports = {
   clubApplication,
   setup,
   rollbar,
+  admin,
 }

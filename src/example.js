@@ -6,7 +6,7 @@ require('dotenv').config({
   path: path.join(__dirname, '..', `/.env.${process.env.NODE_ENV || 'local'}`),
 })
 
-const {onboarding, commands, clubApplication} = require('.')
+const {onboarding, commands, clubApplication, admin} = require('.')
 
 const client = new Discord.Client()
 
@@ -17,7 +17,8 @@ const getKcdGuild = () => client.guilds.cache.find(({name}) => name === 'KCD')
 
 client.on('ready', () => {
   console.log('ready to go')
-  commands.setup(client)
-  clubApplication.setup(client)
+  // commands.setup(client)
+  // clubApplication.setup(client)
+  admin.setup(client)
   // onboarding.setup(client)
 })

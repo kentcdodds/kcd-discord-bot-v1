@@ -61,7 +61,7 @@ async function cleanup(guild) {
       }
 
       // if they're getting close to too many messages, give them a warning
-      if (channel.messages.cache.size > tooManyMessages * 0.7) {
+      if (channel.messages.cache.size > tooManyMessages * 0.5) {
         const hasWarned = channel.messages.cache.find(({content}) =>
           content.includes(spamWarningMessageContent),
         )

@@ -15,7 +15,7 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
   const send = getSend(channel)
 
   // must be a welcome channel
-  if (!channel.name.startsWith(welcomeChannelPrefix)) return
+  if (!channel.name?.startsWith(welcomeChannelPrefix)) return
 
   // allow commands to be handled somewhere else
   if (isCommand(newMessage.content)) return

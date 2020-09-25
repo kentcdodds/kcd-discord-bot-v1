@@ -19,20 +19,20 @@ async function handleNewMember(member) {
 
   const allPermissions = Object.keys(Discord.Permissions.FLAGS)
 
-  const onboardingCategories = member.guild.channels.cache
+  const categoryWithFewest = member.guild.channels.cache
     .filter(
       ({name, type}) =>
         type === 'category' && name.toLowerCase().includes('onboarding'),
     )
     .sort((cat1, cat2) => (cat1.children?.size > cat2.children?.size ? 1 : -1))
-  const [categoryWithFewer] = Array.from(onboardingCategories.values())
+    .first()
 
   const channel = await member.guild.channels.create(
     `${welcomeChannelPrefix}${username}_${discriminator}`,
     {
       topic: `Membership application for ${username}#${discriminator} (Member ID: "${member.id}")`,
       reason: `To allow ${username}#${discriminator} to apply to join the community.`,
-      parent: categoryWithFewer,
+      parent: categoryWithFewest,
       permissionOverwrites: [
         {
           type: 'role',

@@ -14,11 +14,26 @@ console.log('logging in')
 client.login(process.env.DISCORD_BOT_TOKEN)
 
 const getKcdGuild = () => client.guilds.cache.find(({name}) => name === 'KCD')
+const getKent = () =>
+  getKcdGuild().members.cache.find(
+    ({user: {username, discriminator}}) =>
+      username === 'kentcdodds' && discriminator === '0001',
+  )
 
 client.on('ready', () => {
   console.log('ready to go')
-  commands.setup(client)
+  // commands.setup(client)
   // clubApplication.setup(client)
   // admin.setup(client)
   // onboarding.setup(client)
+  client.on('message', onboarding.handleNewMessage)
+  client.on('messageUpdate', onboarding.handleUpdatedMessage)
+
+  onboarding.handleNewMember(getKent())
+
+  setInterval(() => {
+    client.guilds.cache.forEach(guild => {
+      onboarding.cleanup(guild)
+    })
+  }, 5000)
 })

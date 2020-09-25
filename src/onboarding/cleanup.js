@@ -49,6 +49,13 @@ async function cleanup(guild) {
 
       const memberId = getMemberIdFromChannel(channel)
       const member = guild.members.cache.find(({user}) => user.id === memberId)
+      const mostRecentMemberMessage = channel.messages.cache
+        .filter(({author}) => author.id === memberId)
+        .sort((msgA, msgB) => (msgA.createdAt > msgB.createdAt ? -1 : 1))
+        .first()
+
+      const lastMemberInteractionTime =
+        mostRecentMemberMessage?.createdAt ?? channel.createdAt
 
       // somehow the member is gone (maybe they left the server?)
       // delete the channel
@@ -78,7 +85,7 @@ async function cleanup(guild) {
       if (lastMessage.author.id === member.id) {
         // they sent us something and we haven't responded yet
         // this happens if the bot goes down for some reason (normally when we redeploy)
-        const timeSinceLastMessage = new Date() - lastMessage.createdAt
+        const timeSinceLastMessage = new Date() - lastMemberInteractionTime
         if (timeSinceLastMessage > 2 * 1000) {
           // if it's been a while and we haven't handled the last message
           // then let's handle it now.
@@ -86,7 +93,7 @@ async function cleanup(guild) {
         }
       } else {
         // we haven't heard from them in a while...
-        const timeSinceLastMessage = new Date() - lastMessage.createdAt
+        const timeSinceLastMessage = new Date() - lastMemberInteractionTime
         const hasBeenWarned = lastMessage.content.includes(
           timeoutWarningMessageContent,
         )

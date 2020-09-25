@@ -14,7 +14,7 @@ async function cleanup(guild) {
   // because we can only have 50 channels in the welcome category
   // and two of those are already spoken for...
   const minMinutes = 3
-  const maxMinutes = 6
+  const maxMinutes = 20
   const maxChannelsAlteration =
     (welcomeChannels.size / 48) * (maxMinutes - minMinutes)
   const maxWaitingTime = 1000 * 60 * maxMinutes - maxChannelsAlteration

@@ -44,7 +44,7 @@ const allSteps = [
     action: async ({answers, member, channel}) => {
       try {
         const send = getSend(channel)
-        const previousNickname = member.nickname ?? 'Your Name'
+        const previousNickname = member.nickname ?? member.user.username
         await member.setNickname(answers.name, 'Set during onboarding')
         await send(
           `_I've changed your nickname on this server to ${answers.name}. If you'd like to change it back then type: \`/nick ${previousNickname}\`_`,

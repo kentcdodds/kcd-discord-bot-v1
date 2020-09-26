@@ -65,7 +65,7 @@ async function handleNewMember(member) {
     `
 Hello ${user} 👋
 
-I'm a bot and I'm here to welcome you to the KCD Community on Discord! Before you can join in the fun, I need to ask you a few questions. If you have any trouble, please email team@kentcdodds.com with your discord username (\`${username}#${discriminator}\`) and an explanation of the trouble and a screenshot of the conversation. And we'll get things fixed up for you.
+I'm a bot and I'm here to welcome you to the KCD Community on Discord! Before you can join in the fun, I need to ask you a few questions. If you have any trouble, please email team@kentcdodds.com with your discord username (\`${username}#${discriminator}\`), an explanation of the trouble, and a screenshot of the conversation. And we'll get things fixed up for you.
 
 (Note, if you make a mistake, you can edit your responses).
 

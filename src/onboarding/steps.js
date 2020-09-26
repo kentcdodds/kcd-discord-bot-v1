@@ -403,7 +403,7 @@ Here's how you set your avatar: <https://support.discord.com/hc/en-us/articles/2
     feedback: (answers, member) => {
       return member.user.avatar
         ? `Great, thanks for adding your avatar.`
-        : `Ok, please do set your avatar later though. It helps keep everything human.`
+        : `Ok, please do set your avatar later though. It helps keep everything human (and I'll bug you about it every now and then until you do 😈 😅).`
     },
     shouldSkip: member => Boolean(member?.user.avatar),
     getAnswer: messageContents => {

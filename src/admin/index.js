@@ -1,18 +1,14 @@
-const {isWelcomeChannel} = require('./utils')
-const {dedupeMessages} = require('./deduping-channel-posts')
+const {
+  dedupeMessages,
+  setup: setupDedupeMessages,
+} = require('./deduping-channel-posts')
+const {pingAboutMissingAvatar} = require('./ping-about-missing-avatar')
 
 function setup(client) {
   client.on('message', dedupeMessages)
+  setupDedupeMessages(client)
 
-  // prime the message cache for relevant channels
-  const guild = client.guilds.cache.find(({name}) => name === 'KCD')
-  const channels = guild.channels.cache.filter(
-    ch => !isWelcomeChannel(ch) && ch.type === 'text',
-  )
-  for (const channel of Array.from(channels.values())) {
-    // ignore the returned promise. Fire and forget.
-    channel.messages.fetch({limit: 30})
-  }
+  client.on('message', pingAboutMissingAvatar)
 }
 
-module.exports = {setup}
+module.exports = {setup, dedupeMessages, pingAboutMissingAvatar}

@@ -213,9 +213,9 @@ async function setup() {
       },
     },
     channels: {
-      cache: {
-        _channels: {
-          welcomeCategoryChannel: createChannel('Welcome!', {
+      cache: new Discord.Collection(
+        Object.entries({
+          onboardingCategoryChannel: createChannel('Onboarding-1', {
             type: 'category',
           }),
           introductionChannel: createChannel('👶-introductions'),
@@ -226,14 +226,8 @@ async function setup() {
           officeHoursChannel: createChannel(`🏫-office-hours`),
           kentLiveVoiceChannel: createChannel(`💻 Kent live`, {type: 'voice'}),
           kentLiveChannel: createChannel(`💻-kent-live`),
-        },
-        find(cb) {
-          for (const ch of Object.values(this._channels)) {
-            if (cb(ch)) return ch
-          }
-          throw new Error('unhandled case in channels.cache.find')
-        },
-      },
+        }),
+      ),
       create(name, options) {
         channel = createChannel(name, options)
         return channel

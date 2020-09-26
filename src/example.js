@@ -26,14 +26,15 @@ client.on('ready', () => {
   // clubApplication.setup(client)
   // admin.setup(client)
   // onboarding.setup(client)
-  client.on('message', onboarding.handleNewMessage)
-  client.on('messageUpdate', onboarding.handleUpdatedMessage)
+  client.on('guildMemberUpdate', admin.handleGuildMemberUpdate)
+  // client.on('message', onboarding.handleNewMessage)
+  // client.on('messageUpdate', onboarding.handleUpdatedMessage)
 
-  onboarding.handleNewMember(getKent())
+  // onboarding.handleNewMember(getKent())
 
-  setInterval(() => {
-    client.guilds.cache.forEach(guild => {
-      onboarding.cleanup(guild)
-    })
-  }, 5000)
+  // setInterval(() => {
+  //   client.guilds.cache.forEach(guild => {
+  //     onboarding.cleanup(guild)
+  //   })
+  // }, 5000)
 })

@@ -414,7 +414,7 @@ test('the typical flow', async () => {
 
     BOT: Hello <@mock-user> 👋
 
-    I'm a bot and I'm here to welcome you to the KCD Community on Discord! Before you can join in the fun, I need to ask you a few questions. If you have any trouble, please email team@kentcdodds.com with your discord username (\`fredjoe#1234\`) and an explanation of the trouble and a screenshot of the conversation. And we'll get things fixed up for you.
+    I'm a bot and I'm here to welcome you to the KCD Community on Discord! Before you can join in the fun, I need to ask you a few questions. If you have any trouble, please email team@kentcdodds.com with your discord username (\`fredjoe#1234\`), an explanation of the trouble, and a screenshot of the conversation. And we'll get things fixed up for you.
 
     (Note, if you make a mistake, you can edit your responses).
 
@@ -476,7 +476,7 @@ test('the typical flow', async () => {
 
     **When you're finished (or if you'd like to just move on), just say \\"done\\"**
     Fred Joe: done
-    BOT: Ok, please do set your avatar later though. It helps keep everything human.
+    BOT: Ok, please do set your avatar later though. It helps keep everything human (and I'll bug you about it every now and then until you do 😈 😅).
     BOT: Looks like we're all done! Go explore!
 
     We'd love to get to know you a bit. Tell us about you in channel_👶-introductions-id. Here's a template you can use:
@@ -601,7 +601,7 @@ test('typing and editing to an invalid value', async () => {
 
     BOT: Hello <@mock-user> 👋
 
-    I'm a bot and I'm here to welcome you to the KCD Community on Discord! Before you can join in the fun, I need to ask you a few questions. If you have any trouble, please email team@kentcdodds.com with your discord username (\`fredjoe#1234\`) and an explanation of the trouble and a screenshot of the conversation. And we'll get things fixed up for you.
+    I'm a bot and I'm here to welcome you to the KCD Community on Discord! Before you can join in the fun, I need to ask you a few questions. If you have any trouble, please email team@kentcdodds.com with your discord username (\`fredjoe#1234\`), an explanation of the trouble, and a screenshot of the conversation. And we'll get things fixed up for you.
 
     (Note, if you make a mistake, you can edit your responses).
 
@@ -718,7 +718,7 @@ test('a new member with some info already', async () => {
 
     BOT: Hello <@mock-user> 👋
 
-    I'm a bot and I'm here to welcome you to the KCD Community on Discord! Before you can join in the fun, I need to ask you a few questions. If you have any trouble, please email team@kentcdodds.com with your discord username (\`fredjoe#1234\`) and an explanation of the trouble and a screenshot of the conversation. And we'll get things fixed up for you.
+    I'm a bot and I'm here to welcome you to the KCD Community on Discord! Before you can join in the fun, I need to ask you a few questions. If you have any trouble, please email team@kentcdodds.com with your discord username (\`fredjoe#1234\`), an explanation of the trouble, and a screenshot of the conversation. And we'll get things fixed up for you.
 
     (Note, if you make a mistake, you can edit your responses).
 

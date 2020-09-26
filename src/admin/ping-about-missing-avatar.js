@@ -4,7 +4,7 @@ const isMEE6Bot = member =>
   member.user.bot && member.user.username.includes('MEE6')
 
 async function pingAboutMissingAvatar(message) {
-  const mee6Bot = getMember(message.author.id)
+  const mee6Bot = getMember(message.guild, message.author.id)
   if (!isMEE6Bot(mee6Bot)) return // only process the MEE6 bot
   if (!message.content.includes('you just advanced to')) return // only bug them when they get a rank upgrade
 

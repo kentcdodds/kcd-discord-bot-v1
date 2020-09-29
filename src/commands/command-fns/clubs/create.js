@@ -141,7 +141,7 @@ Please fix the ${problems} above and try again. Please be sure to follow the tem
   }
 
   // we're good! Let's make this thing!
-  const activeClubsChannel = getChannel(member.guild, {name: 'active-clubs'})
+  const openClubsChannel = getChannel(member.guild, {name: 'open-clubs'})
   const captainsRole = getRole(member.guild, {name: 'Club Captains'})
 
   const isAlreadyACaptain = member.roles.cache.has(captainsRole.id)
@@ -149,13 +149,13 @@ Please fix the ${problems} above and try again. Please be sure to follow the tem
     await member.roles.add(captainsRole, `Captaining this club: ${formLink}`)
   }
 
-  const activeClubMessage = await activeClubsChannel.send(
+  const activeClubMessage = await openClubsChannel.send(
     getActiveClubMessage({formLink, formData, member}),
   )
   const activeClubMessageLink = getMessageLink(activeClubMessage)
   await message.channel.send(
     `
-      Ok Captain ${member.user}! Congrats on starting your new club. I've posted all about it in ${activeClubsChannel}: <${activeClubMessageLink}>.
+      Ok Captain ${member.user}! Congrats on starting your new club. I've posted all about it in ${openClubsChannel}: <${activeClubMessageLink}>.
       
       We're all set! Please prepare to accept member's friend requests and registrations and add them to a Group DM (learn more: <https://support.discord.com/hc/en-us/articles/223657667-Group-Chat-and-Calls>)
       

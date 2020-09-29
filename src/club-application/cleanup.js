@@ -1,7 +1,7 @@
 async function cleanup(guild) {
   const channel = guild.channels.cache.find(
     ({name, type}) =>
-      name.toLowerCase().includes('active-clubs') && type === 'text',
+      name.toLowerCase().includes('open-clubs') && type === 'text',
   )
 
   const messages = Array.from((await channel.messages.fetch()).values())

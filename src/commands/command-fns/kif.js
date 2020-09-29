@@ -1,5 +1,6 @@
 // Command purpose:
 // this command is just to make sure the bot is running
+const {MessageMentions} = require('discord.js')
 const leven = require('leven')
 const got = require('got')
 const {default: matchSorter} = require('match-sorter')
@@ -84,32 +85,45 @@ async function getCloseMatches(search) {
   ).slice(0, 6)
 }
 
-async function kif(message) {
+async function sendKif(message, kif) {
+  const mentionedMembersNicknames = Array.from(
+    message.mentions.members.values(),
+  ).map(m => m.nickname ?? m.user.username)
+  const from = `From: ${getMember(message.guild, message.author.id).nickname}`
+  const to = mentionedMembersNicknames.length
+    ? `To: ${listify(mentionedMembersNicknames, {stringify: i => i})}`
+    : ''
+  return message.channel.send([from, to, kif].filter(Boolean).join('\n'))
+}
+
+async function handleKifCommand(message) {
   const args = getCommandArgs(message.content)
+
+  const kifArg = args.replace(MessageMentions.USERS_PATTERN, '').trim()
   const {kifMap} = await getKifInfo()
 
-  if (kifMap[args]) {
-    return message.channel.send(kifMap[args])
+  if (kifMap[kifArg]) {
+    return sendKif(message, kifMap[kifArg])
   } else {
     const updatedCache = await getKifInfo({force: true})
-    if (updatedCache.kifMap[args]) {
-      return message.channel.send(updatedCache.kifMap[args])
+    if (updatedCache.kifMap[kifArg]) {
+      return sendKif(message, updatedCache.kifMap[kifArg])
     }
   }
 
-  const closeMatches = await getCloseMatches(args)
+  const closeMatches = await getCloseMatches(kifArg)
   const didYouMean = closeMatches.length
     ? `Did you mean ${listify(closeMatches, {conjunction: 'or '})}?`
     : ''
   return message.channel.send(
     `
-Couldn't find a kif for: "${args}"
+Couldn't find a kif for: "${kifArg}"
 
 ${didYouMean}
   `.trim(),
   )
 }
-kif.description = 'Send a KCD gif'
+handleKifCommand.description = 'Send a KCD gif'
 async function help(message) {
   const {kifsWithAliases} = await getKifInfo()
   const botsChannel = getChannel(message.guild, {name: 'talk-to-bots'})
@@ -127,6 +141,6 @@ async function help(message) {
     `${user}, I sent you the list of available kifs in ${botsChannel}: <${botMessageLink}>`,
   )
 }
-kif.help = help
+handleKifCommand.help = help
 
-module.exports = kif
+module.exports = handleKifCommand

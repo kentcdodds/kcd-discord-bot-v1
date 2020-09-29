@@ -22,11 +22,11 @@ const getKent = () =>
 
 client.on('ready', () => {
   console.log('ready to go')
-  // commands.setup(client)
+  commands.setup(client)
   // clubApplication.setup(client)
   // admin.setup(client)
   // onboarding.setup(client)
-  client.on('guildMemberUpdate', admin.handleGuildMemberUpdate)
+  // client.on('guildMemberUpdate', admin.handleGuildMemberUpdate)
   // client.on('message', onboarding.handleNewMessage)
   // client.on('messageUpdate', onboarding.handleUpdatedMessage)
 

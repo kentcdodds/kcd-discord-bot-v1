@@ -8,11 +8,22 @@ const {
 
 const sixHours = 1000 * 60 * 60 * 6
 
+function isLink(text) {
+  try {
+    // eslint-disable-next-line no-new
+    new URL(text.trim())
+    return true
+  } catch {
+    return false
+  }
+}
+
 async function dedupeMessages(message) {
   if (message.author.id === message.client.user.id) return // ignore the bot
   if (isWelcomeChannel(message.channel)) return // ignore onboarding channels
   if (message.content.startsWith(commandPrefix)) return // ignore commands
   if (message.content.length < 50) return // ignore short messages
+  if (isLink(message.content)) return // ignore links, gifs/blog posts/etc.
 
   const {guild} = message
   const member = getMember(guild, message.author.id)

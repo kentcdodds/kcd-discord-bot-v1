@@ -1,5 +1,5 @@
 const isMEE6Bot = member =>
-  member.user.bot && member.user.username.includes('MEE6')
+  member && member.user.bot && member.user.username.includes('MEE6')
 
 async function pingAboutMissingAvatar(message) {
   const mee6Bot = message.member

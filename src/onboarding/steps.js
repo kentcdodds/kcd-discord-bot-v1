@@ -48,7 +48,10 @@ const allSteps = [
         if (previousNickname === answers.name) {
           return
         }
-        await member.setNickname(answers.name, 'Set during onboarding')
+        const newNickname = previousNickname.includes('🚀')
+          ? `${answers.name} 🚀`
+          : answers.name
+        await member.setNickname(newNickname, 'Set during onboarding')
         await send(
           `_I've changed your nickname on this server to ${answers.name}. If you'd like to change it back then type: \`/nick ${previousNickname}\`_`,
         )

@@ -1,5 +1,5 @@
 const Discord = require('discord.js')
-const {privateChannelPrefix, getSend} = require('../utils')
+const {privateChannelPrefix} = require('../utils')
 
 async function privateChat(message) {
   const mentionedMembers = Array.from(message.mentions.members.values())
@@ -64,7 +64,9 @@ async function privateChat(message) {
   })
 
   if (existingChat) {
-    return message.channel.send(`There is already a chat for the same members`)
+    return message.channel.send(
+      `There is already a chat for the same members ${existingChat}`,
+    )
   }
 
   const channel = await message.guild.channels.create(
@@ -83,11 +85,9 @@ async function privateChat(message) {
     },
   )
 
-  const send = getSend(channel)
-
-  await send(
+  await channel.send(
     `
-Hello all 👋
+Hello ${mentionedMembers.map(member => member.user).join(' ')} 👋
 
 I'm a bot I have created this channel for you. The channel will be deleted after 1 hour or after 10 minutes for inactivity. Enjoy 🗣 
     `.trim(),

@@ -40,9 +40,9 @@ async function cleanup(guild) {
       }
       await send(
         `
-    This channel is getting deleted for the following reason: ${reason}
-    
-    Goodbye 👋
+This channel is getting deleted for the following reason: ${reason}
+
+Goodbye 👋
         `.trim(),
       )
 
@@ -78,7 +78,7 @@ async function cleanup(guild) {
       }
       await send(
         `
-    This channel will be deleted in 5 minutes for the following reason: ${reason}
+This channel will be deleted in 5 minutes for the following reason: ${reason}
         `.trim(),
       )
     }

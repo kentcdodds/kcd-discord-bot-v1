@@ -1,6 +1,4 @@
 const {getSend, sleep} = require('../utils')
-const warnedInactiveChannels = new Set()
-const warnedEOLChannels = new Set()
 
 async function cleanup(guild) {
   const categoryPrivateChat = guild.channels.cache.find(
@@ -11,6 +9,7 @@ async function cleanup(guild) {
   const warningStep = 1000 * 60 * 5
   const maxExistingTime = 1000 * 60 * 60
   const maxInactiveTime = 1000 * 60 * 10
+  const forceDelayTime = 1000 * 60 * 2
   const eolReason = 'deleted for end of life 👻'
   const inactivityReason = 'deleted for inactivity 🚶‍♀️'
 
@@ -27,6 +26,23 @@ async function cleanup(guild) {
     const lastMessageDate = channel.lastMessage?.createdAt ?? channelCreateDate
     const timeSinceChannelCreation = new Date() - channelCreateDate
     const timeSinceLastMessage = new Date() - lastMessageDate
+    const messages = Array.from((await channel.messages.fetch()).values())
+    const hasInactiveWarned = messages.some(message => {
+      return (
+        message.content.includes('5 minutes') &&
+        message.content.includes(inactivityReason)
+      )
+    })
+    const hasEOLWarned = messages.some(
+      message =>
+        message.content.includes('5 minutes') &&
+        message.content.includes(eolReason),
+    )
+    const isGettingDeleted = messages.some(message =>
+      message.content.includes(
+        'This channel is getting deleted for the following reason',
+      ),
+    )
     const send = getSend(channel)
     if (
       timeSinceChannelCreation > maxExistingTime ||
@@ -38,41 +54,47 @@ async function cleanup(guild) {
       } else {
         reason = inactivityReason
       }
-      await send(
-        `
-This channel is getting deleted for the following reason: ${reason}
+      if (!isGettingDeleted) {
+        await send(
+          `
+  This channel is getting deleted for the following reason: ${reason}
+  
+  Goodbye 👋
+          `.trim(),
+        )
+        // Give just a while for the users to understand that the channel will be deleted soon
+        await sleep(10000)
+        await channel.delete(reason)
+      }
+      // After two minute from deletion we try to delate the channel again
+      // Maybe the server was stopped and the previous sleep was not finished
+      if (
+        timeSinceChannelCreation - maxExistingTime > forceDelayTime ||
+        timeSinceLastMessage - maxInactiveTime > forceDelayTime
+      ) {
+        await channel.delete(reason)
+      }
 
-Goodbye 👋
-        `.trim(),
-      )
-
-      // Give just a while for the users to understand that the channel will be deleted soon
-      await sleep(3000)
-      await channel.delete(reason)
-      warnedInactiveChannels.delete(channel.id)
-      warnedEOLChannels.delete(channel.id)
       return
     }
 
     if (
       (timeSinceChannelCreation > maxExistingTime - warningStep ||
         timeSinceLastMessage > maxInactiveTime - warningStep) &&
-      !warnedEOLChannels.has(channel.id) &&
-      !warnedInactiveChannels.has(channel.id)
+      !hasInactiveWarned &&
+      !hasEOLWarned
     ) {
       let reason
       if (
         timeSinceChannelCreation > maxExistingTime - warningStep &&
-        !warnedEOLChannels.has(channel.id)
+        !hasEOLWarned
       ) {
         reason = eolReason
-        warnedEOLChannels.add(channel.id)
       } else if (
         timeSinceLastMessage > maxInactiveTime - warningStep &&
-        !warnedInactiveChannels.has(channel.id)
+        !hasInactiveWarned
       ) {
         reason = inactivityReason
-        warnedInactiveChannels.add(channel.id)
       } else {
         return
       }

@@ -1,8 +1,11 @@
 const Discord = require('discord.js')
-const {privateChannelPrefix} = require('../utils')
+const {privateChannelPrefix, listify} = require('../utils')
 
 async function privateChat(message) {
-  const mentionedMembers = [...Array.from(message.mentions.members.values()), message.member]
+  const mentionedMembers = [
+    ...Array.from(message.mentions.members.values()),
+    message.member,
+  ]
   const mentionedMembersNicknames = Array.from(
     message.mentions.members.values(),
   ).map(m => m.nickname ?? m.user.username)
@@ -87,20 +90,29 @@ async function privateChat(message) {
 
   await channel.send(
     `
-Hello ${mentionedMembers.map(member => member.user).join(' ')} 👋
+Hello ${listify(mentionedMembers)} 👋
 
 I'm a bot I have created this channel for you. The channel will be deleted after 1 hour or after 10 minutes for inactivity. Enjoy 🗣 
+
+> Please note that the KCD Discord Server Owners and Admins *can* see this chat. So if you want to be *completely* private, then you'll need to take your communication elsewhere.
     `.trim(),
+  )
+  await message.channel.send(
+    `I've created ${channel} for you folks to talk privately. Cheers!`,
   )
 }
 privateChat.description =
-  'Create a private channel with you want. This channel will be de'
+  'Create a private channel with you want. This channel is temporary.'
 privateChat.help = message =>
   message.channel.send(
-    `Use this command to create a private chat with members of the server 🤫. 
+    `
+Use this command to create a private chat with members of the server 🤫. 
 The chat will be deleted after 1 hour 👻 or if there is at least 10 minutes of inactivity 🚶‍♂️.
-Example of usage: ?private-chat @Exual1982 @Prours58
-    `,
+
+Example of usage: \`?private-chat @User1 @User2\`
+
+This will create a private chat room for you and User1 and User2.
+    `.trim(),
   )
 
 module.exports = privateChat

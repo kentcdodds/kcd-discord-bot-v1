@@ -1,5 +1,6 @@
 const {getSend, sleep} = require('../utils')
-const warnedChannels = new Set()
+const warnedInactiveChannels = new Set()
+const warnedEOLChannels = new Set()
 
 async function cleanup(guild) {
   const categoryPrivateChat = guild.channels.cache.find(
@@ -48,26 +49,38 @@ async function cleanup(guild) {
       // Give just a while for the users to understand that the channel will be deleted soon
       await sleep(3000)
       await channel.delete(reason)
+      warnedInactiveChannels.delete(channel.id)
+      warnedEOLChannels.delete(channel.id)
       return
     }
 
     if (
       (timeSinceChannelCreation > maxExistingTime - warningStep ||
         timeSinceLastMessage > maxInactiveTime - warningStep) &&
-      !warnedChannels.has(channel.id)
+      !warnedEOLChannels.has(channel.id) &&
+      !warnedInactiveChannels.has(channel.id)
     ) {
       let reason
-      if (timeSinceChannelCreation > maxExistingTime - warningStep) {
+      if (
+        timeSinceChannelCreation > maxExistingTime - warningStep &&
+        !warnedEOLChannels.has(channel.id)
+      ) {
         reason = eolReason
-      } else {
+        warnedEOLChannels.add(channel.id)
+      } else if (
+        timeSinceLastMessage > maxInactiveTime - warningStep &&
+        !warnedInactiveChannels.has(channel.id)
+      ) {
         reason = inactivityReason
+        warnedInactiveChannels.add(channel.id)
+      } else {
+        return
       }
       await send(
         `
     This channel will be deleted in 5 minutes for the following reason: ${reason}
         `.trim(),
       )
-      warnedChannels.add(channel.id)
     }
   })
 }

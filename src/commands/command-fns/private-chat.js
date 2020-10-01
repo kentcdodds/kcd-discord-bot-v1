@@ -2,12 +2,12 @@ const Discord = require('discord.js')
 const {privateChannelPrefix} = require('../utils')
 
 async function privateChat(message) {
-  const mentionedMembers = Array.from(message.mentions.members.values())
+  const mentionedMembers = [...Array.from(message.mentions.members.values()), message.member]
   const mentionedMembersNicknames = Array.from(
     message.mentions.members.values(),
   ).map(m => m.nickname ?? m.user.username)
   if (mentionedMembers.length < 2) {
-    return message.channel.send(`You should mention at least two members.`)
+    return message.channel.send(`You should mention at least one other member.`)
   }
 
   const allPermissions = Object.keys(Discord.Permissions.FLAGS)

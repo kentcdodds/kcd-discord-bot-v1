@@ -4,6 +4,9 @@ const sleep = t =>
     setTimeout(resolve, process.env.NODE_ENV === 'test' ? 0 : t),
   )
 
+const privateChannelPrefix =
+  process.env.NODE_ENV === 'production' ? '🤫-private-' : '😎-private-'
+
 const welcomeChannelPrefix =
   process.env.NODE_ENV === 'production' ? '👋-welcome-' : '🌊-welcome-'
 
@@ -104,4 +107,5 @@ module.exports = {
   getMessageLink,
   isWelcomeChannel,
   welcomeChannelPrefix,
+  privateChannelPrefix,
 }

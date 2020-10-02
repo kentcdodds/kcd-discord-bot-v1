@@ -1,5 +1,6 @@
 // Command purpose:
 // this command is just to make sure the bot is running
+const got = require('got')
 const {MessageMentions} = require('discord.js')
 const {
   getCommandArgs,
@@ -7,9 +8,44 @@ const {
   getMember,
   getChannel,
   getMessageLink,
-  getThanksHistory,
-  saveThanksHistory,
 } = require('../utils')
+
+async function getThanksHistory() {
+  const response = await got.get(
+    `https://api.github.com/gists/${process.env.GIST_REPO_THANKS}`,
+    {
+      headers: {
+        Authorization: `token ${process.env.GITHUB_TOKEN}`,
+      },
+      responseType: 'json',
+    },
+  )
+  if (response.body.files['thanks.json'].content === '') {
+    return {}
+  }
+  return JSON.parse(response.body.files['thanks.json'].content)
+}
+
+async function saveThanksHistory(history) {
+  const body = {
+    public: 'false',
+    files: {
+      'thanks.json': {
+        content: JSON.stringify(history),
+      },
+    },
+  }
+  await got.patch(
+    `https://api.github.com/gists/${process.env.GIST_REPO_THANKS}`,
+    {
+      json: body,
+      headers: {
+        Authorization: `token ${process.env.GITHUB_TOKEN}`,
+      },
+      responseType: 'json',
+    },
+  )
+}
 
 async function sayThankyou(args, message, thanksHistory) {
   const member = getMember(message.guild, message.author.id)

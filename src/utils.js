@@ -1,3 +1,4 @@
+const got = require('got')
 const rollbar = require('./rollbar')
 const sleep = t =>
   new Promise(resolve =>
@@ -60,6 +61,43 @@ function getRole(guild, {name}) {
   )
 }
 
+async function getThanksHistory() {
+  const response = await got.get(
+    `https://api.github.com/gists/${process.env.GIST_REPO_THANKS}`,
+    {
+      headers: {
+        Authorization: `token ${process.env.GITHUB_TOKEN}`,
+      },
+      responseType: 'json',
+    },
+  )
+  if (response.body.files['thanks.json'].content === '') {
+    return {}
+  }
+  return JSON.parse(response.body.files['thanks.json'].content)
+}
+
+async function saveThanksHistory(history) {
+  const body = {
+    public: 'false',
+    files: {
+      'thanks.json': {
+        content: JSON.stringify(history),
+      },
+    },
+  }
+  await got.patch(
+    `https://api.github.com/gists/${process.env.GIST_REPO_THANKS}`,
+    {
+      json: body,
+      headers: {
+        Authorization: `token ${process.env.GITHUB_TOKEN}`,
+      },
+      responseType: 'json',
+    },
+  )
+}
+
 const prodRegex = /^\?(?<command>\S+?)($| )(?<args>(.|\n)*)/
 const devRegex = /^~(?<command>\S+?)($| )(?<args>(.|\n)*)/
 const commandPrefix =
@@ -108,4 +146,6 @@ module.exports = {
   isWelcomeChannel,
   welcomeChannelPrefix,
   privateChannelPrefix,
+  getThanksHistory,
+  saveThanksHistory,
 }

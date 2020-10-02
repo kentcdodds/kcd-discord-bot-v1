@@ -117,7 +117,7 @@ async function thanks(message) {
     thanksHistory = await getThanksHistory()
   } catch {
     return message.channel.send(
-      `There is an issue retrieving the history. Please try again later 👎`,
+      `There is an issue retrieving the history. Please try again later 🙏`,
     )
   }
 

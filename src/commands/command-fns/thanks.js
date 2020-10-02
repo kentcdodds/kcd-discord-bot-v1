@@ -156,20 +156,25 @@ ${topUsers
       searchedMembers = mentionedMembers.map(member => member.user)
     }
 
-    return message.channel.send(
-      `This is the rank of the requested member${
-        searchedMembers.length === 1 ? '' : 's'
-      }: 
-${searchedMembers
+const rankings = searchedMembers
   .map(member => {
-    return thanksHistory[member.id]
-      ? `- ${member.username} has been thanked ${
-          thanksHistory[member.id].length
-        } times 👏`
+    const thanks = thanksHistory[member.id]
+    return thanks
+      ? `- ${member.username} has been thanked ${thanks.length} time${
+          thanks.length === 1 ? '' : 's'
+        } 👏`
       : `- ${member.username} hasn't been thanked yet 🙁`
   })
-  .join('\n')}`,
-    )
+  .join('\n')
+
+message.channel.send(
+  `
+This is the rank of the requested member${
+    searchedMembers.length === 1 ? '' : 's'
+  }: 
+${rankings}
+  `.trim(),
+)
   } else {
     return sayThankYou(args, message, thanksHistory)
   }

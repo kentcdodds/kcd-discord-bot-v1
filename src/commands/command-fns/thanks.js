@@ -124,12 +124,20 @@ async function thanks(message) {
 
   function listThanks(users) {
     return users
-      .map(member => {
-        const thx = thanksHistory[member.id]
-        const times = `time${thx.length === 1 ? '' : 's'}`
-        return thx
-          ? `- ${member.username} has been thanked ${thx.length} ${times} 👏`
-          : `- ${member.username} hasn't been thanked yet 🙁`
+      .map(usr => {
+        return {
+          username: usr.username,
+          count: thanksHistory[usr.id]?.length ?? 0,
+        }
+      })
+      .sort((a, z) => {
+        return a.count === z.count ? 0 : a.count > z.count ? 1 : -1
+      })
+      .map(({username, count}) => {
+        const times = `time${count === 1 ? '' : 's'}`
+        return count > 0
+          ? `- ${username} has been thanked ${count} ${times} 👏`
+          : `- ${username} hasn't been thanked yet 🙁`
       })
       .join('\n')
   }

@@ -81,7 +81,7 @@ async function thanks(message) {
   let thanksHistory
   try {
     thanksHistory = await getThanksHistory()
-  } catch (_) {
+  } catch {
     return message.channel.send(
       `There is an issue retrying the history. Please try again later 👎`,
     )
@@ -121,14 +121,16 @@ ${topUsers
     }
 
     return message.channel.send(
-      `This is the rank of the requested members : 
+      `This is the rank of the requested member${
+        searchedMembers.length === 1 ? '' : 's'
+      }: 
 ${searchedMembers
   .map(member => {
     return thanksHistory[member.id]
       ? `- ${member.username} has been thanked ${
           thanksHistory[member.id]
         } times 👏`
-      : `- ${member.username} has never been thanked 🙁`
+      : `- ${member.username} hasn't been thanked yet 🙁`
   })
   .join('\n')}`,
     )

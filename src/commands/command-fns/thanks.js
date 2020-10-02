@@ -15,7 +15,7 @@ async function getThanksHistory() {
     `https://api.github.com/gists/${process.env.GIST_REPO_THANKS}`,
     {
       headers: {
-        Authorization: `token ${process.env.GITHUB_TOKEN}`,
+        Authorization: `token ${process.env.GIST_BOT_TOKEN}`,
       },
       responseType: 'json',
     },
@@ -40,14 +40,14 @@ async function saveThanksHistory(history) {
     {
       json: body,
       headers: {
-        Authorization: `token ${process.env.GITHUB_TOKEN}`,
+        Authorization: `token ${process.env.GIST_BOT_TOKEN}`,
       },
       responseType: 'json',
     },
   )
 }
 
-async function sayThankyou(args, message, thanksHistory) {
+async function sayThankYou(args, message, thanksHistory) {
   const member = getMember(message.guild, message.author.id)
   const thankedMembers = Array.from(message.mentions.members.values())
   if (!thankedMembers.length) {
@@ -65,12 +65,11 @@ async function sayThankyou(args, message, thanksHistory) {
     )
   }
 
+  const messageLink = getMessageLink(message)
+
   thankedMembers.forEach(thankedMember => {
-    if (thanksHistory[thankedMember.id]) {
-      thanksHistory[thankedMember.id] += 1
-    } else {
-      thanksHistory[thankedMember.id] = 1
-    }
+    thanksHistory[thankedMember.id] = thanksHistory[thankedMember.id] ?? []
+    thanksHistory[thankedMember.id].push(messageLink)
   })
 
   try {
@@ -92,7 +91,6 @@ async function sayThankyou(args, message, thanksHistory) {
   }
 
   const thanksChannel = getChannel(message.guild, {name: 'thank-you'})
-  const messageLink = getMessageLink(message)
   const thankedMembersList = listify(thankedMembers, {
     stringify: m => m.user.toString(),
   })
@@ -119,7 +117,7 @@ async function thanks(message) {
     thanksHistory = await getThanksHistory()
   } catch {
     return message.channel.send(
-      `There is an issue retrying the history. Please try again later 👎`,
+      `There is an issue retrieving the history. Please try again later 👎`,
     )
   }
 
@@ -130,7 +128,7 @@ async function thanks(message) {
     rankArgumentList[1] === 'top'
   ) {
     const sortedUsers = Object.keys(thanksHistory).sort((a, b) => {
-      return thanksHistory[b] - thanksHistory[a]
+      return thanksHistory[b].length - thanksHistory[a].length
     })
     const topUsers = []
     await sortedUsers.forEach(async user => {
@@ -144,7 +142,9 @@ async function thanks(message) {
 ${topUsers
   .map(
     user =>
-      `- ${user.username} has been thanked  ${thanksHistory[user.id]} times 👏`,
+      `- ${user.username} has been thanked  ${
+        thanksHistory[user.id].length
+      } times 👏`,
   )
   .join('\n')}
 `,
@@ -164,14 +164,14 @@ ${searchedMembers
   .map(member => {
     return thanksHistory[member.id]
       ? `- ${member.username} has been thanked ${
-          thanksHistory[member.id]
+          thanksHistory[member.id].length
         } times 👏`
       : `- ${member.username} hasn't been thanked yet 🙁`
   })
   .join('\n')}`,
     )
   } else {
-    return sayThankyou(args, message, thanksHistory)
+    return sayThankYou(args, message, thanksHistory)
   }
 }
 

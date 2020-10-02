@@ -94,7 +94,7 @@ async function sayThankYou(args, message, thanksHistory) {
   const thankedMembersList = listify(thankedMembers, {
     stringify: m => m.user.toString(),
   })
-  const result = await thanksChannel.send(
+  const newThanksMessage = await thanksChannel.send(
     `
 Hey ${thankedMembersList}! You got thanked! 🎉
 
@@ -105,7 +105,8 @@ ${member.user} appreciated you for:
 Link: <${messageLink}>
     `.trim(),
   )
-  return result
+  message.channel.send(`Aw! Thanks! ${getMessageLink(newThanksMessage)} 😍`)
+  return newThanksMessage
 }
 
 async function thanks(message) {
@@ -119,6 +120,18 @@ async function thanks(message) {
     return message.channel.send(
       `There is an issue retrieving the history. Please try again later 🙏`,
     )
+  }
+
+  function listThanks(users) {
+    return users
+      .map(member => {
+        const thx = thanksHistory[member.id]
+        const times = `time${thx.length === 1 ? '' : 's'}`
+        return thx
+          ? `- ${member.username} has been thanked ${thx.length} ${times} 👏`
+          : `- ${member.username} hasn't been thanked yet 🙁`
+      })
+      .join('\n')
   }
 
   const rankArgumentList = rankArgs.split(' ')
@@ -138,16 +151,10 @@ async function thanks(message) {
       }
     })
     return message.channel.send(
-      `This is the list of the top thanked members 💪🏼:
-${topUsers
-  .map(
-    user =>
-      `- ${user.username} has been thanked  ${
-        thanksHistory[user.id].length
-      } times 👏`,
-  )
-  .join('\n')}
-`,
+      `
+This is the list of the top thanked members 💪:
+${listThanks(topUsers)}
+      `.trim(),
     )
   } else if (rankArgumentList.length === 1 && rankArgumentList[0] === 'rank') {
     const mentionedMembers = Array.from(message.mentions.members.values())
@@ -156,25 +163,13 @@ ${topUsers
       searchedMembers = mentionedMembers.map(member => member.user)
     }
 
-const rankings = searchedMembers
-  .map(member => {
-    const thanks = thanksHistory[member.id]
-    return thanks
-      ? `- ${member.username} has been thanked ${thanks.length} time${
-          thanks.length === 1 ? '' : 's'
-        } 👏`
-      : `- ${member.username} hasn't been thanked yet 🙁`
-  })
-  .join('\n')
-
-message.channel.send(
-  `
-This is the rank of the requested member${
-    searchedMembers.length === 1 ? '' : 's'
-  }: 
-${rankings}
-  `.trim(),
-)
+    const members = `member${searchedMembers.length === 1 ? '' : 's'}`
+    message.channel.send(
+      `
+This is the rank of the requested ${members}:
+${listThanks(searchedMembers)}
+      `.trim(),
+    )
   } else {
     return sayThankYou(args, message, thanksHistory)
   }
@@ -191,7 +186,10 @@ thanks.help = async message => {
     `- Send \`?thanks rank @Username\` to show the number of times have been thanked the mentioned users.`,
   ]
   await message.channel.send(
-    `This is the list of the available commands \n ${commandsList.join('\n')}`,
+    `
+This is the list of the available commands:
+${commandsList.join('\n')}
+    `.trim(),
   )
 }
 

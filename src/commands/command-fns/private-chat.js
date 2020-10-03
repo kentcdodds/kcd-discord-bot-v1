@@ -92,7 +92,7 @@ async function privateChat(message) {
     `
 Hello ${listify(mentionedMembers)} 👋
 
-I'm a bot I have created this channel for you. The channel will be deleted after 1 hour or after 10 minutes for inactivity. Enjoy 🗣 
+I'm the bot that created this channel for you. The channel will be deleted after 1 hour or after 10 minutes for inactivity. Enjoy 🗣 
 
 > Please note that the KCD Discord Server Owners and Admins *can* see this chat. So if you want to be *completely* private, then you'll need to take your communication elsewhere.
     `.trim(),
@@ -102,7 +102,7 @@ I'm a bot I have created this channel for you. The channel will be deleted after
   )
 }
 privateChat.description =
-  'Create a private channel with you want. This channel is temporary.'
+  'Create a private channel with who you want. This channel is temporary.'
 privateChat.help = message =>
   message.channel.send(
     `

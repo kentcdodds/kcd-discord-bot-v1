@@ -22,6 +22,7 @@ function searchArticles(articles, searchText) {
     article =>
       article.title.match(regex) ||
       article.description.match(regex) ||
+      article.categories.find(category => category.match(regex)) ||
       article.keywords.find(keyword => keyword.match(regex)),
   )
 }
@@ -66,6 +67,17 @@ ${printArticles(filteredArticles.slice(0, 10))}
   }
 }
 blog.description = 'Show the articles published by Kent on his blog'
-blog.help = message => message.channel.send(``)
+blog.help = message => {
+  const commandsList = [
+    `- Send \`?blog last\` for showing the last 10 articles on kent's blog.`,
+    `- Send \`?blog your search string\` to search some articles by categories,keyword,title and description.`,
+  ]
+  return message.channel.send(
+    `
+This is the list of the available commands:
+${commandsList.join('\n')}
+    `.trim(),
+  )
+}
 
 module.exports = blog

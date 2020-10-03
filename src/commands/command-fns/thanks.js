@@ -131,7 +131,7 @@ async function thanks(message) {
         }
       })
       .sort((a, z) => {
-        return a.count === z.count ? 0 : a.count > z.count ? 1 : -1
+        return a.count === z.count ? 0 : z.count > a.count ? 1 : -1
       })
       .map(({username, count}) => {
         const times = `time${count === 1 ? '' : 's'}`

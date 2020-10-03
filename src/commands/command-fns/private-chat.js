@@ -87,10 +87,9 @@ async function privateChat(message) {
       ],
     },
   )
-
   await channel.send(
     `
-Hello ${listify(mentionedMembers)} 👋
+Hello ${listify(mentionedMembersNicknames)} 👋
 
 I'm a bot I have created this channel for you. The channel will be deleted after 1 hour or after 10 minutes for inactivity. Enjoy 🗣 
 

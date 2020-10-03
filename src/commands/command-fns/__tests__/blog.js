@@ -40,29 +40,31 @@ test('should show the list of the last 10 articles', async () => {
 })
 
 test('should show articles matching the search string', async () => {
-  let send = await setup('useState lazy initialization and function updates')
+  let send = await setup('open source')
 
   expect(send).toHaveBeenCalledTimes(1)
   expect(send)
     .toHaveBeenCalledWith(`This is the list of the articles matching your search 💻:
-- useState lazy initialization and function updates
-  <https://kentcdodds.com/blog/use-state-lazy-initialization-and-function-updates>`)
+- Favor Progress Over Pride in Open Source
+  <https://kentcdodds.com/blog/favor-progress-over-pride-in-open-source>
+- How getting into Open Source has been awesome for me
+  <https://kentcdodds.com/blog/how-getting-into-open-source-has-been-awesome-for-me>
+- What open source project should I contribute to?
+  <https://kentcdodds.com/blog/what-open-source-project-should-i-contribute-to>`)
 
   send = await setup('onditionally render content in JSX')
 
   expect(send).toHaveBeenCalledTimes(1)
-  expect(send)
-    .toHaveBeenCalledWith(`This is the list of the articles matching your search 💻:
-- Use ternaries rather than && in JSX
-  <https://kentcdodds.com/blog/use-ternaries-rather-than-and-and-in-jsx>`)
+  expect(send).toHaveBeenCalledWith(
+    `https://kentcdodds.com/blog/use-ternaries-rather-than-and-and-in-jsx`,
+  )
 
   send = await setup(`why you shouldn't mock fetch or your AP`)
 
   expect(send).toHaveBeenCalledTimes(1)
-  expect(send)
-    .toHaveBeenCalledWith(`This is the list of the articles matching your search 💻:
-- Stop mocking fetch
-  <https://kentcdodds.com/blog/stop-mocking-fetch>`)
+  expect(send).toHaveBeenCalledWith(
+    `https://kentcdodds.com/blog/stop-mocking-fetch`,
+  )
 })
 
 test('should show an info message if not articles are found', async () => {

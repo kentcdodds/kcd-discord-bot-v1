@@ -49,15 +49,17 @@ ${printArticles(lastArticles)}`)
       message.channel.send(
         `😟 Unfortunately there is no article matching your search. Could you try again 😀?`,
       )
+    } else if (filteredArticles.length === 1) {
+      message.channel.send(`${filteredArticles[0].productionUrl}`)
     } else {
       const searchMessage = `This is the list of the articles matching your search 💻:
 ${printArticles(filteredArticles)}`
       if (searchMessage.length >= 2000) {
         return message.channel
           .send(`There are too many resuts for your search. I'll show you only the last 10 articles:
-${printArticles(filteredArticles.slice(0, 10))}          
-`)
+${printArticles(filteredArticles.slice(0, 10))}`)
       }
+
       message.channel.send(searchMessage)
     }
   } else {

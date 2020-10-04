@@ -10,7 +10,7 @@ const privateChannelPrefix =
 const welcomeChannelPrefix =
   process.env.NODE_ENV === 'production' ? '👋-welcome-' : '🌊-welcome-'
 
-const isWelcomeChannel = ch => ch.name.startsWith(welcomeChannelPrefix)
+const isWelcomeChannel = ch => ch.name?.startsWith(welcomeChannelPrefix)
 const getSend = channel => async (...args) => {
   const result = await channel.send(...args)
   // wait a brief moment before continuing because channel.send doesn't

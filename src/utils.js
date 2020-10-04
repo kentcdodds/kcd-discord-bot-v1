@@ -70,8 +70,7 @@ const commandRegex =
   process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'test'
     ? prodRegex
     : devRegex
-const getCommandArgs = string =>
-  string.match(commandRegex)?.groups?.args ?? null
+const getCommandArgs = string => string.match(commandRegex)?.groups?.args ?? ''
 const isCommand = string => commandRegex.test(string)
 
 const listify = (

@@ -71,8 +71,8 @@ ${printArticles(filteredArticles.slice(0, 10))}`)
 blog.description = 'Show the articles published by Kent on his blog'
 blog.help = message => {
   const commandsList = [
-    `- Send \`?blog last\` for showing the last 10 articles on kent's blog.`,
-    `- Send \`?blog your search string\` to search some articles by categories,keyword,title and description.`,
+    `- Send \`?blog last\` for showing the last 10 articles on Kent's blog.`,
+    `- Send \`?blog your search string\` to search some articles by categories, keyword, title and description.`,
   ]
   return message.channel.send(
     `

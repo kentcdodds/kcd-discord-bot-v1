@@ -38,7 +38,7 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
   if (!messageAfterEditedMessage) return
 
   const editedStep = steps.find(s =>
-    s.getAnswer(messageAfterEditedMessage.content, member),
+    s.getAnswer?.(messageAfterEditedMessage.content, member),
   )
   if (!editedStep) return
 

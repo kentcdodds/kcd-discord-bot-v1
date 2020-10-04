@@ -30,9 +30,9 @@ function getMemberIdFromChannel(channel) {
 }
 
 function getMember(guild, memberId) {
-  const member = guild.members.cache.find(({user}) => user.id === memberId)
-
-  return member
+  // somehow the guild isn't always accessible
+  if (!guild) return null
+  return guild.members.cache.find(({user}) => user.id === memberId)
 }
 
 /**

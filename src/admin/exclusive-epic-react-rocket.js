@@ -5,6 +5,7 @@ async function handleGuildMemberUpdate(oldMember, newMember) {
 }
 
 async function handleMember(member) {
+  if (!member) return
   const hasRocket = member.nickname?.includes('🚀')
   const isEpicReactMember = member.roles.cache.some(
     ({name}) => name === 'EpicReact Dev',

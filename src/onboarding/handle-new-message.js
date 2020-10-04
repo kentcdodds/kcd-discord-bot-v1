@@ -16,7 +16,9 @@ async function handleNewMessage(message) {
   const send = getSend(channel)
 
   // must be a welcome channel
-  if (!channel.name.startsWith(welcomeChannelPrefix)) return
+  // check for existance of the channel name because rollbar said our
+  // bot ran into this being undefined several times. I'm not sure how though...
+  if (!channel.name || !channel.name.startsWith(welcomeChannelPrefix)) return
 
   if (message.content.toLowerCase() === 'delete') {
     return deleteWelcomeChannel(channel, 'Requested by the member')

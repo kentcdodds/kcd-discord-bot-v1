@@ -73,7 +73,9 @@ async function cleanup(guild) {
           content.includes(spamWarningMessageContent),
         )
         if (!hasWarned) {
-          await send(`Whoa ${member?.user}, ${spamWarningMessageContent}`)
+          await send(
+            `Whoa ${member?.user ?? 'there'}, ${spamWarningMessageContent}`,
+          )
         }
       }
 
@@ -108,7 +110,9 @@ async function cleanup(guild) {
           !hasBeenWarned &&
           !confirmed
         ) {
-          return send(`Hi ${member.user}, ${timeoutWarningMessageContent}`)
+          return send(
+            `Hi ${member?.user ?? 'there'}, ${timeoutWarningMessageContent}`,
+          )
         } else if (timeSinceLastMessage > maxWaitingTime * 10) {
           // somehow this channel has stuck around for a long time
           // not sure how this should be possible, but we should delete it

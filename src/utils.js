@@ -12,6 +12,9 @@ const welcomeChannelPrefix =
 
 const isWelcomeChannel = ch => ch.name?.startsWith(welcomeChannelPrefix)
 const getSend = channel => async (...args) => {
+  if (!args[0]) {
+    throw new Error('Attempting to call send with no message!')
+  }
   const result = await channel.send(...args)
   // wait a brief moment before continuing because channel.send doesn't
   // always resolve after the message is actually sent.

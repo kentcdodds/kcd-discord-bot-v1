@@ -102,7 +102,7 @@ Find an example and template here: <https://kcd.im/kcd-learning-club-docs>
       errorMessage: error.message,
       formLink,
     })
-    await message.channel.send(error.message)
+    await message.channel.send(error.message ?? 'Unknown error')
     return
   }
 

@@ -43,7 +43,7 @@ async function getKifInfo({force = false} = {}) {
     kifKeysWithoutEmoji.push(kifKey, ...aliases)
     for (const alias of [...aliases, ...emojiAliases]) {
       if (kifMap[alias]) {
-        throw new Error(`Cannot have two kifs with the same alias: ${alias}`)
+        console.error(`Cannot have two kifs with the same alias: ${alias}`)
       }
       kifMap[alias] = gif
     }

@@ -14,7 +14,6 @@ const {
 
 const kifCache = {
   kifs: null,
-  kifsWithAliases: null,
   kifMap: null,
   kifKeysWithoutEmoji: null,
 }
@@ -49,19 +48,7 @@ async function getKifInfo({force = false} = {}) {
   }
   kifKeysWithoutEmoji.sort()
 
-  const kifsWithAliases = Object.keys(kifs).map(kifKey => {
-    const {aliases = [], emojiAliases = []} = kifs[kifKey]
-    const allAliases = [...aliases, ...emojiAliases]
-    if (allAliases.length) {
-      return `${kifKey} (${listify([...aliases, ...emojiAliases], {
-        stringify: i => i,
-        conjunction: 'or ',
-      })})`
-    } else {
-      return kifKey
-    }
-  })
-  Object.assign(kifCache, {kifs, kifMap, kifKeysWithoutEmoji, kifsWithAliases})
+  Object.assign(kifCache, {kifs, kifMap, kifKeysWithoutEmoji})
   return kifCache
 }
 
@@ -133,11 +120,17 @@ ${didYouMean}
     {time: 10, units: 'seconds'},
   )
 }
-handleKifCommand.description = 'Send a KCD gif'
+handleKifCommand.description = `Send a KCD gif (send \`?help kif\` for more info)`
 async function help(message) {
-  const {kifsWithAliases} = await getKifInfo()
-  const kifList = `- ${kifsWithAliases.join('\n- ')}`
-  return sendBotMessageReply(message, `Available kifs are:\n${kifList}`)
+  return sendBotMessageReply(
+    message,
+    `
+"kifs" are "Kent C. Dodds Gifs" and you can find a full list of available kifs here: <https://kcd.im/kifs>
+
+\`?kif amazed\` - Sends the "amazed" kif
+\`?kif 👊 @kentcdodds\` - Sends the "fist bump" kif to \`@kentcdodds\`
+    `.trim(),
+  )
 }
 handleKifCommand.help = help
 

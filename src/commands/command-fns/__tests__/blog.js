@@ -1,6 +1,6 @@
 const {rest} = require('msw')
+const {server} = require('server')
 const blog = require('../blog')
-const {server} = require('../../../../tests/server')
 
 const setup = async command => {
   const send = jest.fn(() => Promise.resolve())
@@ -87,6 +87,15 @@ test('should show an info message if there is an issue retrying articles', async
 
   expect(send).toHaveBeenCalledTimes(1)
   expect(send).toHaveBeenCalledWith(
-    `🤯 Something went wront retrieving the list of articles. Could you try in a few minutes?😀?`,
+    `Something went wrong retrieving the list of articles 😬`,
+  )
+})
+
+test('should give an error message if the user not provide a search term', async () => {
+  const send = await setup(``)
+
+  expect(send).toHaveBeenCalledTimes(1)
+  expect(send).toHaveBeenCalledWith(
+    `A search term is required. For example: \`?blog state management\``,
   )
 })

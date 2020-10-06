@@ -6,4 +6,5 @@ module.exports = {
   clubs: require('./command-fns/clubs'),
   info: require('./command-fns/info'),
   'private-chat': require('./command-fns/private-chat'),
+  blog: require('./command-fns/blog'),
 }

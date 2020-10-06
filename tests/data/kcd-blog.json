@@ -1,0 +1,201 @@
+[
+  {
+    "id": "41c7bc56-22cf-5e0b-b5e6-24f6051e3112",
+    "slug": "/blog/how-to-react",
+    "productionUrl": "https://kentcdodds.com/blog/how-to-react",
+    "title": "How to React ⚛️",
+    "categories": [],
+    "keywords": ["react", "javascript"],
+    "description": "Let's see how learning React ⚛️ in the right order can make it less overwhelming. "
+  },
+  {
+    "id": "ab465d65-3a94-5516-b832-2aaedd3390d1",
+    "slug": "/blog/favor-progress-over-pride-in-open-source",
+    "productionUrl": "https://kentcdodds.com/blog/favor-progress-over-pride-in-open-source",
+    "title": "Favor Progress Over Pride in Open Source",
+    "categories": ["open source"],
+    "keywords": ["javascript", "css-in-js", "glamorous", "open source", "oss"],
+    "description": "How I deprecated my most popular open source project in favor of a better library "
+  },
+  {
+    "id": "837386ea-cbcb-5dc7-8fee-8674a03b7e78",
+    "slug": "/blog/testing-implementation-details",
+    "productionUrl": "https://kentcdodds.com/blog/testing-implementation-details",
+    "title": "Testing Implementation Details",
+    "categories": [],
+    "keywords": ["javascript", "testing", "react"],
+    "description": "Testing implementation details is a recipe for disaster. Why is that? And what does it even mean? "
+  },
+  {
+    "id": "1851c0a0-79eb-5f09-9e34-190452999dc6",
+    "slug": "/blog/how-getting-into-open-source-has-been-awesome-for-me",
+    "productionUrl": "https://kentcdodds.com/blog/how-getting-into-open-source-has-been-awesome-for-me",
+    "title": "How getting into Open Source has been awesome for me",
+    "categories": [],
+    "keywords": ["open source", "javascript"],
+    "description": "An anecdotal argument for contributing and using open source "
+  },
+  {
+    "id": "9d476e93-f463-5080-9eba-46e74143ca4f",
+    "slug": "/blog/use-state-lazy-initialization-and-function-updates",
+    "productionUrl": "https://kentcdodds.com/blog/use-state-lazy-initialization-and-function-updates",
+    "title": "useState lazy initialization and function updates",
+    "categories": ["react"],
+    "keywords": [
+      "react",
+      "useState",
+      "hooks",
+      "javascript",
+      "function components",
+      "function updates",
+      "lazy initialization"
+    ],
+    "description": "When to pass a function to useState and setState "
+  },
+  {
+    "id": "c126278e-4590-5f5f-a1cc-53c4a42497ff",
+    "slug": "/blog/use-ternaries-rather-than-and-and-in-jsx",
+    "productionUrl": "https://kentcdodds.com/blog/use-ternaries-rather-than-and-and-in-jsx",
+    "title": "Use ternaries rather than && in JSX",
+    "categories": ["react"],
+    "keywords": [
+      "react",
+      "jsx",
+      "javascript",
+      "ternaries",
+      "conditionally render jsx"
+    ],
+    "description": "What problems can happen when you use && to conditionally render content in JSX "
+  },
+  {
+    "id": "308c6263-a1ab-501b-bc5c-571f3e280922",
+    "slug": "/blog/application-state-management-with-react",
+    "productionUrl": "https://kentcdodds.com/blog/application-state-management-with-react",
+    "title": "Application State Management with React",
+    "categories": ["react"],
+    "keywords": [
+      "react",
+      "state",
+      "javascript",
+      "redux",
+      "mobx",
+      "recoil",
+      "react query",
+      "jotai"
+    ],
+    "description": "How React is all you need to manage your application state "
+  },
+  {
+    "id": "6794d477-2731-5154-8bcd-70968833f755",
+    "slug": "/blog/use-react-error-boundary-to-handle-errors-in-react",
+    "productionUrl": "https://kentcdodds.com/blog/use-react-error-boundary-to-handle-errors-in-react",
+    "title": "Use react-error-boundary to handle errors in React",
+    "categories": ["react"],
+    "keywords": [
+      "react",
+      "error boundary",
+      "react-error-boundary",
+      "error boundaries",
+      "runtime errors",
+      "error"
+    ],
+    "description": "How to simplify your React apps by handling React errors effectively with react-error-boundary "
+  },
+  {
+    "id": "6fbe37ec-338b-56ef-a758-a339e0c266a0",
+    "slug": "/blog/javascript-to-know-for-react",
+    "productionUrl": "https://kentcdodds.com/blog/javascript-to-know-for-react",
+    "title": "JavaScript to Know for React",
+    "categories": ["javascript"],
+    "keywords": ["react", "javascript"],
+    "description": "What JavaScript features you should be familiar with when learning and using React "
+  },
+  {
+    "id": "0ed366ef-5205-56fd-b1ef-1c6b01b32d3b",
+    "slug": "/blog/how-i-structure-express-apps",
+    "productionUrl": "https://kentcdodds.com/blog/how-i-structure-express-apps",
+    "title": "How I structure Express apps",
+    "categories": ["node"],
+    "keywords": [
+      "javascript",
+      "node.js",
+      "express",
+      "express.js",
+      "node",
+      "file structure",
+      "architecture",
+      "testing"
+    ],
+    "description": "The build/dev tools and scripts I use for Node backends. "
+  },
+  {
+    "id": "9b11aba5-1290-50b5-8048-10d84ea5c5cb",
+    "slug": "/blog/what-open-source-project-should-i-contribute-to",
+    "productionUrl": "https://kentcdodds.com/blog/what-open-source-project-should-i-contribute-to",
+    "title": "What open source project should I contribute to?",
+    "categories": [],
+    "keywords": ["open source", "github", "javascript"],
+    "description": "My silver bullet answer to this frequently posed question, and how to get started "
+  },
+  {
+    "id": "dfd710c8-8904-5f76-8d3d-92a385cb9bfb",
+    "slug": "/blog/when-i-follow-tdd",
+    "productionUrl": "https://kentcdodds.com/blog/when-i-follow-tdd",
+    "title": "When I follow TDD",
+    "categories": ["testing"],
+    "keywords": ["testing", "javascript", "tdd", "test driven development"],
+    "description": "Test-Driven Development doesn't always make sense, here's when it does for me. "
+  },
+  {
+    "id": "5d60fe63-b8f8-59ef-b8c5-93f3e2fa0392",
+    "slug": "/blog/how-i-record-educational-videos",
+    "productionUrl": "https://kentcdodds.com/blog/how-i-record-educational-videos",
+    "title": "How I Record Educational Videos",
+    "categories": ["teaching"],
+    "keywords": ["learning", "teaching", "videos", "egghead"],
+    "description": "My process for making high value-to-minute content. "
+  },
+  {
+    "id": "b2c0c744-6634-5558-a1e2-4ec01855b09c",
+    "slug": "/blog/aha-programming",
+    "productionUrl": "https://kentcdodds.com/blog/aha-programming",
+    "title": "AHA Programming 💡",
+    "categories": ["programming"],
+    "keywords": ["programming", "coding"],
+    "description": "The dangers of DRY, the web of WET, the awesomeness of AHA. "
+  },
+  {
+    "id": "3978e75e-f323-5ffe-bda2-3d4d0c36a412",
+    "slug": "/blog/should-i-write-a-test-or-fix-a-bug",
+    "productionUrl": "https://kentcdodds.com/blog/should-i-write-a-test-or-fix-a-bug",
+    "title": "Should I write a test or fix a bug?",
+    "categories": ["testing"],
+    "keywords": ["software development", "testing", "javascript"],
+    "description": "How to prioritize tests relative to everything else. "
+  },
+  {
+    "id": "34790f94-773a-5f86-a146-e920d58e7637",
+    "slug": "/blog/stop-mocking-fetch",
+    "productionUrl": "https://kentcdodds.com/blog/stop-mocking-fetch",
+    "title": "Stop mocking fetch",
+    "categories": ["testing"],
+    "keywords": [
+      "javascript",
+      "testing",
+      "http",
+      "fetch",
+      "integration",
+      "unit"
+    ],
+    "description": "Why you shouldn't mock fetch or your API Client in your tests and what to do instead. "
+  },
+  {
+    "id": "4af6cca4-1ed9-507c-9511-bcec7cf45c66",
+    "slug": "/blog/intentional-career-building",
+    "productionUrl": "https://kentcdodds.com/blog/intentional-career-building",
+    "title": "Intentional Career Building",
+    "categories": ["career"],
+    "keywords": ["career"],
+    "description": "A challenge and ideas for you to do something to build your career. "
+  }
+]

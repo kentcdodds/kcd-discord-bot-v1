@@ -1,6 +1,6 @@
 const got = require('got')
 const {default: matchSorter} = require('match-sorter')
-const {getCommandArgs} = require('../utils')
+const {getCommandArgs, sendBotMessageReply} = require('../utils')
 
 async function fetchArticles() {
   const response = await got('https://kentcdodds.com/blog.json')
@@ -40,7 +40,8 @@ async function blog(message) {
 
   if (args === 'last') {
     const lastArticles = articles.slice(0, 10)
-    message.channel.send(
+    return sendBotMessageReply(
+      message,
       `
 This is the list of the last 10 articles on the blog:
 ${printArticles(lastArticles)}
@@ -49,28 +50,31 @@ ${printArticles(lastArticles)}
   } else if (args) {
     const filteredArticles = searchArticles(articles, args)
     if (filteredArticles.length === 0) {
-      message.channel.send(
-        `Unfortunately there is no article matching your search 😟. Try searching here: <https://kentcdodds.com/blog>`,
+      return message.channel.send(
+        `Unfortunately there is no article matching "${args}" 😟. Try searching here: <https://kentcdodds.com/blog>`,
       )
     } else if (filteredArticles.length === 1) {
-      message.channel.send(`${filteredArticles[0].productionUrl}`)
+      return message.channel.send(`${filteredArticles[0].productionUrl}`)
     } else {
-      const searchMessage = `
-This is the list of the articles matching your search 💻:
-${printArticles(filteredArticles)}`.trim()
       if (filteredArticles.length > 10) {
-        return message.channel.send(
+        return sendBotMessageReply(
+          message,
           `
-There are too many results for your search. Here are the top 10:
+There are too many results for "${args}". Here are the top 10:
 ${printArticles(filteredArticles.slice(0, 10))}
             `.trim(),
         )
       }
-
-      message.channel.send(searchMessage)
+      return sendBotMessageReply(
+        message,
+        `
+This is the list of the articles matching "${args}" 💻:
+${printArticles(filteredArticles)}
+        `.trim(),
+      )
     }
   } else {
-    message.channel.send(
+    return message.channel.send(
       `A search term is required. For example: \`?blog state management\``,
     )
   }

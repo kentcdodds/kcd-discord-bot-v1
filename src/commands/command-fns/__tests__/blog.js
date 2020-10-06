@@ -71,8 +71,8 @@ test('should show an info message if not articles are found', async () => {
   const send = await setup(`not exist`)
 
   expect(send).toHaveBeenCalledTimes(1)
-  expect(send).toHaveBeenCalledWith(
-    `😟 Unfortunately there is no article matching your search. Could you try again 😀?`,
+  expect(send.mock.calls[0][0]).toMatchInlineSnapshot(
+    `"Unfortunately there is no article matching your search 😟. Try searching here: <https://kentcdodds.com/blog>"`,
   )
 })
 
@@ -86,8 +86,8 @@ test('should show an info message if there is an issue retrying articles', async
   const send = await setup(`not exist`)
 
   expect(send).toHaveBeenCalledTimes(1)
-  expect(send).toHaveBeenCalledWith(
-    `Something went wrong retrieving the list of articles 😬`,
+  expect(send.mock.calls[0][0]).toMatchInlineSnapshot(
+    `"Something went wrong retrieving the list of articles 😬. Try searching here: <https://kentcdodds.com/blog>"`,
   )
 })
 

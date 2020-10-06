@@ -34,19 +34,23 @@ async function blog(message) {
     articles = await fetchArticles()
   } catch (error) {
     return message.channel.send(
-      `Something went wrong retrieving the list of articles 😬`,
+      `Something went wrong retrieving the list of articles 😬. Try searching here: <https://kentcdodds.com/blog>`,
     )
   }
 
   if (args === 'last') {
     const lastArticles = articles.slice(0, 10)
-    message.channel.send(`This is the list of the last 10 articles on the blog:
-${printArticles(lastArticles)}`)
+    message.channel.send(
+      `
+This is the list of the last 10 articles on the blog:
+${printArticles(lastArticles)}
+      `.trim(),
+    )
   } else if (args) {
     const filteredArticles = searchArticles(articles, args)
     if (filteredArticles.length === 0) {
       message.channel.send(
-        `😟 Unfortunately there is no article matching your search. Could you try again 😀?`,
+        `Unfortunately there is no article matching your search 😟. Try searching here: <https://kentcdodds.com/blog>`,
       )
     } else if (filteredArticles.length === 1) {
       message.channel.send(`${filteredArticles[0].productionUrl}`)

@@ -16,7 +16,13 @@ function printArticles(articles) {
 
 function searchArticles(articles, searchText) {
   return matchSorter(articles, searchText, {
-    keys: ['title', 'description', 'categories', 'keywords'],
+    keys: [
+      {threshold: matchSorter.rankings.STARTS_WITH, key: 'categories'},
+      {threshold: matchSorter.rankings.STARTS_WITH, key: 'keywords'},
+      'title',
+      'description',
+    ],
+    threshold: matchSorter.rankings.CONTAINS,
   })
 }
 

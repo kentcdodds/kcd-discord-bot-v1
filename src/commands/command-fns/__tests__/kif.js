@@ -96,9 +96,9 @@ test('suggests similar item', async () => {
   const message = getMessage('?kif peace fail')
   await kif(message)
   expect(message.channel.send.mock.calls[0][0]).toMatchInlineSnapshot(`
-    "Couldn't find a kif for: \\"peace fail\\"
-
-    Did you mean \\"peace fall\\"?"
+    "Did you mean \\"peace fall\\"?
+    From: kody
+    https://giphy.com/gifs/fall-peace-kentcdodds-U3nGECxxmHugNeAm6n"
   `)
   expect(message.channel.send).toHaveBeenCalledTimes(1)
 })

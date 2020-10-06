@@ -12,7 +12,7 @@ const {
   sendBotMessageReply,
 } = require('../utils')
 
-const cache = {
+const kifCache = {
   kifs: null,
   kifsWithAliases: null,
   kifMap: null,
@@ -20,7 +20,7 @@ const cache = {
 }
 
 async function getKifInfo({force = false} = {}) {
-  if (cache.kifs && !force) return cache
+  if (kifCache.kifs && !force) return kifCache
 
   const kifs = await got(
     'https://api.github.com/repos/kentcdodds/kifs/contents/kifs.json',
@@ -61,8 +61,8 @@ async function getKifInfo({force = false} = {}) {
       return kifKey
     }
   })
-  Object.assign(cache, {kifs, kifMap, kifKeysWithoutEmoji, kifsWithAliases})
-  return cache
+  Object.assign(kifCache, {kifs, kifMap, kifKeysWithoutEmoji, kifsWithAliases})
+  return kifCache
 }
 
 async function getCloseMatches(search) {
@@ -84,7 +84,7 @@ async function getCloseMatches(search) {
   ).slice(0, 6)
 }
 
-async function sendKif(message, kif) {
+function getKifReply(message, kif) {
   const mentionedMembersNicknames = Array.from(
     message.mentions.members.values(),
   ).map(m => m.nickname ?? m.user.username)
@@ -92,7 +92,7 @@ async function sendKif(message, kif) {
   const to = mentionedMembersNicknames.length
     ? `To: ${listify(mentionedMembersNicknames, {stringify: i => i})}`
     : ''
-  return message.channel.send([from, to, kif].filter(Boolean).join('\n'))
+  return [from, to, kif].filter(Boolean).join('\n')
 }
 
 async function handleKifCommand(message) {
@@ -102,20 +102,27 @@ async function handleKifCommand(message) {
     .replace(MessageMentions.USERS_PATTERN, '')
     .trim()
     .toLowerCase()
-  const {kifMap} = await getKifInfo()
+  let cache = await getKifInfo()
+  if (!cache.kifMap[kifArg]) {
+    cache = await getKifInfo({force: true})
+  }
 
-  if (kifMap[kifArg]) {
-    return sendKif(message, kifMap[kifArg])
-  } else {
-    const updatedCache = await getKifInfo({force: true})
-    if (updatedCache.kifMap[kifArg]) {
-      return sendKif(message, updatedCache.kifMap[kifArg])
-    }
+  if (cache.kifMap[kifArg]) {
+    return message.channel.send(getKifReply(message, cache.kifMap[kifArg]))
   }
 
   const closeMatches = await getCloseMatches(kifArg)
+  if (closeMatches.length === 1) {
+    const closestMatch = closeMatches[0]
+    const matchingKif = cache.kifMap[closestMatch]
+    return message.channel.send(
+      `Did you mean "${closestMatch}"?\n${getKifReply(message, matchingKif)}`,
+    )
+  }
   const didYouMean = closeMatches.length
-    ? `Did you mean ${listify(closeMatches, {conjunction: 'or '})}?`
+    ? `Did you mean ${listify(closeMatches, {
+        conjunction: 'or ',
+      })}?`
     : ''
   return message.channel.send(
     `

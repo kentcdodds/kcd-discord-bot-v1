@@ -1,7 +1,11 @@
 const Discord = require('discord.js')
+const {SnowflakeUtil} = require('discord.js')
 
-function makeFakeClient() {
-  const client = {options: {}}
+const guilds = {}
+
+async function makeFakeClient() {
+  const client = new Discord.Client()
+  client.login(process.env.DISCORD_BOT_TOKEN)
   Object.assign(client, {
     channels: new Discord.ChannelManager(client),
     guilds: new Discord.GuildManager(client),
@@ -12,7 +16,11 @@ function makeFakeClient() {
       username: 'kcd',
     }),
   })
-  const guild = new Discord.Guild(client, {id: 'KCD_id', name: 'KCD'})
+  const guild = new Discord.Guild(client, {
+    id: SnowflakeUtil.generate(),
+    name: 'KCD',
+  })
+  guilds[guild.id] = guild
   const everyoneRole = new Discord.Role(
     client,
     // the everyone role has the same id as the guild.
@@ -45,66 +53,17 @@ function makeFakeClient() {
   })
   guild.members.cache.set(kody.id, kody)
 
-  const talkToBotsChannel = new Discord.TextChannel(guild, {
-    type: Discord.Constants.ChannelTypes.TEXT,
-    id: 'talk-to-bots-id',
-    name: '🤖-talk-to-bots',
-  })
-  jest
-    .spyOn(talkToBotsChannel, 'send')
-    .mockImplementation(content =>
-      Promise.resolve(
-        new Discord.Message(
-          client,
-          {id: 'help_test', content},
-          talkToBotsChannel,
-        ),
-      ),
-    )
+  const talkToBotsChannel = await guild.channels.create('🤖-talk-to-bots')
+  jest.spyOn(talkToBotsChannel, 'send')
   guild.channels.cache.set(talkToBotsChannel.id, talkToBotsChannel)
-  const privateChatCategory = new Discord.CategoryChannel(guild, {
-    type: Discord.Constants.ChannelTypes.CATEGORY,
-    id: 'private-chat',
-    name: 'PRIVATE CHAT',
+
+  const privateChatCategory = await guild.channels.create('PRIVATE CHAT', {
+    type: 'CATEGORY',
   })
   guild.channels.cache.set(privateChatCategory.id, privateChatCategory)
-  jest
-    .spyOn(guild.channels, 'create')
-    .mockImplementation((name, channelOptions) => {
-      const {
-        topic,
-        nsfw,
-        bitrate,
-        userLimit,
-        parent,
-        permissionOverwrites,
-        position,
-        rateLimitPerUser,
-      } = channelOptions
-      const newChannel = new Discord.TextChannel(guild, {
-        id: `${name}-id`,
-        name,
-        type: Discord.Constants.ChannelTypes.TEXT,
-        topic,
-        nsfw,
-        bitrate,
-        user_limit: userLimit,
-        parent_id: parent,
-        position,
-        permission_overwrites: permissionOverwrites,
-        rate_limit_per_user: rateLimitPerUser,
-      })
-      guild.channels.cache.set(newChannel.id, newChannel)
-      jest
-        .spyOn(newChannel, 'send')
-        .mockImplementation(content =>
-          Promise.resolve(
-            new Discord.Message(client, {id: 'help_test', content}, newChannel),
-          ),
-        )
-      return Promise.resolve(newChannel)
-    })
-
+  afterEach(() => {
+    delete guilds[guild.id]
+  })
   return {client, guild, bot, kody, talkToBotsChannel}
 }
 
@@ -120,4 +79,30 @@ function createUser(client, username, guild) {
   return newUser
 }
 
-module.exports = {makeFakeClient, createUser}
+function waitExpect(expectation, {timeout = 3000, interval = 1000}) {
+  if (interval < 1) interval = 1
+  const maxTries = Math.ceil(timeout / interval)
+  let tries = 0
+  return new Promise((resolve, reject) => {
+    const rejectOrRerun = error => {
+      if (tries > maxTries) {
+        reject(error)
+        return
+      }
+      setTimeout(runExpectation, interval)
+    }
+    function runExpectation() {
+      tries += 1
+      try {
+        Promise.resolve(expectation())
+          .then(() => resolve())
+          .catch(rejectOrRerun)
+      } catch (error) {
+        rejectOrRerun(error)
+      }
+    }
+    setTimeout(runExpectation, 0)
+  })
+}
+
+module.exports = {makeFakeClient, createUser, guilds, waitExpect}

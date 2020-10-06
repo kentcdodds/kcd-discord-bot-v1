@@ -71,12 +71,30 @@ function makeFakeClient() {
   jest
     .spyOn(guild.channels, 'create')
     .mockImplementation((name, channelOptions) => {
+      const {
+        topic,
+        nsfw,
+        bitrate,
+        userLimit,
+        parent,
+        permissionOverwrites,
+        position,
+        rateLimitPerUser,
+      } = channelOptions
       const newChannel = new Discord.TextChannel(guild, {
-        type: Discord.Constants.ChannelTypes.TEXT,
         id: `${name}-id`,
         name,
-        ...channelOptions,
+        type: Discord.Constants.ChannelTypes.TEXT,
+        topic,
+        nsfw,
+        bitrate,
+        user_limit: userLimit,
+        parent_id: parent,
+        position,
+        permission_overwrites: permissionOverwrites,
+        rate_limit_per_user: rateLimitPerUser,
       })
+      guild.channels.cache.set(newChannel.id, newChannel)
       jest
         .spyOn(newChannel, 'send')
         .mockImplementation(content =>

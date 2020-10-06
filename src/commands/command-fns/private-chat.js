@@ -1,5 +1,5 @@
 const Discord = require('discord.js')
-const {privateChannelPrefix, listify} = require('../utils')
+const {privateChannelPrefix, listify, sendBotMessageReply} = require('../utils')
 
 async function privateChat(message) {
   const mentionedMembers = [
@@ -103,7 +103,8 @@ I'm the bot that created this channel for you. The channel will be deleted after
 privateChat.description =
   'Create a private channel with who you want. This channel is temporary.'
 privateChat.help = message =>
-  message.channel.send(
+  sendBotMessageReply(
+    message,
     `
 Use this command to create a private chat with members of the server 🤫. 
 The chat will be deleted after 1 hour 👻 or if there is at least 10 minutes of inactivity 🚶‍♂️.

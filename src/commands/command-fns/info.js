@@ -2,6 +2,7 @@
 // provide information about the bot itself
 
 const redent = require('redent')
+const {sendBotMessageReply} = require('../utils')
 
 const startDate = new Date()
 
@@ -72,7 +73,8 @@ Commit:
 }
 
 async function info(message) {
-  const result = await message.channel.send(
+  const result = await sendBotMessageReply(
+    message,
     `
 Here's some info about the currently running bot:
 

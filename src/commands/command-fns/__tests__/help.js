@@ -1,17 +1,31 @@
+const Discord = require('discord.js')
+const {makeFakeClient} = require('test-utils')
 const help = require('../help')
 
 test('prints help for all commands', async () => {
-  const send = jest.fn(() => Promise.resolve())
-  const message = {content: '?help', channel: {send}}
+  const {client, talkToBotsChannel} = makeFakeClient()
+  const message = new Discord.Message(
+    client,
+    {id: 'help_test', content: '?help'},
+    talkToBotsChannel,
+  )
   await help(message)
-  expect(send).toHaveBeenCalledWith(expect.stringContaining('- help'))
-  expect(send).toHaveBeenCalledTimes(1)
+  expect(talkToBotsChannel.send).toHaveBeenCalledWith(
+    expect.stringContaining('- help'),
+  )
+  expect(talkToBotsChannel.send).toHaveBeenCalledTimes(1)
 })
 
 test('help with a specific command', async () => {
-  const send = jest.fn(() => Promise.resolve())
-  const message = {content: '?help ping', channel: {send}}
+  const {client, talkToBotsChannel} = makeFakeClient()
+  const message = new Discord.Message(
+    client,
+    {id: 'help_test', content: '?help info'},
+    talkToBotsChannel,
+  )
   await help(message)
-  expect(send).toHaveBeenCalledWith(expect.stringContaining('pong'))
-  expect(send).toHaveBeenCalledTimes(1)
+  expect(talkToBotsChannel.send).toHaveBeenCalledWith(
+    expect.stringContaining('information'),
+  )
+  expect(talkToBotsChannel.send).toHaveBeenCalledTimes(1)
 })

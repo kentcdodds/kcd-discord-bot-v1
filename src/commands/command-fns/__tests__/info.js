@@ -1,3 +1,5 @@
+const Discord = require('discord.js')
+const {makeFakeClient} = require('test-utils')
 const {buildTime} = require('../../../../build-info.json')
 
 jest.mock('../../../../build-info.json', () => ({
@@ -32,10 +34,15 @@ afterEach(() => {
 
 test('prints useful info', async () => {
   const info = require('../info')
-  const send = jest.fn(() => Promise.resolve())
-  const message = {content: '?info', channel: {send}}
+  const {client, talkToBotsChannel, kody} = makeFakeClient()
+  const message = new Discord.Message(
+    client,
+    {id: 'help_test', content: '?info', author: kody.user},
+    talkToBotsChannel,
+  )
+
   await info(message)
-  expect(send.mock.calls[0][0]).toMatchInlineSnapshot(`
+  expect(talkToBotsChannel.send.mock.calls[0][0]).toMatchInlineSnapshot(`
     "Here's some info about the currently running bot:
 
       Started at: Wed, 21 Oct 2020 07:20:15 GMT (now)
@@ -46,5 +53,5 @@ test('prints useful info', async () => {
         message: improve the info command
         link: <https://github.com/kentcdodds/kcd-discord-bot/commit/b84d60ca5507ebf73c8fd2fe620a8ad1cdf1958e>"
   `)
-  expect(send).toHaveBeenCalledTimes(1)
+  expect(talkToBotsChannel.send).toHaveBeenCalledTimes(1)
 })

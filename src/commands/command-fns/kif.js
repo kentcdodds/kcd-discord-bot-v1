@@ -7,10 +7,10 @@ const {default: matchSorter} = require('match-sorter')
 const {
   getCommandArgs,
   listify,
-  getChannel,
   getMember,
-  getMessageLink,
   rollbar,
+  sendSelfDestructMessage,
+  sendBotMessageReply,
 } = require('../utils')
 
 const cache = {
@@ -115,31 +115,21 @@ async function handleKifCommand(message) {
   const didYouMean = closeMatches.length
     ? `Did you mean ${listify(closeMatches, {conjunction: 'or '})}?`
     : ''
-  return message.channel.send(
+  return sendSelfDestructMessage(
+    message.channel,
     `
 Couldn't find a kif for: "${kifArg}"
 
 ${didYouMean}
-  `.trim(),
+    `.trim(),
+    {time: 10, units: 'seconds'},
   )
 }
 handleKifCommand.description = 'Send a KCD gif'
 async function help(message) {
   const {kifsWithAliases} = await getKifInfo()
-  const botsChannel = getChannel(message.guild, {name: 'talk-to-bots'})
-  const {user} = getMember(message.guild, message.author.id)
   const kifList = `- ${kifsWithAliases.join('\n- ')}`
-  if (message.channel.id === botsChannel.id) {
-    return botsChannel.send(`Available kifs are:\n${kifList}`)
-  }
-  const requestLink = getMessageLink(message)
-  const botMessage = await botsChannel.send(
-    `Hi ${user}. You asked for help with kifs (<${requestLink}>). Available kifs are:\n${kifList}`,
-  )
-  const botMessageLink = getMessageLink(botMessage)
-  await message.channel.send(
-    `${user}, I sent you the list of available kifs in ${botsChannel}: <${botMessageLink}>`,
-  )
+  return sendBotMessageReply(message, `Available kifs are:\n${kifList}`)
 }
 handleKifCommand.help = help
 

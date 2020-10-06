@@ -41,11 +41,12 @@
     "open-graph-scraper": "^4.5.1",
     "p-memoize": "^4.0.0",
     "redent": "^3.0.0",
-    "rollbar": "^2.19.3"
+    "rollbar": "^2.19.3",
+    "why-is-node-running": "^2.2.0"
   },
   "devDependencies": {
-    "kcd-scripts": "^6.0.0",
-    "msw": "^0.20.1"
+    "kcd-scripts": "^6.6.0",
+    "msw": "^0.21.2"
   },
   "eslintConfig": {
     "extends": "./node_modules/kcd-scripts/eslint.js",

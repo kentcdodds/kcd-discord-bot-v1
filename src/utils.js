@@ -92,6 +92,60 @@ const listify = (
 const getMessageLink = msg =>
   `https://discordapp.com/channels/${msg.guild.id}/${msg.channel.id}/${msg.id}`
 
+async function sendSelfDestructMessage(
+  channel,
+  messageContent,
+  {time = 10, units = 'seconds'} = {},
+) {
+  return channel.send(
+    `
+${messageContent}
+
+_This message will self-destruct in about ${time} ${units}_
+    `.trim(),
+  )
+}
+
+const timeToMs = {
+  seconds: t => t * 1000,
+  minutes: t => t * 1000 * 60,
+  hours: t => t * 1000 * 60 * 60,
+  days: t => t * 1000 * 60 * 60 * 24,
+  weeks: t => t * 1000 * 60 * 60 * 24 * 7,
+}
+
+function getSelfDestructTime(messageContent) {
+  const match = messageContent.match(
+    /self-destruct in about (?<time>\d+) (?<units>seconds|minutes|hours|days|weeks)/i,
+  )
+  if (!match) return null
+  const {units, time} = match.groups
+  return timeToMs[units]?.(time) ?? 0
+}
+
+async function sendBotMessageReply(msg, reply) {
+  const botsChannel = getChannel(msg.guild, {name: 'talk-to-bots'})
+  if (botsChannel.id === msg.channel.id) {
+    // if they sent this from the bot's channel then we'll just send the reply
+    return botsChannel.send(reply)
+  } else {
+    // otherwise, we'll send the reply in the bots channel and let them know
+    // where they can get the reply.
+    const botMsg = await botsChannel.send(
+      `
+_Replying to ${msg.author} <${getMessageLink(msg)}>_
+  
+${reply}
+      `.trim(),
+    )
+    return sendSelfDestructMessage(
+      msg.channel,
+      `Hey ${msg.author}, I replied to you here: ${getMessageLink(botMsg)}`,
+      {time: 7, units: 'seconds'},
+    )
+  }
+}
+
 module.exports = {
   rollbar,
   sleep,
@@ -108,6 +162,9 @@ module.exports = {
   listify,
   getMessageLink,
   isWelcomeChannel,
+  sendBotMessageReply,
+  sendSelfDestructMessage,
+  getSelfDestructTime,
   welcomeChannelPrefix,
   privateChannelPrefix,
 }

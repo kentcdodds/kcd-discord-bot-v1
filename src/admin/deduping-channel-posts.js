@@ -1,9 +1,9 @@
 const {
   commandPrefix,
   isWelcomeChannel,
-  getChannel,
   getMember,
   getMessageLink,
+  sendBotMessageReply,
 } = require('./utils')
 
 const sixHours = 1000 * 60 * 60 * 6
@@ -54,9 +54,9 @@ async function dedupeMessages(message) {
 
   if (duplicateMessage) {
     await message.delete({reason: `Duplicate message: ${duplicateMessage.id}`})
-    const botsChannel = getChannel(message.guild, {name: 'talk-to-bots'})
     const duplicateMessageLink = getMessageLink(duplicateMessage)
-    botsChannel.send(
+    sendBotMessageReply(
+      message,
       `
 Hi ${member.user}, I deleted a message you just posted because it's a duplicate of this one: <${duplicateMessageLink}>. Please give it time for users to respond to your first post.
 
@@ -78,4 +78,4 @@ function setup(client) {
   }
 }
 
-module.exports = {dedupeMessages, setup}
+module.exports = {handleNewMessage: dedupeMessages, setup}

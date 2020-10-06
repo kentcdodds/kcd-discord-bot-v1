@@ -1,38 +1,16 @@
+const Discord = require('discord.js')
+const {makeFakeClient} = require('test-utils')
 const {handleNewMessage} = require('..')
 
 test('handles incoming messages', async () => {
-  const send = jest.fn()
-  await handleNewMessage({
-    content: '?help',
-    channel: {send},
+  const {client, talkToBotsChannel, kody} = makeFakeClient()
 
-    // someone please save me...
-    guild: {
-      roles: {
-        cache: {
-          find() {
-            return {name: 'Member'}
-          },
-        },
-      },
-      members: {
-        cache: {
-          find() {
-            return {
-              id: '1234',
-              roles: {
-                cache: {
-                  has() {
-                    return true
-                  },
-                },
-              },
-            }
-          },
-        },
-      },
-    },
-    author: {id: '1234'},
-  })
-  expect(send).toHaveBeenCalledTimes(1)
+  const message = new Discord.Message(
+    client,
+    {id: 'help_test', content: '?help', author: kody.user},
+    talkToBotsChannel,
+  )
+
+  await handleNewMessage(message)
+  expect(talkToBotsChannel.send).toHaveBeenCalledTimes(1)
 })

@@ -1,6 +1,12 @@
 // Command purpose:
 // to automate management of learning clubs https://kcd.im/clubs
-const {getCommandArgs, getMember, listify, commandPrefix} = require('../utils')
+const {
+  getCommandArgs,
+  getMember,
+  listify,
+  commandPrefix,
+  sendBotMessageReply,
+} = require('../utils')
 
 const availableRoles = ['Notify: Kent Live', 'Notify: Office Hours']
 
@@ -21,7 +27,8 @@ async function roles(message) {
 
   if (requestedRole && action?.toLowerCase() === 'add') {
     if (member.roles.cache.has(requestedRole.id)) {
-      return message.channel.send(
+      return sendBotMessageReply(
+        message,
         `${member.user}, you already have the role \`${requestedRole.name}\`.`,
       )
     } else {
@@ -29,7 +36,8 @@ async function roles(message) {
         requestedRole,
         'Requested by the member via roles command',
       )
-      return message.channel.send(
+      return sendBotMessageReply(
+        message,
         `${member.user}, I've added you to \`${requestedRole.name}\`.`,
       )
     }
@@ -39,11 +47,13 @@ async function roles(message) {
         requestedRole,
         'Requested by the member via roles command',
       )
-      return message.channel.send(
+      return sendBotMessageReply(
+        message,
         `${member.user}, I've removed you from \`${requestedRole.name}\`.`,
       )
     } else {
-      return message.channel.send(
+      return sendBotMessageReply(
+        message,
         `${member.user}, you don't have the role \`${requestedRole.name}\`.`,
       )
     }
@@ -55,7 +65,8 @@ async function roles(message) {
 const rolesDisplayList = listify(availableRoles)
 roles.description = `Add or remove yourself from these roles: ${rolesDisplayList}`
 roles.help = message =>
-  message.channel.send(
+  sendBotMessageReply(
+    message,
     `
 Add or remove yourself from these roles: ${rolesDisplayList}
 

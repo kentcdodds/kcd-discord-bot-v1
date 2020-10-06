@@ -1,6 +1,6 @@
 // Command purpose:
 // lists all available commands
-const {getCommandArgs} = require('../utils')
+const {getCommandArgs, sendBotMessageReply} = require('../utils')
 
 async function help(message) {
   const args = getCommandArgs(message.content)
@@ -11,10 +11,11 @@ async function help(message) {
     if (commandFn.help) {
       return commandFn.help(message)
     } else if (commandFn.description) {
-      return message.channel.send(commandFn.description)
+      return sendBotMessageReply(message, commandFn.description)
     }
   } else {
-    const result = await message.channel.send(
+    const result = sendBotMessageReply(
+      message,
       `
 Here are the available commands:
 

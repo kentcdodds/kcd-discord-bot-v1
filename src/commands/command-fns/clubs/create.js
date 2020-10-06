@@ -9,6 +9,7 @@ const {
   getRole,
   getCommandArgs,
   getMessageLink,
+  sendBotMessageReply,
 } = require('../../utils')
 
 const httpify = link => (link.startsWith('http') ? link : `https://${link}`)
@@ -86,11 +87,11 @@ Find an example and template here: <https://kcd.im/kcd-learning-club-docs>
       new URL(formLink).hostname !== 'docs.google.com' &&
       new URL(formLink).hostname !== 'forms.gle'
     ) {
-      await message.channel.send(invalidLinkResponse)
+      await sendBotMessageReply(message, invalidLinkResponse)
       return
     }
   } catch {
-    await message.channel.send(invalidLinkResponse)
+    await sendBotMessageReply(message, invalidLinkResponse)
     return
   }
 
@@ -102,7 +103,7 @@ Find an example and template here: <https://kcd.im/kcd-learning-club-docs>
       errorMessage: error.message,
       formLink,
     })
-    await message.channel.send(error.message ?? 'Unknown error')
+    await sendBotMessageReply(message, error.message ?? 'Unknown error')
     return
   }
 
@@ -115,7 +116,8 @@ Find an example and template here: <https://kcd.im/kcd-learning-club-docs>
       key =>
         `Can't find data for "${formDataMarkers[key].before}" (make sure it comes before "${formDataMarkers[key].after})"`,
     )
-    await message.channel.send(
+    await sendBotMessageReply(
+      message,
       `
 I couldn't find all the required data for this club. Please make sure the Google Form Summary has all the data (and in the right order). Here's what I'm missing:
 - ${missingKeyLines.join('\n- ')}
@@ -129,7 +131,8 @@ I couldn't find all the required data for this club. Please make sure the Google
   if (errors.length) {
     const issues = errors.length === 1 ? 'an issue' : 'some issues'
     const problems = errors.length === 1 ? 'problem' : 'problems'
-    await message.channel.send(
+    await sendBotMessageReply(
+      message,
       `
 I found ${issues} with that club registration form:
 - ${errors.join('\n- ')}
@@ -153,7 +156,8 @@ Please fix the ${problems} above and try again. Please be sure to follow the tem
     getActiveClubMessage({formLink, formData, member}),
   )
   const activeClubMessageLink = getMessageLink(activeClubMessage)
-  await message.channel.send(
+  await sendBotMessageReply(
+    message,
     `
       Ok Captain ${member.user}! Congrats on starting your new club. I've posted all about it in ${openClubsChannel}: <${activeClubMessageLink}>.
       

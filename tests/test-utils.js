@@ -62,7 +62,44 @@ function makeFakeClient() {
       ),
     )
   guild.channels.cache.set(talkToBotsChannel.id, talkToBotsChannel)
+  const privateChatCategory = new Discord.CategoryChannel(guild, {
+    type: Discord.Constants.ChannelTypes.CATEGORY,
+    id: 'private-chat',
+    name: 'PRIVATE CHAT',
+  })
+  guild.channels.cache.set(privateChatCategory.id, privateChatCategory)
+  jest
+    .spyOn(guild.channels, 'create')
+    .mockImplementation((name, channelOptions) => {
+      const newChannel = new Discord.TextChannel(guild, {
+        type: Discord.Constants.ChannelTypes.TEXT,
+        id: `${name}-id`,
+        name,
+        ...channelOptions,
+      })
+      jest
+        .spyOn(newChannel, 'send')
+        .mockImplementation(content =>
+          Promise.resolve(
+            new Discord.Message(client, {id: 'help_test', content}, newChannel),
+          ),
+        )
+      return Promise.resolve(newChannel)
+    })
+
   return {client, guild, bot, kody, talkToBotsChannel}
 }
 
-module.exports = {makeFakeClient}
+function createUser(client, username, guild) {
+  const memberRole = guild.roles.cache.find(({name}) => name === 'Member')
+  const newUser = new Discord.GuildMember(client, {nick: username}, guild)
+  newUser.user = new Discord.User(client, {
+    id: `${username}-id`,
+    username,
+    roles: [memberRole],
+  })
+  guild.members.cache.set(newUser.id, newUser)
+  return newUser
+}
+
+module.exports = {makeFakeClient, createUser}

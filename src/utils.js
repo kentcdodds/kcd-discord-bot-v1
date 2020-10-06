@@ -163,7 +163,6 @@ module.exports = {
   getMessageLink,
   isWelcomeChannel,
   sendBotMessageReply,
-  sendSelfDestructMessage,
   getSelfDestructTime,
   welcomeChannelPrefix,
   privateChannelPrefix,

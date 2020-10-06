@@ -9,7 +9,6 @@ const {
   listify,
   getMember,
   rollbar,
-  sendSelfDestructMessage,
   sendBotMessageReply,
 } = require('../utils')
 
@@ -115,8 +114,7 @@ async function handleKifCommand(message) {
   const didYouMean = closeMatches.length
     ? `Did you mean ${listify(closeMatches, {conjunction: 'or '})}?`
     : ''
-  return sendSelfDestructMessage(
-    message.channel,
+  return message.channel.send(
     `
 Couldn't find a kif for: "${kifArg}"
 

@@ -98,9 +98,7 @@ test('suggests similar item', async () => {
   expect(message.channel.send.mock.calls[0][0]).toMatchInlineSnapshot(`
     "Couldn't find a kif for: \\"peace fail\\"
 
-    Did you mean \\"peace fall\\"?
-
-    _This message will self-destruct in about 10 seconds_"
+    Did you mean \\"peace fall\\"?"
   `)
   expect(message.channel.send).toHaveBeenCalledTimes(1)
 })
@@ -111,9 +109,7 @@ test('suggests two items', async () => {
   expect(message.channel.send.mock.calls[0][0]).toMatchInlineSnapshot(`
     "Couldn't find a kif for: \\"peac\\"
 
-    Did you mean \\"peace\\" or \\"peace fall\\"?
-
-    _This message will self-destruct in about 10 seconds_"
+    Did you mean \\"peace\\" or \\"peace fall\\"?"
   `)
   expect(message.channel.send).toHaveBeenCalledTimes(1)
 })
@@ -124,9 +120,7 @@ test('suggests several items (but no more than 6)', async () => {
   expect(message.channel.send.mock.calls[0][0]).toMatchInlineSnapshot(`
     "Couldn't find a kif for: \\"a\\"
 
-    Did you mean \\"aw\\", \\"adorable\\", \\"agree\\", \\"agreed\\", \\"aw shucks\\", or \\"peace\\"?
-
-    _This message will self-destruct in about 10 seconds_"
+    Did you mean \\"aw\\", \\"adorable\\", \\"agree\\", \\"agreed\\", \\"aw shucks\\", or \\"peace\\"?"
   `)
   expect(message.channel.send).toHaveBeenCalledTimes(1)
 })
@@ -134,10 +128,8 @@ test('suggests several items (but no more than 6)', async () => {
 test(`says it can't find something if it can't`, async () => {
   const message = getMessage('?kif djskfjdlakfjewoifdjd')
   await kif(message)
-  expect(message.channel.send.mock.calls[0][0]).toMatchInlineSnapshot(`
-    "Couldn't find a kif for: \\"djskfjdlakfjewoifdjd\\"
-
-    _This message will self-destruct in about 10 seconds_"
-  `)
+  expect(message.channel.send.mock.calls[0][0]).toMatchInlineSnapshot(
+    `"Couldn't find a kif for: \\"djskfjdlakfjewoifdjd\\""`,
+  )
   expect(message.channel.send).toHaveBeenCalledTimes(1)
 })

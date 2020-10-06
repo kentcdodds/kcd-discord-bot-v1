@@ -38,7 +38,7 @@ async function getKifInfo({force = false} = {}) {
   const kifMap = {}
   for (const kifKey of Object.keys(kifs)) {
     const {gif, aliases = [], emojiAliases = []} = kifs[kifKey]
-    kifMap[kifKey] = gif
+    kifMap[kifKey.toLowerCase()] = gif
     kifKeysWithoutEmoji.push(kifKey, ...aliases)
     for (const alias of [...aliases, ...emojiAliases]) {
       if (kifMap[alias]) {
@@ -98,7 +98,10 @@ async function sendKif(message, kif) {
 async function handleKifCommand(message) {
   const args = getCommandArgs(message.content)
 
-  const kifArg = args.replace(MessageMentions.USERS_PATTERN, '').trim()
+  const kifArg = args
+    .replace(MessageMentions.USERS_PATTERN, '')
+    .trim()
+    .toLowerCase()
   const {kifMap} = await getKifInfo()
 
   if (kifMap[kifArg]) {

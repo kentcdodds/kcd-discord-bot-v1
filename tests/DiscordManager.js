@@ -5,6 +5,13 @@
 class DiscordManager {
   static channels = {}
   static guilds = {}
+  static clients = []
+
+  static cleanup() {
+    this.channels = {}
+    this.guilds = {}
+    this.clients.forEach(client => client.destroy())
+  }
 }
 
 module.exports = DiscordManager

@@ -84,10 +84,9 @@ async function makeFakeClient() {
   }
 
   function cleanup() {
-    DiscordManager.channels = {}
-    DiscordManager.guilds = {}
+    DiscordManager.cleanup()
   }
-
+  DiscordManager.clients.push(client)
   return {
     client,
     guild,

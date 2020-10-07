@@ -34,7 +34,7 @@ afterEach(() => {
 
 test('prints useful info', async () => {
   const info = require('../info')
-  const {client, talkToBotsChannel, kody} = makeFakeClient()
+  const {client, talkToBotsChannel, kody} = await makeFakeClient()
   const message = new Discord.Message(
     client,
     {id: 'help_test', content: '?info', author: kody.user},

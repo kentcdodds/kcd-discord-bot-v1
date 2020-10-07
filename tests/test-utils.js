@@ -4,8 +4,8 @@ const DiscordManager = require('./DiscordManager')
 
 async function makeFakeClient() {
   const client = new Discord.Client()
-  client.token = process.env.DISCORD_BOT_TOKEN
   Object.assign(client, {
+    token: process.env.DISCORD_BOT_TOKEN,
     user: new Discord.ClientUser(client, {
       id: SnowflakeUtil.generate(),
       bot: true,

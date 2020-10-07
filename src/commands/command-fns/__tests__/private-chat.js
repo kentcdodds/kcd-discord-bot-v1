@@ -102,14 +102,9 @@ This channel is getting deleted for the following reason: deleted for inactivity
     `.trim(),
   )
 
-  await waitUntil(
-    () => {
-      expect(privateChannel.deleted).toBeTruthy()
-    },
-    {
-      timeout: 3000,
-    },
-  )
+  await waitUntil(() => {
+    expect(privateChannel.deleted).toBeTruthy()
+  })
 })
 
 test('should delete the private chat after 60 minutes', async () => {
@@ -141,14 +136,9 @@ This channel is getting deleted for the following reason: deleted for end of lif
     `.trim(),
   )
 
-  await waitUntil(
-    () => {
-      expect(privateChannel.deleted).toBeTruthy()
-    },
-    {
-      timeout: 3000,
-    },
-  )
+  await waitUntil(() => {
+    expect(privateChannel.deleted).toBeTruthy()
+  })
 })
 
 test('should not create a chat without mentioned member', async () => {

@@ -77,7 +77,7 @@ async function makeFakeClient() {
     user = kody,
     content = 'content',
     channel = talkToBotsChannel,
-  }) {
+  } = {}) {
     const userMessage = new Discord.Message(
       client,
       {
@@ -102,7 +102,7 @@ async function makeFakeClient() {
   }
 }
 
-function waitUntil(expectation, {timeout = 3000, interval = 1000}) {
+function waitUntil(expectation, {timeout = 3000, interval = 1000} = {}) {
   if (interval < 1) interval = 1
   const maxTries = Math.ceil(timeout / interval)
   let tries = 0

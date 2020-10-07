@@ -19,12 +19,12 @@ async function createPrivateChat(mentionedUsernames = []) {
     {
       id: SnowflakeUtil.generate(),
       content: '?private-chat',
-      author: sentMessageUser,
+      author: sentMessageUser.user,
     },
     talkToBotsChannel,
   )
-  const mentionedUsers = mentionedUsernames.map(username =>
-    createUser(client, username, guild),
+  const mentionedUsers = mentionedUsernames.map(
+    username => createUser(username).user,
   )
   Object.assign(message, {
     mentions: new Discord.MessageMentions(message, mentionedUsers, [], false),
@@ -50,7 +50,7 @@ function getPrivateChannels(guild) {
   )
 }
 
-test('should create a private chat', async () => {
+test('should create a private chat for two users', async () => {
   const {message, guild, channelMembers} = await createPrivateChat([
     'mentionedUser',
   ])
@@ -58,10 +58,13 @@ test('should create a private chat', async () => {
 
   expect(privateChannels).toHaveLength(1)
   const privateChannel = privateChannels[0]
+  expect(privateChannel.name).toEqual(
+    `😎-private-mentionedUser-sentMessageUser`,
+  )
   expect(privateChannel.lastMessage).toBeDefined()
   expect(privateChannel.lastMessage.content).toEqual(
     `
-Hello <@!${channelMembers[1].user.id}> and <@!${channelMembers[0].user.id}> 👋
+Hello <@!${channelMembers[1].id}> and <@${channelMembers[0].id}> 👋
 
 I'm the bot that created this channel for you. The channel will be deleted after 1 hour or after 10 minutes for inactivity. Enjoy 🗣
 
@@ -72,6 +75,21 @@ I'm the bot that created this channel for you. The channel will be deleted after
   expect(message.channel.send).toHaveBeenCalledTimes(1)
   expect(message.channel.send).toHaveBeenCalledWith(
     `I've created <#${privateChannel.id}> for you folks to talk privately. Cheers!`,
+  )
+})
+
+test('should create a private chat for more than two users', async () => {
+  const {guild} = await createPrivateChat([
+    'mentionedUser',
+    'mentionedUser2',
+    'mentionedUser3',
+  ])
+  const privateChannels = getPrivateChannels(guild)
+
+  expect(privateChannels).toHaveLength(1)
+  const privateChannel = privateChannels[0]
+  expect(privateChannel.name).toEqual(
+    `😎-private-mentionedUser-mentionedUser2-and-others`,
   )
 })
 

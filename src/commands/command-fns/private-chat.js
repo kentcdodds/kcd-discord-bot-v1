@@ -12,8 +12,11 @@ async function privateChat(message) {
   )
   const mentionedMembersNicknames = Array.from(
     message.mentions.members.values(),
-  ).map(user => user.nickname ?? user.user.username)
-  mentionedMembers.push(message.member)
+  ).map(user => {
+    return user.nickname ?? user.user.username
+  })
+  mentionedMembers.push(message.author)
+  mentionedMembersNicknames.push(message.author.username)
   if (mentionedMembers.length < 2) {
     return message.channel.send(`You should mention at least one other member.`)
   }

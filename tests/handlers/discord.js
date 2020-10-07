@@ -11,7 +11,6 @@ const handlers = [
     }
     DiscordManager.channels[createdChannel.id] = {
       ...createdChannel,
-      messages: [],
     }
 
     return res(ctx.status(200), ctx.json(createdChannel))
@@ -19,8 +18,14 @@ const handlers = [
   rest.get(
     '*/api/:apiVersion/channels/:channelId/messages',
     (req, res, ctx) => {
-      const channel = DiscordManager.channels[req.params.channelId]
-      return res(ctx.status(200), ctx.json(channel.messages))
+      const cachedChannel = DiscordManager.channels[req.params.channelId]
+      const discordChannel = Array.from(
+        DiscordManager.guilds[cachedChannel.guild_id].channels.cache.values(),
+      ).find(channel => channel.id === cachedChannel.id)
+      return res(
+        ctx.status(200),
+        ctx.json(Array.from(discordChannel.messages.cache.values())),
+      )
     },
   ),
   rest.post(
@@ -36,7 +41,6 @@ const handlers = [
         author: guild.client.user,
         ...req.body,
       }
-      channel.messages.push(message)
       return res(ctx.status(200), ctx.json(message))
     },
   ),

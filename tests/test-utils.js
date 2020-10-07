@@ -88,7 +88,6 @@ async function makeFakeClient() {
       channel,
     )
     channel.messages.cache.set(userMessage.id, userMessage)
-    DiscordManager.channels[channel.id].messages.push(userMessage)
   }
 
   return {

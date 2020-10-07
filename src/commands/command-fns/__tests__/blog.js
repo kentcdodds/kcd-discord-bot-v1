@@ -80,6 +80,13 @@ test('should show articles matching the search string', async () => {
   )
 })
 
+test('should show the first articles retrieved', async () => {
+  const send = await setup(`latest`)
+
+  expect(send).toHaveBeenCalledTimes(1)
+  expect(send).toHaveBeenCalledWith(`https://kentcdodds.com/blog/how-to-react`)
+})
+
 test('should show an info message if not articles are found', async () => {
   const send = await setup(`not exist`)
 

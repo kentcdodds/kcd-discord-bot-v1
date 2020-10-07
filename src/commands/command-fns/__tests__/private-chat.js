@@ -158,3 +158,14 @@ test('should not create a chat without mentioned member', async () => {
     'You should mention at least one other member.',
   )
 })
+
+test('should give an error trying to create a chat for the same members', async () => {
+  const {message, guild} = await createPrivateChat(['mentionedUser'])
+  const privateChannel = getPrivateChannels(guild)[0]
+  await privateChat(message)
+
+  expect(message.channel.send).toHaveBeenCalledTimes(2)
+  expect(message.channel.send).toHaveBeenCalledWith(
+    `There is already a chat for the same members <#${privateChannel.id}>`,
+  )
+})

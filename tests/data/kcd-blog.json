@@ -197,5 +197,14 @@
     "categories": ["career"],
     "keywords": ["career"],
     "description": "A challenge and ideas for you to do something to build your career. "
+  },
+  {
+    "id": "9e5ad34a-b4cf-5e72-89b9-88fe0a493c76",
+    "slug": "/blog/updated-advanced-react-component-patterns",
+    "productionUrl": "https://kentcdodds.com/blog/updated-advanced-react-component-patterns",
+    "title": "💯 UPDATED: Advanced React Component Patterns ⚛️",
+    "categories": [],
+    "keywords": ["javascript", "react"],
+    "description": "Now featuring the latest React APIs (like context) and entirely new patterns (like state reducer props). "
   }
 ]

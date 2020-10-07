@@ -38,7 +38,10 @@ async function blog(message) {
     )
   }
 
-  if (args === 'last') {
+  if (args === 'latest') {
+    // The articles are already sorted by published date
+    return message.channel.send(`${articles[0].productionUrl}`)
+  } else if (args === 'last') {
     const lastArticles = articles.slice(0, 10)
     return sendBotMessageReply(
       message,

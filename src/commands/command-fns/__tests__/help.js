@@ -10,10 +10,21 @@ test('prints help for all commands', async () => {
     talkToBotsChannel,
   )
   await help(message)
-  expect(talkToBotsChannel.send).toHaveBeenCalledWith(
-    expect.stringContaining('- help'),
-  )
-  expect(talkToBotsChannel.send).toHaveBeenCalledTimes(1)
+
+  const messages = Array.from(talkToBotsChannel.messages.cache.values())
+  expect(messages).toHaveLength(1)
+  expect(messages[0].content).toMatchInlineSnapshot(`
+    "Here are the available commands:
+
+    - help: Lists available commands
+    - kif: Send a KCD gif (send \`?help kif\` for more info)
+    - thanks: A special way to show your appreciation for someone who's helped you out a bit
+    - roles: Add or remove yourself from these roles: \\"Notify: Kent Live\\" and \\"Notify: Office Hours\\"
+    - clubs: Create a club with \`?clubs create LINK_TO_GOOGLE_FORM\` (learn more: <https://kcd.im/clubs>)
+    - info: Gives information about the bot (deploy date etc.)
+    - private-chat: Create a private channel with who you want. This channel is temporary.
+    - blog: Find articles on Kent's blog: <https://kentcdodds.com/blog>"
+  `)
 })
 
 test('help with a specific command', async () => {
@@ -24,8 +35,10 @@ test('help with a specific command', async () => {
     talkToBotsChannel,
   )
   await help(message)
-  expect(talkToBotsChannel.send).toHaveBeenCalledWith(
-    expect.stringContaining('information'),
+
+  const messages = Array.from(talkToBotsChannel.messages.cache.values())
+  expect(messages).toHaveLength(1)
+  expect(messages[0].content).toMatchInlineSnapshot(
+    `"Gives information about the bot (deploy date etc.)"`,
   )
-  expect(talkToBotsChannel.send).toHaveBeenCalledTimes(1)
 })

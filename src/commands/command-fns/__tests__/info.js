@@ -42,7 +42,10 @@ test('prints useful info', async () => {
   )
 
   await info(message)
-  expect(talkToBotsChannel.send.mock.calls[0][0]).toMatchInlineSnapshot(`
+
+  const messages = Array.from(talkToBotsChannel.messages.cache.values())
+  expect(messages).toHaveLength(1)
+  expect(messages[0].content).toMatchInlineSnapshot(`
     "Here's some info about the currently running bot:
 
       Started at: Wed, 21 Oct 2020 07:20:15 GMT (now)
@@ -53,5 +56,4 @@ test('prints useful info', async () => {
         message: improve the info command
         link: <https://github.com/kentcdodds/kcd-discord-bot/commit/b84d60ca5507ebf73c8fd2fe620a8ad1cdf1958e>"
   `)
-  expect(talkToBotsChannel.send).toHaveBeenCalledTimes(1)
 })

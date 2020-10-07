@@ -28,6 +28,12 @@ const handlers = [
       )
     },
   ),
+  rest.patch(
+    '*/api/:apiVersion/guilds/:guildId/members/:memberId',
+    (req, res, ctx) => {
+      return res(ctx.status(200), ctx.json({}))
+    },
+  ),
   rest.post(
     '*/api/:apiVersion/channels/:channelId/messages',
     (req, res, ctx) => {

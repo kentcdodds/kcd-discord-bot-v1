@@ -31,11 +31,12 @@ async function createPrivateChat(mentionedUsernames = []) {
   })
 
   await privateChat(message)
-
+  const botsMessages = Array.from(talkToBotsChannel.messages.cache.values())
   return {
     client,
     message,
     guild,
+    botsMessages,
     channelMembers: [sentMessageUser, ...mentionedUsers],
     addUserMessage,
   }
@@ -51,7 +52,7 @@ function getPrivateChannels(guild) {
 }
 
 test('should create a private chat for two users', async () => {
-  const {message, guild, channelMembers} = await createPrivateChat([
+  const {guild, channelMembers, botsMessages} = await createPrivateChat([
     'mentionedUser',
   ])
   const privateChannels = getPrivateChannels(guild)
@@ -72,8 +73,8 @@ I'm the bot that created this channel for you. The channel will be deleted after
 `.trim(),
   )
 
-  expect(message.channel.send).toHaveBeenCalledTimes(1)
-  expect(message.channel.send).toHaveBeenCalledWith(
+  expect(botsMessages).toHaveLength(1)
+  expect(botsMessages[0].content).toEqual(
     `I've created <#${privateChannel.id}> for you folks to talk privately. Cheers!`,
   )
 })
@@ -164,9 +165,9 @@ This channel is getting deleted for the following reason: deleted for end of lif
 })
 
 test('should not create a chat without mentioned member', async () => {
-  const {message} = await createPrivateChat()
-  expect(message.channel.send).toHaveBeenCalledTimes(1)
-  expect(message.channel.send).toHaveBeenCalledWith(
+  const {botsMessages} = await createPrivateChat()
+  expect(botsMessages).toHaveLength(1)
+  expect(botsMessages[0].content).toEqual(
     'You should mention at least one other member.',
   )
 })
@@ -176,8 +177,9 @@ test('should give an error trying to create a chat for the same members', async 
   const privateChannel = getPrivateChannels(guild)[0]
   await privateChat(message)
 
-  expect(message.channel.send).toHaveBeenCalledTimes(2)
-  expect(message.channel.send).toHaveBeenCalledWith(
+  const botsMessages = Array.from(message.channel.messages.cache.values())
+  expect(botsMessages).toHaveLength(2)
+  expect(botsMessages[1].content).toEqual(
     `There is already a chat for the same members <#${privateChannel.id}>`,
   )
 })
@@ -205,8 +207,9 @@ test('should not create a private-chat with yourself', async () => {
 
   await privateChat(message)
 
-  expect(message.channel.send).toHaveBeenCalledTimes(1)
-  expect(message.channel.send).toHaveBeenCalledWith(
+  const botsMessages = Array.from(talkToBotsChannel.messages.cache.values())
+  expect(botsMessages).toHaveLength(1)
+  expect(botsMessages[0].content).toEqual(
     `You should mention at least one other member.`,
   )
 })

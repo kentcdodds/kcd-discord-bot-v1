@@ -5,7 +5,7 @@ const {makeFakeClient} = require('test-utils')
 const blog = require('../blog')
 
 const setup = async command => {
-  const {client, talkToBotsChannel, kody} = await makeFakeClient()
+  const {client, talkToBotsChannel, kody, cleanup} = await makeFakeClient()
   const message = new Discord.Message(
     client,
     {
@@ -19,14 +19,15 @@ const setup = async command => {
     mentions: new Discord.MessageMentions(message, [], [], false),
   })
   await blog(message)
-  return talkToBotsChannel.send
+
+  const messages = Array.from(talkToBotsChannel.messages.cache.values())
+  return {messages, cleanup}
 }
 
 test('should show the list of the last 10 articles', async () => {
-  const send = await setup('last')
+  const {messages} = await setup('last')
 
-  expect(send).toHaveBeenCalledTimes(1)
-  expect(send.mock.calls[0][0]).toMatchInlineSnapshot(`
+  expect(messages[0].content).toMatchInlineSnapshot(`
     "This is the list of the last 10 articles on the blog:
     - How to React ⚛️
       <https://kentcdodds.com/blog/how-to-react>
@@ -52,10 +53,9 @@ test('should show the list of the last 10 articles', async () => {
 })
 
 test('should show articles matching the search string', async () => {
-  let send = await setup('open source')
+  let utils = await setup('open source')
 
-  expect(send).toHaveBeenCalledTimes(1)
-  expect(send.mock.calls[0][0]).toMatchInlineSnapshot(`
+  expect(utils.messages[0].content).toMatchInlineSnapshot(`
     "This is the list of the articles matching \\"open source\\" 💻:
     - Favor Progress Over Pride in Open Source
       <https://kentcdodds.com/blog/favor-progress-over-pride-in-open-source>
@@ -65,17 +65,17 @@ test('should show articles matching the search string', async () => {
       <https://kentcdodds.com/blog/what-open-source-project-should-i-contribute-to>"
   `)
 
-  send = await setup('onditionally render content in JSX')
+  utils.cleanup()
+  utils = await setup('onditionally render content in JSX')
 
-  expect(send).toHaveBeenCalledTimes(1)
-  expect(send).toHaveBeenCalledWith(
+  expect(utils.messages[0].content).toEqual(
     `https://kentcdodds.com/blog/use-ternaries-rather-than-and-and-in-jsx`,
   )
+  utils.cleanup()
 
-  send = await setup(`why you shouldn't mock fetch or your AP`)
+  utils = await setup(`why you shouldn't mock fetch or your AP`)
 
-  expect(send).toHaveBeenCalledTimes(1)
-  expect(send).toHaveBeenCalledWith(
+  expect(utils.messages[0].content).toEqual(
     `https://kentcdodds.com/blog/stop-mocking-fetch`,
   )
 })
@@ -88,10 +88,9 @@ test('should show the first articles retrieved', async () => {
 })
 
 test('should show an info message if not articles are found', async () => {
-  const send = await setup(`not exist`)
+  const {messages} = await setup(`not exist`)
 
-  expect(send).toHaveBeenCalledTimes(1)
-  expect(send.mock.calls[0][0]).toMatchInlineSnapshot(
+  expect(messages[0].content).toMatchInlineSnapshot(
     `"Unfortunately there is no article matching \\"not exist\\" 😟. Try searching here: <https://kentcdodds.com/blog>"`,
   )
 })
@@ -103,19 +102,17 @@ test('should show an info message if there is an issue retrying articles', async
     }),
   )
 
-  const send = await setup(`not exist`)
+  const {messages} = await setup(`not exist`)
 
-  expect(send).toHaveBeenCalledTimes(1)
-  expect(send.mock.calls[0][0]).toMatchInlineSnapshot(
+  expect(messages[0].content).toMatchInlineSnapshot(
     `"Something went wrong retrieving the list of articles 😬. Try searching here: <https://kentcdodds.com/blog>"`,
   )
 })
 
 test('should give an error message if the user not provide a search term', async () => {
-  const send = await setup(``)
+  const {messages} = await setup(``)
 
-  expect(send).toHaveBeenCalledTimes(1)
-  expect(send).toHaveBeenCalledWith(
+  expect(messages[0].content).toEqual(
     `A search term is required. For example: \`?blog state management\``,
   )
 })

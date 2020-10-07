@@ -34,24 +34,20 @@ async function makeFakeClient() {
   )
   guild.roles.cache.set(memberRole.id, memberRole)
 
-  const bot = new Discord.GuildMember(
-    client,
-    {bot: true, username: 'kcd', roles: [memberRole]},
-    guild,
-  )
+  let bot = new Discord.GuildMember(client, {bot: true, username: 'kcd'}, guild)
   bot.user = new Discord.User(client, {id: SnowflakeUtil.generate()})
+  bot = await bot.roles.add([memberRole])
   guild.members.cache.set(bot.id, bot)
 
-  const kody = new Discord.GuildMember(client, {nick: 'kody'}, guild)
+  let kody = new Discord.GuildMember(client, {nick: 'kody'}, guild)
   kody.user = new Discord.User(client, {
     id: SnowflakeUtil.generate(),
     username: 'kodykoala',
-    roles: [memberRole],
   })
+  kody = await kody.roles.add([memberRole])
   guild.members.cache.set(kody.id, kody)
 
   const talkToBotsChannel = await guild.channels.create('🤖-talk-to-bots')
-  jest.spyOn(talkToBotsChannel, 'send')
   guild.channels.cache.set(talkToBotsChannel.id, talkToBotsChannel)
 
   const privateChatCategory = await guild.channels.create('PRIVATE CHAT', {
@@ -87,6 +83,11 @@ async function makeFakeClient() {
     channel.messages.cache.set(userMessage.id, userMessage)
   }
 
+  function cleanup() {
+    DiscordManager.channels = {}
+    DiscordManager.guilds = {}
+  }
+
   return {
     client,
     guild,
@@ -95,6 +96,7 @@ async function makeFakeClient() {
     talkToBotsChannel,
     createUser,
     addUserMessage,
+    cleanup,
   }
 }
 

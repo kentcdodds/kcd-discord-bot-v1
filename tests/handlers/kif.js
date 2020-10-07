@@ -1,6 +1,5 @@
 const {rest} = require('msw')
-const kif = require('./data/kif.json')
-const posts = require('./data/kcd-blog.json')
+const kif = require('../data/kif.json')
 
 const handlers = [
   rest.get(
@@ -14,9 +13,6 @@ const handlers = [
       )
     },
   ),
-  rest.get('https://kentcdodds.com/blog.json', (req, res, ctx) => {
-    return res(ctx.json(posts))
-  }),
 ]
 
 module.exports = handlers

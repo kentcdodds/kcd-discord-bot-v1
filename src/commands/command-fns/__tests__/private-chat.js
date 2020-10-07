@@ -1,76 +1,14 @@
 const Discord = require('discord.js')
 const {SnowflakeUtil} = require('discord.js')
-const {makeFakeClient, createUser, guilds} = require('test-utils')
-const {rest} = require('msw')
-const {setupServer} = require('msw/node')
+const {
+  makeFakeClient,
+  createUser,
+  DiscordManager,
+  waitUntil,
+} = require('test-utils')
 const privateChat = require('../private-chat')
 const {getCategory} = require('../../utils')
 const {cleanup} = require('../../../private-chat/cleanup')
-
-let channels = {}
-const server = setupServer(
-  rest.post('*/api/:apiVersion/guilds/:guild/channels', (req, res, ctx) => {
-    const createdChannel = {
-      id: SnowflakeUtil.generate(),
-      guild_id: req.params.guild,
-      ...req.body,
-    }
-    channels[createdChannel.id] = {
-      ...createdChannel,
-      messages: [],
-    }
-    return res(ctx.status(200), ctx.json(createdChannel))
-  }),
-  rest.get(
-    '*/api/:apiVersion/channels/:channelId/messages',
-    (req, res, ctx) => {
-      const channel = channels[req.params.channelId]
-      return res(ctx.status(200), ctx.json(channel.messages))
-    },
-  ),
-  rest.post(
-    '*/api/:apiVersion/channels/:channelId/messages',
-    (req, res, ctx) => {
-      const channel = channels[req.params.channelId]
-      const guild = guilds[channel.guild_id]
-      const message = {
-        id: SnowflakeUtil.generate(),
-        channel_id: channel.id,
-        guild_id: channel.guild_id,
-        timestamp: new Date().toISOString(),
-        author: guild.client.user,
-        ...req.body,
-      }
-      channel.messages.push(message)
-      return res(ctx.status(200), ctx.json(message))
-    },
-  ),
-  rest.delete('*/api/:apiVersion/channels/:channelId', (req, res, ctx) => {
-    const channel = channels[req.params.channelId]
-    channel.deleted = true
-    return res(ctx.status(200), ctx.json(channel))
-  }),
-  rest.get('*/api/:apiVersion/gateway/bot', (req, res, ctx) => {
-    return res(
-      ctx.status(200),
-      ctx.json({
-        url: '',
-        shards: 9,
-        session_start_limit: {
-          total: 1000,
-          remaining: 999,
-          reset_after: 14400000,
-        },
-      }),
-    )
-  }),
-)
-beforeAll(() => server.listen({onUnhandledRequest: 'error'}))
-afterAll(() => server.close())
-afterEach(() => {
-  server.resetHandlers()
-  channels = {}
-})
 
 async function createPrivateChat(mentionedUsernames = []) {
   const {client, talkToBotsChannel, guild} = await makeFakeClient()
@@ -78,7 +16,7 @@ async function createPrivateChat(mentionedUsernames = []) {
   const message = new Discord.Message(
     client,
     {
-      id: 'private_chat_test',
+      id: SnowflakeUtil.generate(),
       content: '?private-chat',
       author: sentMessageUser,
     },
@@ -159,6 +97,15 @@ This channel is getting deleted for the following reason: deleted for inactivity
   Goodbye 👋
     `.trim(),
   )
+
+  await waitUntil(
+    () => {
+      expect(privateChannel.deleted).toBeTruthy()
+    },
+    {
+      timeout: 3000,
+    },
+  )
 })
 
 test('should delete the private chat after 60 minutes', async () => {
@@ -179,7 +126,7 @@ test('should delete the private chat after 60 minutes', async () => {
     privateChannel,
   )
   privateChannel.messages.cache.set(fakeUserMessage.id, fakeUserMessage)
-  channels[privateChannel.id].messages.push(fakeUserMessage)
+  DiscordManager.channels[privateChannel.id].messages.push(fakeUserMessage)
   await cleanup(guild)
   expect(privateChannel.messages.cache.size).toEqual(3)
   expect(privateChannel.lastMessage.content).toEqual(
@@ -196,6 +143,15 @@ This channel is getting deleted for the following reason: deleted for end of lif
   
   Goodbye 👋
     `.trim(),
+  )
+
+  await waitUntil(
+    () => {
+      expect(privateChannel.deleted).toBeTruthy()
+    },
+    {
+      timeout: 3000,
+    },
   )
 })
 

@@ -5,7 +5,7 @@ const {makeFakeClient} = require('test-utils')
 const blog = require('../blog')
 
 const setup = async command => {
-  const {client, talkToBotsChannel, kody} = makeFakeClient()
+  const {client, talkToBotsChannel, kody} = await makeFakeClient()
   const message = new Discord.Message(
     client,
     {

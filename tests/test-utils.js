@@ -1,7 +1,6 @@
 const Discord = require('discord.js')
 const {SnowflakeUtil} = require('discord.js')
-
-const guilds = {}
+const DiscordManager = require('./DiscordManager')
 
 async function makeFakeClient() {
   const client = new Discord.Client()
@@ -20,7 +19,8 @@ async function makeFakeClient() {
     id: SnowflakeUtil.generate(),
     name: 'KCD',
   })
-  guilds[guild.id] = guild
+  guild.messages = []
+  DiscordManager.guilds[guild.id] = guild
   const everyoneRole = new Discord.Role(
     client,
     // the everyone role has the same id as the guild.
@@ -61,9 +61,7 @@ async function makeFakeClient() {
     type: 'CATEGORY',
   })
   guild.channels.cache.set(privateChatCategory.id, privateChatCategory)
-  afterEach(() => {
-    delete guilds[guild.id]
-  })
+
   return {client, guild, bot, kody, talkToBotsChannel}
 }
 
@@ -79,7 +77,7 @@ function createUser(client, username, guild) {
   return newUser
 }
 
-function waitExpect(expectation, {timeout = 3000, interval = 1000}) {
+function waitUntil(expectation, {timeout = 3000, interval = 1000}) {
   if (interval < 1) interval = 1
   const maxTries = Math.ceil(timeout / interval)
   let tries = 0
@@ -105,4 +103,9 @@ function waitExpect(expectation, {timeout = 3000, interval = 1000}) {
   })
 }
 
-module.exports = {makeFakeClient, createUser, guilds, waitExpect}
+module.exports = {
+  makeFakeClient,
+  createUser,
+  waitUntil,
+  DiscordManager,
+}

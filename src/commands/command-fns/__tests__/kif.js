@@ -2,8 +2,8 @@ const Discord = require('discord.js')
 const {makeFakeClient} = require('test-utils')
 const kif = require('../kif')
 
-function getMessage(content) {
-  const {client, talkToBotsChannel, kody} = makeFakeClient()
+async function getMessage(content) {
+  const {client, talkToBotsChannel, kody} = await makeFakeClient()
   const message = new Discord.Message(
     client,
     {
@@ -20,7 +20,7 @@ function getMessage(content) {
 }
 
 test('sends a gif', async () => {
-  const message = getMessage('?kif hi')
+  const message = await getMessage('?kif hi')
   await kif(message)
   expect(message.channel.send.mock.calls[0][0]).toMatchInlineSnapshot(`
     "From: kody
@@ -30,7 +30,7 @@ test('sends a gif', async () => {
 })
 
 test('suggests similar item', async () => {
-  const message = getMessage('?kif peace fail')
+  const message = await getMessage('?kif peace fail')
   await kif(message)
   expect(message.channel.send.mock.calls[0][0]).toMatchInlineSnapshot(`
     "Did you mean \\"peace fall\\"?
@@ -41,7 +41,7 @@ test('suggests similar item', async () => {
 })
 
 test('suggests two items', async () => {
-  const message = getMessage('?kif peac')
+  const message = await getMessage('?kif peac')
   await kif(message)
   expect(message.channel.send.mock.calls[0][0]).toMatchInlineSnapshot(`
     "Couldn't find a kif for: \\"peac\\"
@@ -52,7 +52,7 @@ test('suggests two items', async () => {
 })
 
 test('suggests several items (but no more than 6)', async () => {
-  const message = getMessage('?kif a')
+  const message = await getMessage('?kif a')
   await kif(message)
   expect(message.channel.send.mock.calls[0][0]).toMatchInlineSnapshot(`
     "Couldn't find a kif for: \\"a\\"
@@ -63,7 +63,7 @@ test('suggests several items (but no more than 6)', async () => {
 })
 
 test(`says it can't find something if it can't`, async () => {
-  const message = getMessage('?kif djskfjdlakfjewoifdjd')
+  const message = await getMessage('?kif djskfjdlakfjewoifdjd')
   await kif(message)
   expect(message.channel.send.mock.calls[0][0]).toMatchInlineSnapshot(
     `"Couldn't find a kif for: \\"djskfjdlakfjewoifdjd\\""`,

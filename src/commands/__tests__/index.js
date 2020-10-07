@@ -3,7 +3,7 @@ const {makeFakeClient} = require('test-utils')
 const {handleNewMessage} = require('..')
 
 test('handles incoming messages', async () => {
-  const {client, talkToBotsChannel, kody} = makeFakeClient()
+  const {client, talkToBotsChannel, kody} = await makeFakeClient()
 
   const message = new Discord.Message(
     client,

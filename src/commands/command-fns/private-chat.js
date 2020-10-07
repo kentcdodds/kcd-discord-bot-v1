@@ -7,13 +7,13 @@ const {
 } = require('../utils')
 
 async function privateChat(message) {
-  const mentionedMembers = [
-    ...Array.from(message.mentions.members.values()),
-    message.member,
-  ]
+  const mentionedMembers = Array.from(message.mentions.members.values()).filter(
+    user => user.user.id !== message.member.id,
+  )
   const mentionedMembersNicknames = Array.from(
     message.mentions.members.values(),
-  ).map(m => m.nickname ?? m.user.username)
+  ).map(user => user.nickname ?? user.user.username)
+  mentionedMembers.push(message.member)
   if (mentionedMembers.length < 2) {
     return message.channel.send(`You should mention at least one other member.`)
   }

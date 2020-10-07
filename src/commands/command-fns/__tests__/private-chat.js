@@ -163,3 +163,32 @@ test('should give an error trying to create a chat for the same members', async 
     `There is already a chat for the same members <#${privateChannel.id}>`,
   )
 })
+
+test('should not create a private-chat with yourself', async () => {
+  const {client, talkToBotsChannel, createUser} = await makeFakeClient()
+  const sentMessageUser = createUser('sentMessageUser')
+  const message = new Discord.Message(
+    client,
+    {
+      id: SnowflakeUtil.generate(),
+      content: '?private-chat',
+      author: sentMessageUser,
+    },
+    talkToBotsChannel,
+  )
+  Object.assign(message, {
+    mentions: new Discord.MessageMentions(
+      message,
+      [sentMessageUser],
+      [],
+      false,
+    ),
+  })
+
+  await privateChat(message)
+
+  expect(message.channel.send).toHaveBeenCalledTimes(1)
+  expect(message.channel.send).toHaveBeenCalledWith(
+    `You should mention at least one other member.`,
+  )
+})

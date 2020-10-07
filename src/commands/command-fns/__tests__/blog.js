@@ -27,6 +27,7 @@ const setup = async command => {
 test('should show the list of the last 10 articles', async () => {
   const {messages} = await setup('last')
 
+  expect(messages).toHaveLength(1)
   expect(messages[0].content).toMatchInlineSnapshot(`
     "This is the list of the last 10 articles on the blog:
     - How to React ⚛️
@@ -55,6 +56,7 @@ test('should show the list of the last 10 articles', async () => {
 test('should show articles matching the search string', async () => {
   let utils = await setup('open source')
 
+  expect(utils.messages).toHaveLength(1)
   expect(utils.messages[0].content).toMatchInlineSnapshot(`
     "This is the list of the articles matching \\"open source\\" 💻:
     - Favor Progress Over Pride in Open Source
@@ -68,6 +70,7 @@ test('should show articles matching the search string', async () => {
   utils.cleanup()
   utils = await setup('onditionally render content in JSX')
 
+  expect(utils.messages).toHaveLength(1)
   expect(utils.messages[0].content).toEqual(
     `https://kentcdodds.com/blog/use-ternaries-rather-than-and-and-in-jsx`,
   )
@@ -75,21 +78,25 @@ test('should show articles matching the search string', async () => {
 
   utils = await setup(`why you shouldn't mock fetch or your AP`)
 
+  expect(utils.messages).toHaveLength(1)
   expect(utils.messages[0].content).toEqual(
     `https://kentcdodds.com/blog/stop-mocking-fetch`,
   )
 })
 
 test('should show the first articles retrieved', async () => {
-  const send = await setup(`latest`)
+  const {messages} = await setup(`latest`)
 
-  expect(send).toHaveBeenCalledTimes(1)
-  expect(send).toHaveBeenCalledWith(`https://kentcdodds.com/blog/how-to-react`)
+  expect(messages).toHaveLength(1)
+  expect(messages[0].content).toEqual(
+    `https://kentcdodds.com/blog/how-to-react`,
+  )
 })
 
 test('should show an info message if not articles are found', async () => {
   const {messages} = await setup(`not exist`)
 
+  expect(messages).toHaveLength(1)
   expect(messages[0].content).toMatchInlineSnapshot(
     `"Unfortunately there is no article matching \\"not exist\\" 😟. Try searching here: <https://kentcdodds.com/blog>"`,
   )
@@ -104,6 +111,7 @@ test('should show an info message if there is an issue retrying articles', async
 
   const {messages} = await setup(`not exist`)
 
+  expect(messages).toHaveLength(1)
   expect(messages[0].content).toMatchInlineSnapshot(
     `"Something went wrong retrieving the list of articles 😬. Try searching here: <https://kentcdodds.com/blog>"`,
   )
@@ -112,6 +120,7 @@ test('should show an info message if there is an issue retrying articles', async
 test('should give an error message if the user not provide a search term', async () => {
   const {messages} = await setup(``)
 
+  expect(messages).toHaveLength(1)
   expect(messages[0].content).toEqual(
     `A search term is required. For example: \`?blog state management\``,
   )

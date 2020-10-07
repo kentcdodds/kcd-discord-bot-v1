@@ -29,8 +29,9 @@ async function cleanup(guild) {
     const timeSinceChannelCreation = Date.now() - channelCreateDate
 
     const allMessages = Array.from((await channel.messages.fetch()).values())
+    const botMessages = allMessages.filter(message => message.author?.bot)
     const messages = allMessages
-      .filter(message => message.author?.bot === false)
+      .filter(message => !message.author?.bot)
       .sort((a, b) => b.createdTimestamp - a.createdTimestamp)
     let timeSinceLastMessage = timeSinceChannelCreation
 
@@ -38,18 +39,18 @@ async function cleanup(guild) {
       timeSinceLastMessage = Date.now() - messages[0].createdTimestamp
     }
 
-    const hasInactiveWarned = messages.some(message => {
+    const hasInactiveWarned = botMessages.some(message => {
       return (
         message.content.includes('5 minutes') &&
         message.content.includes(inactivityReason)
       )
     })
-    const hasEOLWarned = messages.some(
+    const hasEOLWarned = botMessages.some(
       message =>
         message.content.includes('5 minutes') &&
         message.content.includes(eolReason),
     )
-    const isGettingDeleted = messages.some(message =>
+    const isGettingDeleted = botMessages.some(message =>
       message.content.includes(
         'This channel is getting deleted for the following reason',
       ),

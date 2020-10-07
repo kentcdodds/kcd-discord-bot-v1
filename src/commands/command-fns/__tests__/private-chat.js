@@ -89,6 +89,8 @@ test('should delete the private chat after 10 minutes of inactivity', async () =
   expect(privateChannel.lastMessage.content).toEqual(
     `This channel will be deleted in 5 minutes for the following reason: deleted for inactivity 🚶‍♀️`,
   )
+  // run this to check that no other warning message are sent
+  await cleanup(guild)
 
   jest.spyOn(Date, 'now').mockImplementation(() => 1598947801000) //10:10:01 UTC+2
 
@@ -123,6 +125,8 @@ test('should delete the private chat after 60 minutes', async () => {
   expect(privateChannel.lastMessage.content).toEqual(
     `This channel will be deleted in 5 minutes for the following reason: deleted for end of life 👻`,
   )
+  // run this to check that no other warning message are sent
+  await cleanup(guild)
 
   jest.spyOn(Date, 'now').mockImplementation(() => 1598950801000) //11:00:01 UTC+2
 

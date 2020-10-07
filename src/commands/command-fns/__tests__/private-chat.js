@@ -1,18 +1,19 @@
 const Discord = require('discord.js')
 const {SnowflakeUtil} = require('discord.js')
-const {
-  makeFakeClient,
-  createUser,
-  DiscordManager,
-  waitUntil,
-} = require('test-utils')
+const {makeFakeClient, waitUntil} = require('test-utils')
 const privateChat = require('../private-chat')
 const {getCategory} = require('../../utils')
 const {cleanup} = require('../../../private-chat/cleanup')
 
 async function createPrivateChat(mentionedUsernames = []) {
-  const {client, talkToBotsChannel, guild} = await makeFakeClient()
-  const sentMessageUser = createUser(client, 'sentMessageUser', guild)
+  const {
+    client,
+    talkToBotsChannel,
+    guild,
+    addUserMessage,
+    createUser,
+  } = await makeFakeClient()
+  const sentMessageUser = createUser('sentMessageUser')
   const message = new Discord.Message(
     client,
     {
@@ -35,7 +36,8 @@ async function createPrivateChat(mentionedUsernames = []) {
     client,
     message,
     guild,
-    mentionedUsers,
+    channelMembers: [sentMessageUser, ...mentionedUsers],
+    addUserMessage,
   }
 }
 
@@ -49,7 +51,9 @@ function getPrivateChannels(guild) {
 }
 
 test('should create a private chat', async () => {
-  const {message, guild} = await createPrivateChat(['mentionedUser'])
+  const {message, guild, channelMembers} = await createPrivateChat([
+    'mentionedUser',
+  ])
   const privateChannels = getPrivateChannels(guild)
 
   expect(privateChannels).toHaveLength(1)
@@ -57,7 +61,7 @@ test('should create a private chat', async () => {
   expect(privateChannel.lastMessage).toBeDefined()
   expect(privateChannel.lastMessage.content).toEqual(
     `
-Hello <@!mentionedUser-id> and <@!sentMessageUser-id> 👋
+Hello <@!${channelMembers[1].user.id}> and <@!${channelMembers[0].user.id}> 👋
 
 I'm the bot that created this channel for you. The channel will be deleted after 1 hour or after 10 minutes for inactivity. Enjoy 🗣
 
@@ -110,25 +114,17 @@ This channel is getting deleted for the following reason: deleted for inactivity
 
 test('should delete the private chat after 60 minutes', async () => {
   jest.spyOn(Date, 'now').mockImplementation(() => 1598947200000) // 10:00 UTC+2
-  const {guild, client, mentionedUsers} = await createPrivateChat([
+  const {guild, channelMembers, addUserMessage} = await createPrivateChat([
     'mentionedUser',
   ])
   const privateChannel = getPrivateChannels(guild)[0]
 
+  jest.spyOn(Date, 'now').mockImplementation(() => 1598947800000) //10:15:00 UTC+2
+  addUserMessage({user: channelMembers[0].user, channel: privateChannel})
   jest.spyOn(Date, 'now').mockImplementation(() => 1598950501000) //10:55:01 UTC+2
-  const fakeUserMessage = new Discord.Message(
-    client,
-    {
-      id: SnowflakeUtil.generate(Date.now()),
-      content: 'Some content',
-      author: mentionedUsers[0].user,
-    },
-    privateChannel,
-  )
-  privateChannel.messages.cache.set(fakeUserMessage.id, fakeUserMessage)
-  DiscordManager.channels[privateChannel.id].messages.push(fakeUserMessage)
+  addUserMessage({user: channelMembers[0].user, channel: privateChannel})
   await cleanup(guild)
-  expect(privateChannel.messages.cache.size).toEqual(3)
+  expect(privateChannel.messages.cache.size).toEqual(4)
   expect(privateChannel.lastMessage.content).toEqual(
     `This channel will be deleted in 5 minutes for the following reason: deleted for end of life 👻`,
   )
@@ -136,7 +132,7 @@ test('should delete the private chat after 60 minutes', async () => {
   jest.spyOn(Date, 'now').mockImplementation(() => 1598950801000) //11:00:01 UTC+2
 
   await cleanup(guild)
-  expect(privateChannel.messages.cache.size).toEqual(4)
+  expect(privateChannel.messages.cache.size).toEqual(5)
   expect(privateChannel.lastMessage.content).toEqual(
     `
 This channel is getting deleted for the following reason: deleted for end of life 👻

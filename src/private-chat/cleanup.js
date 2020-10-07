@@ -31,7 +31,7 @@ async function cleanup(guild) {
     const allMessages = Array.from((await channel.messages.fetch()).values())
     const messages = allMessages
       .filter(message => message.author?.bot === false)
-      .sort((a, b) => a.createdTimestamp - b.createdTimestamp)
+      .sort((a, b) => b.createdTimestamp - a.createdTimestamp)
     let timeSinceLastMessage = timeSinceChannelCreation
 
     if (messages.length > 0) {

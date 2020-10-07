@@ -10,7 +10,7 @@ async function makeFakeClient() {
     guilds: new Discord.GuildManager(client),
     users: new Discord.UserManager(client),
     user: new Discord.ClientUser(client, {
-      id: 'bot-id',
+      id: SnowflakeUtil.generate(),
       bot: true,
       username: 'kcd',
     }),
@@ -32,7 +32,7 @@ async function makeFakeClient() {
 
   const memberRole = new Discord.Role(
     client,
-    {id: 'member-role-id', name: 'Member'},
+    {id: SnowflakeUtil.generate(), name: 'Member'},
     guild,
   )
   guild.roles.cache.set(memberRole.id, memberRole)
@@ -42,12 +42,12 @@ async function makeFakeClient() {
     {bot: true, username: 'kcd', roles: [memberRole]},
     guild,
   )
-  bot.user = new Discord.User(client, {id: 'bot-id'})
+  bot.user = new Discord.User(client, {id: SnowflakeUtil.generate()})
   guild.members.cache.set(bot.id, bot)
 
   const kody = new Discord.GuildMember(client, {nick: 'kody'}, guild)
   kody.user = new Discord.User(client, {
-    id: 'kody-id',
+    id: SnowflakeUtil.generate(),
     username: 'kodykoala',
     roles: [memberRole],
   })
@@ -62,19 +62,44 @@ async function makeFakeClient() {
   })
   guild.channels.cache.set(privateChatCategory.id, privateChatCategory)
 
-  return {client, guild, bot, kody, talkToBotsChannel}
-}
+  function createUser(username) {
+    const newUser = new Discord.GuildMember(client, {nick: username}, guild)
+    newUser.user = new Discord.User(client, {
+      id: SnowflakeUtil.generate(),
+      username,
+      roles: [memberRole],
+    })
+    guild.members.cache.set(newUser.id, newUser)
+    return newUser
+  }
 
-function createUser(client, username, guild) {
-  const memberRole = guild.roles.cache.find(({name}) => name === 'Member')
-  const newUser = new Discord.GuildMember(client, {nick: username}, guild)
-  newUser.user = new Discord.User(client, {
-    id: `${username}-id`,
-    username,
-    roles: [memberRole],
-  })
-  guild.members.cache.set(newUser.id, newUser)
-  return newUser
+  function addUserMessage({
+    user = kody,
+    content = 'content',
+    channel = talkToBotsChannel,
+  }) {
+    const userMessage = new Discord.Message(
+      client,
+      {
+        id: SnowflakeUtil.generate(Date.now()),
+        content,
+        author: user,
+      },
+      channel,
+    )
+    channel.messages.cache.set(userMessage.id, userMessage)
+    DiscordManager.channels[channel.id].messages.push(userMessage)
+  }
+
+  return {
+    client,
+    guild,
+    bot,
+    kody,
+    talkToBotsChannel,
+    createUser,
+    addUserMessage,
+  }
 }
 
 function waitUntil(expectation, {timeout = 3000, interval = 1000}) {
@@ -105,7 +130,6 @@ function waitUntil(expectation, {timeout = 3000, interval = 1000}) {
 
 module.exports = {
   makeFakeClient,
-  createUser,
   waitUntil,
   DiscordManager,
 }

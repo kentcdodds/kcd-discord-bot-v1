@@ -121,6 +121,10 @@ test('the typical flow', async () => {
     member,
   } = await setup()
 
+  expect(onboardingChannel.name).toMatchInlineSnapshot(
+    `"🌊-welcome-fredjoe_1234"`,
+  )
+
   const name = 'Fred'
   const email = 'fred@example.com'
   await send(name) // What's your name

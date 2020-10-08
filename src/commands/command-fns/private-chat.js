@@ -4,7 +4,6 @@ const {
   listify,
   sendBotMessageReply,
   getCategory,
-  getUsername,
   getMember,
 } = require('../utils')
 
@@ -14,10 +13,10 @@ async function privateChat(message) {
   )
   const mentionedMembersNicknames = Array.from(
     message.mentions.members.values(),
-  ).map(user => getUsername(user))
+  ).map(user => user.displayName)
   mentionedMembers.push(message.author)
   mentionedMembersNicknames.push(
-    getUsername(getMember(message.guild, message.author.id)),
+    getMember(message.guild, message.author.id).displayName,
   )
   if (mentionedMembers.length < 2) {
     return message.channel.send(`You should mention at least one other member.`)

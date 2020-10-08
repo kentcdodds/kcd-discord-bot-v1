@@ -75,15 +75,6 @@ function getCategory(guild, {name}) {
   )
 }
 
-/**
- * Get the username of the user from the given GuildMember
- * @param member
- * @returns {string|*|string|T|null}
- */
-function getUsername(member) {
-  return member.nickname ?? member.user.username
-}
-
 const prodRegex = /^\?(?<command>\S+?)($| )(?<args>(.|\n)*)/
 const devRegex = /^~(?<command>\S+?)($| )(?<args>(.|\n)*)/
 const commandPrefix =
@@ -188,5 +179,4 @@ module.exports = {
   getSelfDestructTime,
   welcomeChannelPrefix,
   privateChannelPrefix,
-  getUsername,
 }

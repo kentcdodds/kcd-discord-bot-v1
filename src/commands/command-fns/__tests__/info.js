@@ -34,16 +34,18 @@ afterEach(() => {
 
 test('prints useful info', async () => {
   const info = require('../info')
-  const {client, talkToBotsChannel, kody} = await makeFakeClient()
+  const {client, defaultChannels, kody} = await makeFakeClient()
   const message = new Discord.Message(
     client,
     {id: 'help_test', content: '?info', author: kody.user},
-    talkToBotsChannel,
+    defaultChannels.talkToBotsChannel,
   )
 
   await info(message)
 
-  const messages = Array.from(talkToBotsChannel.messages.cache.values())
+  const messages = Array.from(
+    defaultChannels.talkToBotsChannel.messages.cache.values(),
+  )
   expect(messages).toHaveLength(1)
   expect(messages[0].content).toMatchInlineSnapshot(`
     "Here's some info about the currently running bot:

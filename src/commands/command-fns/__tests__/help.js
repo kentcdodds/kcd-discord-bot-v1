@@ -3,15 +3,17 @@ const {makeFakeClient} = require('test-utils')
 const help = require('../help')
 
 test('prints help for all commands', async () => {
-  const {client, talkToBotsChannel} = await makeFakeClient()
+  const {client, defaultChannels} = await makeFakeClient()
   const message = new Discord.Message(
     client,
     {id: 'help_test', content: '?help'},
-    talkToBotsChannel,
+    defaultChannels.talkToBotsChannel,
   )
   await help(message)
 
-  const messages = Array.from(talkToBotsChannel.messages.cache.values())
+  const messages = Array.from(
+    defaultChannels.talkToBotsChannel.messages.cache.values(),
+  )
   expect(messages).toHaveLength(1)
   expect(messages[0].content).toMatchInlineSnapshot(`
     "Here are the available commands:
@@ -28,15 +30,17 @@ test('prints help for all commands', async () => {
 })
 
 test('help with a specific command', async () => {
-  const {client, talkToBotsChannel} = await makeFakeClient()
+  const {client, defaultChannels} = await makeFakeClient()
   const message = new Discord.Message(
     client,
     {id: 'help_test', content: '?help info'},
-    talkToBotsChannel,
+    defaultChannels.talkToBotsChannel,
   )
   await help(message)
 
-  const messages = Array.from(talkToBotsChannel.messages.cache.values())
+  const messages = Array.from(
+    defaultChannels.talkToBotsChannel.messages.cache.values(),
+  )
   expect(messages).toHaveLength(1)
   expect(messages[0].content).toMatchInlineSnapshot(
     `"Gives information about the bot (deploy date etc.)"`,

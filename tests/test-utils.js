@@ -1,52 +1,34 @@
+/* eslint-disable no-await-in-loop */
 const Discord = require('discord.js')
 const {SnowflakeUtil} = require('discord.js')
 const DiscordManager = require('./DiscordManager')
 
-async function makeFakeClient() {
-  const client = new Discord.Client()
-  Object.assign(client, {
-    token: process.env.DISCORD_BOT_TOKEN,
-    user: new Discord.ClientUser(client, {
-      id: SnowflakeUtil.generate(),
-      bot: true,
-      username: 'kcd',
-    }),
-  })
-  const guild = new Discord.Guild(client, {
-    id: SnowflakeUtil.generate(),
-    name: 'KCD',
-  })
-  guild.messages = []
-  DiscordManager.guilds[guild.id] = guild
-  const everyoneRole = new Discord.Role(
-    client,
-    // the everyone role has the same id as the guild.
-    {id: guild.id, name: '@everyone'},
-    guild,
-  )
-  client.guilds.cache.set(guild.id, guild)
-  guild.roles.cache.set(guild.id, everyoneRole)
+async function createEmojis(guild) {
+  const emojies = [
+    'jest',
+    'react',
+    'reactquery',
+    'nextjs',
+    'gatsby',
+    'remix',
+    'graphql',
+    'html',
+    'css',
+    'js',
+    'node',
+    'msw',
+    'cypress',
+    'ReactTestingLibrary',
+    'DOMTestingLibrary',
+  ]
+  const guildEmojis = {}
+  for (const emoji of emojies) {
+    guildEmojis[emoji] = await guild.emojis.create(Buffer.from(emoji), emoji)
+  }
+  return guildEmojis
+}
 
-  const memberRole = new Discord.Role(
-    client,
-    {id: SnowflakeUtil.generate(), name: 'Member'},
-    guild,
-  )
-  guild.roles.cache.set(memberRole.id, memberRole)
-
-  let bot = new Discord.GuildMember(client, {bot: true, username: 'kcd'}, guild)
-  bot.user = new Discord.User(client, {id: SnowflakeUtil.generate()})
-  bot = await bot.roles.add([memberRole])
-  guild.members.cache.set(bot.id, bot)
-
-  let kody = new Discord.GuildMember(client, {nick: 'kody'}, guild)
-  kody.user = new Discord.User(client, {
-    id: SnowflakeUtil.generate(),
-    username: 'kodykoala',
-  })
-  kody = await kody.roles.add([memberRole])
-  guild.members.cache.set(kody.id, kody)
-
+async function createChannels(client, guild) {
   const talkToBotsChannel = await guild.channels.create('🤖-talk-to-bots')
   guild.channels.cache.set(talkToBotsChannel.id, talkToBotsChannel)
 
@@ -55,21 +37,143 @@ async function makeFakeClient() {
   })
   guild.channels.cache.set(privateChatCategory.id, privateChatCategory)
 
-  function createUser(username) {
+  const onBoardingCategory = await guild.channels.create('Onboarding-1', {
+    type: 'CATEGORY',
+  })
+  guild.channels.cache.set(onBoardingCategory.id, onBoardingCategory)
+
+  const introductionChannel = await guild.channels.create('👶-introductions')
+  guild.channels.cache.set(introductionChannel.id, introductionChannel)
+
+  const botsOnlyChannel = await guild.channels.create('🤖-bots-only')
+  guild.channels.cache.set(botsOnlyChannel.id, botsOnlyChannel)
+
+  const officeHoursVoiceChannel = await guild.channels.create(
+    `🏫 Kent's Office Hours`,
+    {
+      type: 'VOICE',
+    },
+  )
+  guild.channels.cache.set(officeHoursVoiceChannel.id, officeHoursVoiceChannel)
+
+  const officeHoursChannel = await guild.channels.create(`🏫-office-hours`)
+  guild.channels.cache.set(officeHoursChannel.id, officeHoursChannel)
+
+  const kentLiveVoiceChannel = await guild.channels.create(`💻-kent-live`, {
+    type: 'VOICE',
+  })
+  guild.channels.cache.set(kentLiveVoiceChannel.id, kentLiveVoiceChannel)
+
+  const kentLiveChannel = await guild.channels.create(`💻-kent-live`)
+  guild.channels.cache.set(kentLiveChannel.id, kentLiveChannel)
+
+  return {
+    kentLiveChannel,
+    kentLiveVoiceChannel,
+    officeHoursChannel,
+    officeHoursVoiceChannel,
+    botsOnlyChannel,
+    introductionChannel,
+    onBoardingCategory,
+    privateChatCategory,
+    talkToBotsChannel,
+  }
+}
+
+function createRoles(client, guild) {
+  const everyoneRole = new Discord.Role(
+    client,
+    {id: guild.id, name: '@everyone'},
+    guild,
+  )
+  guild.roles.cache.set(guild.id, everyoneRole)
+
+  const officeHoursRole = new Discord.Role(
+    client,
+    {id: SnowflakeUtil.generate(), name: 'Notify: Office Hours'},
+    guild,
+  )
+  guild.roles.cache.set(officeHoursRole.id, officeHoursRole)
+
+  const liveStreamRole = new Discord.Role(
+    client,
+    {id: SnowflakeUtil.generate(), name: 'Notify: Kent Live'},
+    guild,
+  )
+  guild.roles.cache.set(liveStreamRole.id, liveStreamRole)
+
+  const unconfirmedRole = new Discord.Role(
+    client,
+    {id: SnowflakeUtil.generate(), name: 'Unconfirmed Member'},
+    guild,
+  )
+  guild.roles.cache.set(unconfirmedRole.id, unconfirmedRole)
+
+  const memberRole = new Discord.Role(
+    client,
+    {id: SnowflakeUtil.generate(), name: 'Member'},
+    guild,
+  )
+  guild.roles.cache.set(memberRole.id, memberRole)
+
+  const newConfirmedMemberRole = new Discord.Role(
+    client,
+    {id: SnowflakeUtil.generate(), name: 'New confirmed member'},
+    guild,
+  )
+  guild.roles.cache.set(newConfirmedMemberRole.id, newConfirmedMemberRole)
+
+  return {
+    memberRole,
+    unconfirmedRole,
+    liveStreamRole,
+    officeHoursRole,
+    everyoneRole,
+    newConfirmedMemberRole,
+  }
+}
+
+async function makeFakeClient() {
+  const client = new Discord.Client()
+  Object.assign(client, {
+    token: process.env.DISCORD_BOT_TOKEN,
+    user: new Discord.ClientUser(client, {
+      id: SnowflakeUtil.generate(),
+      bot: true,
+      username: 'BOT',
+    }),
+  })
+  const guild = new Discord.Guild(client, {
+    id: SnowflakeUtil.generate(),
+    name: 'KCD',
+  })
+
+  DiscordManager.guilds[guild.id] = guild
+  client.guilds.cache.set(guild.id, guild)
+
+  const {memberRole} = createRoles(client, guild)
+  const defaultChannels = await createChannels(client, guild)
+  await createEmojis(guild)
+
+  async function createUser(username, options = {}) {
     const newUser = new Discord.GuildMember(client, {nick: username}, guild)
     newUser.user = new Discord.User(client, {
       id: SnowflakeUtil.generate(),
       username,
-      roles: [memberRole],
+      discriminator: client.users.cache.size,
+      ...options,
     })
     guild.members.cache.set(newUser.id, newUser)
+    await newUser.roles.add(memberRole)
     return newUser
   }
 
-  function addUserMessage({
+  const kody = await createUser('kody')
+
+  function sendFromUser({
     user = kody,
     content = 'content',
-    channel = talkToBotsChannel,
+    channel = defaultChannels.talkToBotsChannel,
   } = {}) {
     const userMessage = new Discord.Message(
       client,
@@ -81,6 +185,22 @@ async function makeFakeClient() {
       channel,
     )
     channel.messages.cache.set(userMessage.id, userMessage)
+    return userMessage
+  }
+
+  function reactFromUser({user = kody, message, reactionName = 'react'} = {}) {
+    const emoji = guild.emojis.cache.find(({name}) => reactionName === name)
+    let re = message.reactions.cache.get(emoji.name)
+    if (!re) {
+      re = {
+        message,
+        emoji: {name: emoji.name},
+        users: {cache: new Discord.Collection()},
+      }
+      message.reactions.cache.set(emoji.name, re)
+    }
+    re.users.cache.set(user.id, user)
+    return message
   }
 
   function cleanup() {
@@ -90,11 +210,12 @@ async function makeFakeClient() {
   return {
     client,
     guild,
-    bot,
+    bot: client.user,
     kody,
-    talkToBotsChannel,
+    defaultChannels,
     createUser,
-    addUserMessage,
+    sendFromUser,
+    reactFromUser,
     cleanup,
   }
 }

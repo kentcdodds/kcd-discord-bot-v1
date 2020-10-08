@@ -8,12 +8,12 @@ const {cleanup} = require('../../../private-chat/cleanup')
 async function createPrivateChat(mentionedUsernames = []) {
   const {
     client,
-    talkToBotsChannel,
+    defaultChannels,
     guild,
-    addUserMessage,
+    sendFromUser,
     createUser,
   } = await makeFakeClient()
-  const sentMessageUser = createUser('sentMessageUser')
+  const sentMessageUser = await createUser('sentMessageUser')
   const message = new Discord.Message(
     client,
     {
@@ -21,24 +21,26 @@ async function createPrivateChat(mentionedUsernames = []) {
       content: '?private-chat',
       author: sentMessageUser.user,
     },
-    talkToBotsChannel,
+    defaultChannels.talkToBotsChannel,
   )
-  const mentionedUsers = mentionedUsernames.map(
-    username => createUser(username).user,
-  )
+  const mentionedUsers = (
+    await Promise.all(mentionedUsernames.map(username => createUser(username)))
+  ).map(guildMember => guildMember.user)
   Object.assign(message, {
     mentions: new Discord.MessageMentions(message, mentionedUsers, [], false),
   })
 
   await privateChat(message)
-  const botsMessages = Array.from(talkToBotsChannel.messages.cache.values())
+  const botsMessages = Array.from(
+    defaultChannels.talkToBotsChannel.messages.cache.values(),
+  )
   return {
     client,
     message,
     guild,
     botsMessages,
     channelMembers: [sentMessageUser, ...mentionedUsers],
-    addUserMessage,
+    sendFromUser,
   }
 }
 
@@ -130,15 +132,15 @@ This channel is getting deleted for the following reason: deleted for inactivity
 
 test('should delete the private chat after 60 minutes', async () => {
   jest.spyOn(Date, 'now').mockImplementation(() => 1598947200000) // 10:00 UTC+2
-  const {guild, channelMembers, addUserMessage} = await createPrivateChat([
+  const {guild, channelMembers, sendFromUser} = await createPrivateChat([
     'mentionedUser',
   ])
   const privateChannel = getPrivateChannels(guild)[0]
 
   jest.spyOn(Date, 'now').mockImplementation(() => 1598947800000) //10:15:00 UTC+2
-  addUserMessage({user: channelMembers[0].user, channel: privateChannel})
+  sendFromUser({user: channelMembers[0].user, channel: privateChannel})
   jest.spyOn(Date, 'now').mockImplementation(() => 1598950501000) //10:55:01 UTC+2
-  addUserMessage({user: channelMembers[0].user, channel: privateChannel})
+  sendFromUser({user: channelMembers[0].user, channel: privateChannel})
   await cleanup(guild)
   expect(privateChannel.messages.cache.size).toEqual(4)
   expect(privateChannel.lastMessage.content).toEqual(
@@ -185,8 +187,8 @@ test('should give an error trying to create a chat for the same members', async 
 })
 
 test('should not create a private-chat with yourself', async () => {
-  const {client, talkToBotsChannel, createUser} = await makeFakeClient()
-  const sentMessageUser = createUser('sentMessageUser')
+  const {client, defaultChannels, createUser} = await makeFakeClient()
+  const sentMessageUser = await createUser('sentMessageUser')
   const message = new Discord.Message(
     client,
     {
@@ -194,7 +196,7 @@ test('should not create a private-chat with yourself', async () => {
       content: '?private-chat',
       author: sentMessageUser,
     },
-    talkToBotsChannel,
+    defaultChannels.talkToBotsChannel,
   )
   Object.assign(message, {
     mentions: new Discord.MessageMentions(
@@ -207,7 +209,9 @@ test('should not create a private-chat with yourself', async () => {
 
   await privateChat(message)
 
-  const botsMessages = Array.from(talkToBotsChannel.messages.cache.values())
+  const botsMessages = Array.from(
+    defaultChannels.talkToBotsChannel.messages.cache.values(),
+  )
   expect(botsMessages).toHaveLength(1)
   expect(botsMessages[0].content).toEqual(
     `You should mention at least one other member.`,

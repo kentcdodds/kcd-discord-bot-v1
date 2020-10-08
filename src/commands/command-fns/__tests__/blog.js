@@ -5,7 +5,7 @@ const {makeFakeClient} = require('test-utils')
 const blog = require('../blog')
 
 const setup = async command => {
-  const {client, talkToBotsChannel, kody, cleanup} = await makeFakeClient()
+  const {client, defaultChannels, kody, cleanup} = await makeFakeClient()
   const message = new Discord.Message(
     client,
     {
@@ -13,14 +13,16 @@ const setup = async command => {
       content: `?blog ${command}`,
       author: kody.user,
     },
-    talkToBotsChannel,
+    defaultChannels.talkToBotsChannel,
   )
   Object.assign(message, {
     mentions: new Discord.MessageMentions(message, [], [], false),
   })
   await blog(message)
 
-  const messages = Array.from(talkToBotsChannel.messages.cache.values())
+  const messages = Array.from(
+    defaultChannels.talkToBotsChannel.messages.cache.values(),
+  )
   return {messages, cleanup}
 }
 

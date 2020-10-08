@@ -24,8 +24,80 @@ const handlers = [
       ).find(channel => channel.id === cachedChannel.id)
       return res(
         ctx.status(200),
-        ctx.json(Array.from(discordChannel.messages.cache.values())),
+        ctx.json(Array.from(discordChannel.messages.cache.values()).reverse()),
       )
+    },
+  ),
+  rest.delete(
+    '*/api/:apiVersion/channels/:channelId/messages/:messageId',
+    (req, res, ctx) => {
+      const channel = DiscordManager.channels[req.params.channelId]
+      const deletedMessage = {
+        id: req.params.messageId,
+        channel_id: req.params.channelId,
+      }
+      DiscordManager.guilds[
+        channel.guild_id
+      ].client.actions.MessageDelete.handle(deletedMessage)
+      return res(ctx.status(200), ctx.json(deletedMessage))
+    },
+  ),
+  rest.patch(
+    '*/api/:apiVersion/channels/:channelId/messages/:messageId',
+    (req, res, ctx) => {
+      const channel = DiscordManager.channels[req.params.channelId]
+      const editedMessage = {
+        ...req.body,
+        id: req.params.messageId,
+        channel_id: req.params.channelId,
+      }
+      DiscordManager.guilds[
+        channel.guild_id
+      ].client.actions.MessageUpdate.handle(editedMessage)
+
+      return res(ctx.status(200), ctx.json(editedMessage))
+    },
+  ),
+  rest.put(
+    `*/api/:apiVersion/channels/:channelId/messages/:messageId/reactions/*/@me`,
+    (req, res, ctx) => {
+      return res(ctx.status(200), ctx.json(req.body))
+    },
+  ),
+  rest.delete(
+    '*/api/:apiVersion/guilds/:guildId/members/:memberId/roles/:roleId',
+    (req, res, ctx) => {
+      const updateUser = {
+        id: req.params.memberId,
+      }
+      const guild = DiscordManager.guilds[req.params.guildId]
+
+      const user = Array.from(guild.members.cache.values()).find(
+        guildMember => guildMember.user.id === req.params.memberId,
+      )
+      const removedRole = Array.from(guild.roles.cache.values()).find(
+        role => role.id === req.params.roleId,
+      )
+      user._roles = user._roles.filter(roleId => roleId !== removedRole.id)
+      return res(ctx.status(200), ctx.json(updateUser))
+    },
+  ),
+  rest.put(
+    '*/api/:apiVersion/guilds/:guildId/members/:memberId/roles/:roleId',
+    (req, res, ctx) => {
+      const updateUser = {
+        id: req.params.memberId,
+      }
+      const guild = DiscordManager.guilds[req.params.guildId]
+
+      const user = Array.from(guild.members.cache.values()).find(
+        guildMember => guildMember.user.id === req.params.memberId,
+      )
+      const assigneRole = Array.from(guild.roles.cache.values()).find(
+        role => role.id === req.params.roleId,
+      )
+      user._roles.push(assigneRole.id)
+      return res(ctx.status(200), ctx.json(updateUser))
     },
   ),
   rest.patch(
@@ -57,6 +129,13 @@ const handlers = [
       channel,
     )
     return res(ctx.status(200), ctx.json(channel))
+  }),
+  rest.post('*/api/:apiVersion/guilds/:guildId/emojis', (req, res, ctx) => {
+    const emoji = {
+      id: SnowflakeUtil.generate(),
+      ...req.body,
+    }
+    return res(ctx.status(200), ctx.json(emoji))
   }),
   rest.get('*/api/:apiVersion/gateway/bot', (req, res, ctx) => {
     return res(

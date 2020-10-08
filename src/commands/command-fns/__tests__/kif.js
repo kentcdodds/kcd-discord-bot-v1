@@ -3,7 +3,7 @@ const {makeFakeClient} = require('test-utils')
 const kif = require('../kif')
 
 async function setup(content) {
-  const {client, talkToBotsChannel, kody} = await makeFakeClient()
+  const {client, defaultChannels, kody} = await makeFakeClient()
   const message = new Discord.Message(
     client,
     {
@@ -11,14 +11,16 @@ async function setup(content) {
       content,
       author: kody.user,
     },
-    talkToBotsChannel,
+    defaultChannels.talkToBotsChannel,
   )
   Object.assign(message, {
     mentions: new Discord.MessageMentions(message, [], [], false),
   })
   await kif(message)
 
-  const messages = Array.from(talkToBotsChannel.messages.cache.values())
+  const messages = Array.from(
+    defaultChannels.talkToBotsChannel.messages.cache.values(),
+  )
   return {messages}
 }
 

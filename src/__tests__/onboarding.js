@@ -1,275 +1,124 @@
-const Discord = require('discord.js')
 const {rest} = require('msw')
 const {server} = require('server')
-
+const {makeFakeClient} = require('test-utils')
+const {getCategory} = require('../utils')
 const {
   onboarding: {handleNewMember, handleNewMessage, handleUpdatedMessage},
 } = require('..')
 
-// eslint-disable-next-line max-lines-per-function
+function getOnBoardingChannel(guild) {
+  const onboardingCategory = getCategory(guild, {name: 'Onboarding-1'})
+  return Array.from(
+    guild.channels.cache
+      .filter(channel => channel.parent?.id === onboardingCategory.id)
+      .values(),
+  )
+}
+
 async function setup() {
-  const mockClient = {user: {id: 'mock-client', name: 'BOT'}}
-  let channel
-  const guild = {}
-
-  const mockMember = {
-    id: 'mock-user',
-    name: 'Fred Joe',
-    client: mockClient,
+  const {
+    client,
+    createUser,
+    sendFromUser,
+    reactFromUser,
     guild,
-    user: {
-      id: 'mock-user',
-      username: 'fredjoe',
-      discriminator: '1234',
-    },
-    roles: {
-      cache: {
-        _roles: [],
-        find(cb) {
-          for (const role of this._roles) {
-            if (cb(role)) return role
-          }
-          return null
-        },
-      },
-      remove(role) {
-        this.cache._roles = this.cache._roles.filter(r => r !== role)
-        return Promise.resolve()
-      },
-      add(role) {
-        this.cache._roles.push(role)
-        return Promise.resolve()
-      },
-    },
-    nickname: 'fred',
-    setNickname(newNickname) {
-      this.nickname = newNickname
-      return Promise.resolve()
-    },
-  }
-  mockMember.user.toString = function toString() {
-    return `<@${this.id}>`
-  }
+    defaultChannels,
+  } = await makeFakeClient()
 
-  function createEmoji(name) {
-    return {
-      id: `emoji_${name}`,
-      name,
-    }
-  }
-
-  function reactToMessage(message, emoji, user) {
-    let re = message.reactions.cache.get(emoji.name)
-    if (!re) {
-      re = {
-        message,
-        emoji: {name: emoji.name},
-        users: {cache: new Discord.Collection()},
-      }
-      message.reactions.cache.set(emoji.name, re)
-    }
-    re.users.cache.set(user.id, user)
-  }
-
-  function createChannel(name, options) {
-    return {
-      id: `channel_${name}`,
-      name,
-      guild,
-      toString: () => `channel_${name}-id`,
-      client: mockClient,
-      type: 'text',
-      messages: {
-        _messages: [],
-        _create({content, author}) {
-          if (!content) {
-            throw new Error('Trying to send a message with no content')
-          }
-          const message = {
-            client: mockClient,
-            guild,
-            author,
-            content,
-            reactions: {
-              cache: new Discord.Collection(),
-            },
-            react(emoji) {
-              reactToMessage(this, emoji, mockClient.user)
-              return Promise.resolve(this)
-            },
-            edit(newContent) {
-              return updateMessage(message, newContent)
-            },
-            delete() {
-              const index = channel.messages._messages.indexOf(message)
-              channel.messages._messages.splice(index, 1)
-            },
-            channel,
-          }
-          return message
-        },
-        fetch() {
-          return Promise.resolve(this._messages)
-        },
-      },
-      delete: jest.fn(),
-      async send(newMessageContent) {
-        const message = this.messages._create({
-          author: mockClient.user,
-          content: newMessageContent,
-        })
-        this.messages._messages.unshift(message)
-        // eslint-disable-next-line no-use-before-define
-        await handleNewMessage(message)
-        return message
-      },
-      ...options,
-    }
-  }
-
-  Object.assign(guild, {
-    client: mockClient,
-    members: {
-      cache: {
-        find(cb) {
-          if (cb(mockMember)) return mockMember
-          return null
-        },
-      },
-    },
-    channels: {
-      cache: new Discord.Collection(
-        Object.entries({
-          onboardingCategoryChannel: createChannel('Onboarding-1', {
-            type: 'category',
-          }),
-          introductionChannel: createChannel('👶-introductions'),
-          botsOnlyChannel: createChannel('🤖-bots-only'),
-          officeHoursVoiceChannel: createChannel(`🏫 Kent's Office Hours`, {
-            type: 'voice',
-          }),
-          officeHoursChannel: createChannel(`🏫-office-hours`),
-          kentLiveVoiceChannel: createChannel(`💻 Kent live`, {type: 'voice'}),
-          kentLiveChannel: createChannel(`💻-kent-live`),
-        }),
-      ),
-      create(name, options) {
-        channel = createChannel(name, options)
-        return channel
-      },
-    },
-    emojis: {
-      cache: new Discord.Collection(
-        Object.entries({
-          jest: createEmoji('jest'),
-          react: createEmoji('react'),
-          reactquery: createEmoji('reactquery'),
-          nextjs: createEmoji('nextjs'),
-          gatsby: createEmoji('gatsby'),
-          remix: createEmoji('remix'),
-          graphql: createEmoji('graphql'),
-          html: createEmoji('html'),
-          css: createEmoji('css'),
-          js: createEmoji('js'),
-          node: createEmoji('node'),
-          msw: createEmoji('msw'),
-          cypress: createEmoji('cypress'),
-          ReactTestingLibrary: createEmoji('ReactTestingLibrary'),
-          DOMTestingLibrary: createEmoji('DOMTestingLibrary'),
-        }),
-      ),
-    },
-    roles: {
-      cache: new Discord.Collection(
-        Object.entries({
-          everyone: {name: '@everyone', id: 'everyone-role-id'},
-          member: {name: 'Member', id: 'member-role-id'},
-          unconfirmedMember: {
-            name: 'Unconfirmed Member',
-            id: 'unconfirmed-role-id',
-          },
-          liveStream: {
-            name: 'Notify: Kent Live',
-            id: 'notify-kent-live',
-          },
-          officeHours: {
-            name: 'Notify: Office Hours',
-            id: 'notify-office-hours',
-          },
-        }),
-      ),
-    },
+  const member = await createUser('fredjoe', {
+    discriminator: 1234,
   })
 
-  await handleNewMember(mockMember)
+  await handleNewMember(member)
 
-  expect(mockMember.roles.cache._roles).toEqual([
-    guild.roles.cache.get('unconfirmedMember'),
-  ])
+  const onboardingChannel = getOnBoardingChannel(guild)[0]
 
-  async function reactFromUser(message, reactionName) {
-    const emoji = guild.emojis.cache.find(({name}) => reactionName === name)
-    reactToMessage(message, emoji, mockMember.user)
-    await message.react(emoji)
-    return message
-  }
-
-  async function sendFromUser(content) {
-    const message = channel.messages._create({author: mockMember, content})
-    channel.messages._messages.unshift(message)
+  async function send(content) {
+    const message = sendFromUser({
+      user: member.user,
+      channel: onboardingChannel,
+      content,
+    })
     await handleNewMessage(message)
     return message
   }
 
-  async function updateMessage(oldMessage, newContent) {
-    const messagesArray = channel.messages._messages
-    const newMessage = channel.messages._create({
-      author: oldMessage.author,
+  async function update(oldMessage, newContent) {
+    const newMessage = {
+      ...oldMessage,
       content: newContent,
-    })
-    messagesArray[messagesArray.indexOf(oldMessage)] = newMessage
+      guild,
+      client,
+    }
+    onboardingChannel.messages.cache.set(newMessage.id, newMessage)
     await handleUpdatedMessage(oldMessage, newMessage)
     return newMessage
   }
 
-  function getBotResponses() {
-    const response = []
-    for (const message of channel.messages._messages) {
-      if (message.author.id === mockClient.user.id) response.push(message)
-      else break
-    }
-    return response
-      .map(m => `${m.author.name}: ${m.content}`)
-      .reverse()
-      .join('\n')
-  }
-
-  function getMessageThread(chan = channel) {
+  function getMessageThread() {
     return `
-Messages in ${chan.name}
-
-${chan.messages._messages
-  .map(m => `${m.author.name}: ${m.content}`)
-  .reverse()
+Messages in ${onboardingChannel.name}
+${Array.from(onboardingChannel.messages.cache.values())
+  .map(m => {
+    const content = m.content
+      .replace(`<@${member.id}>`, '<@mock-user>')
+      .replace(
+        `<#${defaultChannels.kentLiveChannel.id}>`,
+        'channel_💻-kent-live-id',
+      )
+      .replace(
+        `<#${defaultChannels.officeHoursChannel.id}>`,
+        'channel_🏫-office-hours-id',
+      )
+      .replace(
+        `<#${defaultChannels.introductionChannel.id}>`,
+        'channel_👶-introductions-id',
+      )
+    return `${m.author.username}: ${content}`
+  })
   .join('\n')}
     `.trim()
   }
 
+  function getBotResponses() {
+    const response = []
+    const messages = Array.from(
+      onboardingChannel.messages.cache.values(),
+    ).reverse()
+    for (const message of messages) {
+      if (message.author.id === client.user.id) response.push(message)
+      else break
+    }
+    return response
+      .reverse()
+      .map(m => `${m.author.username}: ${m.content}`)
+      .join('\n')
+  }
+
+  const react = (message, emoji) =>
+    reactFromUser({user: member.user, message, reactionName: emoji})
+
   return {
-    react: reactFromUser,
-    send: sendFromUser,
-    update: updateMessage,
-    member: mockMember,
-    messages: channel.messages._messages,
-    channel,
+    member,
+    send,
+    update,
+    react,
+    onboardingChannel,
     getMessageThread,
     getBotResponses,
+    defaultChannels,
   }
 }
 
 // eslint-disable-next-line max-lines-per-function
 test('the typical flow', async () => {
-  const {send, react, getMessageThread, messages, member} = await setup()
+  const {
+    send,
+    react,
+    getMessageThread,
+    onboardingChannel,
+    member,
+  } = await setup()
 
   const name = 'Fred'
   const email = 'fred@example.com'
@@ -322,6 +171,7 @@ test('the typical flow', async () => {
     ),
   )
 
+  const messages = Array.from(onboardingChannel.messages.cache.values())
   const techMessage = messages.find(msg =>
     msg.content.includes('the tech you are most interested in'),
   )
@@ -336,7 +186,6 @@ test('the typical flow', async () => {
 
   expect(getMessageThread()).toMatchInlineSnapshot(`
     "Messages in 🌊-welcome-fredjoe_1234
-
     BOT: Hello <@mock-user> 👋
 
     I'm a bot and I'm here to welcome you to the KCD Community on Discord! Before you can join in the fun, I need to ask you a few questions. If you have any trouble, please email team@kentcdodds.com with your discord username (\`fredjoe#1234\`), an explanation of the trouble, and a screenshot of the conversation. And we'll get things fixed up for you.
@@ -345,21 +194,21 @@ test('the typical flow', async () => {
 
     In less than 5 minutes, you'll have full access to this server. So, let's get started! Here's the first question:
     BOT: What's your first name?
-    Fred Joe: Fred
+    fredjoe: Fred
     BOT: Great, hi Fred 👋
-    BOT: _I've changed your nickname on this server to Fred. If you'd like to change it back then type: \`/nick fred\`_
+    BOT: _I've changed your nickname on this server to Fred. If you'd like to change it back then type: \`/nick fredjoe\`_
     BOT: What's your email address? (This will look you up on Kent's mailing list. If you're not already on it, you'll be added and will receive a confirmation email.)
-    Fred Joe: fred@example.com
+    fredjoe: fred@example.com
     BOT: Awesome, when we're done here, you'll receive a confirmation email to: fred@example.com.
     BOT: Our community is commited to certain standards of behavior and we enforce that behavior to ensure it's a nice place to spend time.
 
     Please read about our code of conduct here: https://kentcdodds.com/conduct
 
     Do you agree to abide by and uphold the code of conduct? **The only correct answer is \\"yes\\"**
-    Fred Joe: yes
+    fredjoe: yes
     BOT: Great, thanks for helping us keep this an awesome place to be.
     BOT: **Based on what you read in the Code of Conduct**, what's the email address you send Code of Conduct concerns and violations to? (If you're not sure, open the code of conduct to find out).
-    Fred Joe: team@kentcdodds.com
+    fredjoe: team@kentcdodds.com
     BOT: That's right!
     BOT: Here are your answers:
       First Name: Fred
@@ -369,7 +218,7 @@ test('the typical flow', async () => {
     If you'd like to change any, then edit your responses above.
 
     **If everything's correct, simply reply \\"yes\\"**.
-    Fred Joe: yes
+    fredjoe: yes
     BOT: Awesome, welcome to the KCD Community on Discord!
     BOT: 🎉 You should be good to go now. Don't forget to check fred@example.com for a confirmation email. 📬
 
@@ -386,10 +235,10 @@ test('the typical flow', async () => {
     **If you wanna hang out here for a bit longer, I have a few questions that will help you get set up in this server a bit more.**
     BOT: Click the icon of the tech you are most interested in right now (or want to learn about). Kent will use this to give you more relevant content in the future.
     BOT: Would you like to be notified when Kent starts live streaming in channel_💻-kent-live-id?
-    Fred Joe: yes
+    fredjoe: yes
     BOT: Cool, when Kent starts live streaming, you'll get notified.
     BOT: Would you like to be notified when Kent starts <https://kcd.im/office-hours> in channel_🏫-office-hours-id?
-    Fred Joe: yes
+    fredjoe: yes
     BOT: Great, you'll be notified when Kent's Office Hours start.
     BOT: It's more fun here when folks have an avatar. You can go ahead and set yours now 😄
 
@@ -400,7 +249,7 @@ test('the typical flow', async () => {
     Here's how you set your avatar: <https://support.discord.com/hc/en-us/articles/204156688-How-do-I-change-my-avatar->
 
     **When you're finished (or if you'd like to just move on), just say \\"done\\"**
-    Fred Joe: done
+    fredjoe: done
     BOT: Ok, please do set your avatar later though. It helps keep everything human (and I'll bug you about it every now and then until you do 😈 😅).
     BOT: Looks like we're all done! Go explore!
 
@@ -413,17 +262,21 @@ test('the typical flow', async () => {
     🤪 I really enjoy:
 
     Enjoy the community!
-    Fred Joe: anything else?
+    fredjoe: anything else?
     BOT: We're all done. This channel will get deleted automatically eventually, but if you want to delete it yourself, then say \\"delete\\".
-    Fred Joe: delete
+    fredjoe: delete
     BOT: This channel is getting deleted for the following reason: Requested by the member
 
     Goodbye 👋"
   `)
 
   expect(
-    member.roles.cache._roles.map(role => role.name).join(', '),
-  ).toMatchInlineSnapshot(`"Member, Notify: Kent Live, Notify: Office Hours"`)
+    Array.from(member.roles.cache.values())
+      .map(role => role.name)
+      .join(', '),
+  ).toMatchInlineSnapshot(
+    `"Notify: Office Hours, Notify: Kent Live, Member, @everyone"`,
+  )
 })
 
 // eslint-disable-next-line max-lines-per-function
@@ -434,7 +287,6 @@ test('typing and editing to an invalid value', async () => {
     getMessageThread,
     getBotResponses,
     member,
-    channel,
   } = await setup()
 
   const nameMessage = await send('Fred')
@@ -523,7 +375,6 @@ test('typing and editing to an invalid value', async () => {
 
   expect(getMessageThread()).toMatchInlineSnapshot(`
     "Messages in 🌊-welcome-fredjoe_1234
-
     BOT: Hello <@mock-user> 👋
 
     I'm a bot and I'm here to welcome you to the KCD Community on Discord! Before you can join in the fun, I need to ask you a few questions. If you have any trouble, please email team@kentcdodds.com with your discord username (\`fredjoe#1234\`), an explanation of the trouble, and a screenshot of the conversation. And we'll get things fixed up for you.
@@ -532,23 +383,23 @@ test('typing and editing to an invalid value', async () => {
 
     In less than 5 minutes, you'll have full access to this server. So, let's get started! Here's the first question:
     BOT: What's your first name?
-    Fred Joe: Freddy
+    fredjoe: Freddy
     BOT: Great, hi Freddy 👋
-    BOT: _I've changed your nickname on this server to Fred. If you'd like to change it back then type: \`/nick fred\`_
+    BOT: _I've changed your nickname on this server to Fred. If you'd like to change it back then type: \`/nick fredjoe\`_
     BOT: What's your email address? (This will look you up on Kent's mailing list. If you're not already on it, you'll be added and will receive a confirmation email.)
-    Fred Joe: not an email
+    fredjoe: not an email
     BOT: That doesn't look like an email address. Please provide a proper email address.
-    Fred Joe: fred@acme.com
+    fredjoe: fred@acme.com
     BOT: Awesome, when we're done here, you'll receive a confirmation email to: fred@acme.com.
     BOT: Our community is commited to certain standards of behavior and we enforce that behavior to ensure it's a nice place to spend time.
 
     Please read about our code of conduct here: https://kentcdodds.com/conduct
 
     Do you agree to abide by and uphold the code of conduct? **The only correct answer is \\"yes\\"**
-    Fred Joe: Yes
+    fredjoe: Yes
     BOT: Great, thanks for helping us keep this an awesome place to be.
     BOT: **Based on what you read in the Code of Conduct**, what's the email address you send Code of Conduct concerns and violations to? (If you're not sure, open the code of conduct to find out).
-    Fred Joe: team@kentcdodds.com
+    fredjoe: team@kentcdodds.com
     BOT: That's right!
     BOT: Here are your answers:
       First Name: Fred
@@ -558,7 +409,7 @@ test('typing and editing to an invalid value', async () => {
     If you'd like to change any, then edit your responses above.
 
     **If everything's correct, simply reply \\"yes\\"**.
-    Fred Joe: yes
+    fredjoe: yes
     BOT: There are existing errors with your previous answers, please edit your answer above before continuing.
     BOT: Thanks for fixing things up, now we can continue.
     BOT: Here are your answers:
@@ -569,7 +420,7 @@ test('typing and editing to an invalid value', async () => {
     If you'd like to change any, then edit your responses above.
 
     **If everything's correct, simply reply \\"yes\\"**.
-    Fred Joe: yes
+    fredjoe: yes
     BOT: Awesome, welcome to the KCD Community on Discord!
     BOT: 🎉 You should be good to go now. Don't forget to check fred@acme.com for a confirmation email. 📬
 
@@ -586,19 +437,20 @@ test('typing and editing to an invalid value', async () => {
     **If you wanna hang out here for a bit longer, I have a few questions that will help you get set up in this server a bit more.**
     BOT: Click the icon of the tech you are most interested in right now (or want to learn about). Kent will use this to give you more relevant content in the future.
     BOT: Would you like to be notified when Kent starts live streaming in channel_💻-kent-live-id?
-    BOT: _I've changed your nickname on this server to Freddy. If you'd like to change it back then type: \`/nick Fred\`_
+    BOT: _I've changed your nickname on this server to Freddy. If you'd like to change it back then type: \`/nick fredjoe\`_
     BOT: Thanks for fixing things up, now we can continue.
     BOT: Would you like to be notified when Kent starts live streaming in channel_💻-kent-live-id?
-    Fred Joe: delete
+    fredjoe: delete
     BOT: This channel is getting deleted for the following reason: Requested by the member
 
     Goodbye 👋"
   `)
 
   expect(
-    member.roles.cache._roles.map(({name}) => name).join(', '),
-  ).toMatchInlineSnapshot(`"Member"`)
-  expect(channel.delete).toHaveBeenCalledTimes(1)
+    Array.from(member.roles.cache.values())
+      .map(role => role.name)
+      .join(', '),
+  ).toMatchInlineSnapshot(`"Member, @everyone"`)
 })
 
 test('a new member with some info already', async () => {
@@ -640,7 +492,6 @@ test('a new member with some info already', async () => {
 
   expect(getMessageThread()).toMatchInlineSnapshot(`
     "Messages in 🌊-welcome-fredjoe_1234
-
     BOT: Hello <@mock-user> 👋
 
     I'm a bot and I'm here to welcome you to the KCD Community on Discord! Before you can join in the fun, I need to ask you a few questions. If you have any trouble, please email team@kentcdodds.com with your discord username (\`fredjoe#1234\`), an explanation of the trouble, and a screenshot of the conversation. And we'll get things fixed up for you.
@@ -649,21 +500,21 @@ test('a new member with some info already', async () => {
 
     In less than 5 minutes, you'll have full access to this server. So, let's get started! Here's the first question:
     BOT: What's your first name?
-    Fred Joe: Fred
+    fredjoe: Fred
     BOT: Great, hi Fred 👋
-    BOT: _I've changed your nickname on this server to Fred. If you'd like to change it back then type: \`/nick fred\`_
+    BOT: _I've changed your nickname on this server to Fred. If you'd like to change it back then type: \`/nick fredjoe\`_
     BOT: What's your email address? (This will look you up on Kent's mailing list. If you're not already on it, you'll be added and will receive a confirmation email.)
-    Fred Joe: fred+already-subscribed@example.com
+    fredjoe: fred+already-subscribed@example.com
     BOT: Oh, nice, fred+already-subscribed@example.com is already a part of Kent's mailing list (you rock 🤘), so you won't be getting a confirmation email after all.
     BOT: Our community is commited to certain standards of behavior and we enforce that behavior to ensure it's a nice place to spend time.
 
     Please read about our code of conduct here: https://kentcdodds.com/conduct
 
     Do you agree to abide by and uphold the code of conduct? **The only correct answer is \\"yes\\"**
-    Fred Joe: yes
+    fredjoe: yes
     BOT: Great, thanks for helping us keep this an awesome place to be.
     BOT: **Based on what you read in the Code of Conduct**, what's the email address you send Code of Conduct concerns and violations to? (If you're not sure, open the code of conduct to find out).
-    Fred Joe: team@kentcdodds.com
+    fredjoe: team@kentcdodds.com
     BOT: That's right!
     BOT: Here are your answers:
       First Name: Fred
@@ -673,7 +524,7 @@ test('a new member with some info already', async () => {
     If you'd like to change any, then edit your responses above.
 
     **If everything's correct, simply reply \\"yes\\"**.
-    Fred Joe: yes
+    fredjoe: yes
     BOT: Awesome, welcome to the KCD Community on Discord!
     BOT: 🎉 You should be good to go now. 
 
@@ -690,10 +541,10 @@ test('a new member with some info already', async () => {
     **If you wanna hang out here for a bit longer, I have a few questions that will help you get set up in this server a bit more.**
     BOT: Click the icon of the tech you are most interested in right now (or want to learn about). Kent will use this to give you more relevant content in the future.
     BOT: Would you like to be notified when Kent starts live streaming in channel_💻-kent-live-id?
-    Fred Joe: yes
+    fredjoe: yes
     BOT: Cool, when Kent starts live streaming, you'll get notified.
     BOT: Would you like to be notified when Kent starts <https://kcd.im/office-hours> in channel_🏫-office-hours-id?
-    Fred Joe: yes
+    fredjoe: yes
     BOT: Great, you'll be notified when Kent's Office Hours start.
     BOT: Looks like we're all done! Go explore!
 
@@ -706,11 +557,15 @@ test('a new member with some info already', async () => {
     🤪 I really enjoy:
 
     Enjoy the community!
-    Fred Joe: anything else?
+    fredjoe: anything else?
     BOT: We're all done. This channel will get deleted automatically eventually, but if you want to delete it yourself, then say \\"delete\\"."
   `)
 
   expect(
-    member.roles.cache._roles.map(({name}) => name).join(', '),
-  ).toMatchInlineSnapshot(`"Member, Notify: Kent Live, Notify: Office Hours"`)
+    Array.from(member.roles.cache.values())
+      .map(role => role.name)
+      .join(', '),
+  ).toMatchInlineSnapshot(
+    `"Notify: Office Hours, Notify: Kent Live, Member, @everyone"`,
+  )
 })

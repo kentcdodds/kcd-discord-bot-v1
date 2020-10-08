@@ -1,17 +1,17 @@
 /**
  * this class is used by the API to get channel and guild by their ids.
- * The only thing to remember is that if a new message
+ * This is useful to clean up all things after each test and
+ * to enable API to access guilds and channels because we don't have a DB
  **/
-class DiscordManager {
-  static channels = {}
-  static guilds = {}
-  static clients = []
-
-  static cleanup() {
-    this.channels = {}
-    this.guilds = {}
-    this.clients.forEach(client => client.destroy())
-  }
+const DiscordManager = {
+  channels: {},
+  guilds: {},
+  clients: [],
+  cleanup: () => {
+    DiscordManager.channels = {}
+    DiscordManager.guilds = {}
+    DiscordManager.clients.forEach(client => client.destroy())
+  },
 }
 
 module.exports = DiscordManager

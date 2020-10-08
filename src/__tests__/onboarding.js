@@ -58,6 +58,7 @@ async function setup() {
   function getMessageThread() {
     return `
 Messages in ${onboardingChannel.name}
+
 ${Array.from(onboardingChannel.messages.cache.values())
   .map(m => {
     const content = m.content
@@ -186,6 +187,7 @@ test('the typical flow', async () => {
 
   expect(getMessageThread()).toMatchInlineSnapshot(`
     "Messages in 🌊-welcome-fredjoe_1234
+    
     BOT: Hello <@mock-user> 👋
 
     I'm a bot and I'm here to welcome you to the KCD Community on Discord! Before you can join in the fun, I need to ask you a few questions. If you have any trouble, please email team@kentcdodds.com with your discord username (\`fredjoe#1234\`), an explanation of the trouble, and a screenshot of the conversation. And we'll get things fixed up for you.
@@ -375,6 +377,7 @@ test('typing and editing to an invalid value', async () => {
 
   expect(getMessageThread()).toMatchInlineSnapshot(`
     "Messages in 🌊-welcome-fredjoe_1234
+    
     BOT: Hello <@mock-user> 👋
 
     I'm a bot and I'm here to welcome you to the KCD Community on Discord! Before you can join in the fun, I need to ask you a few questions. If you have any trouble, please email team@kentcdodds.com with your discord username (\`fredjoe#1234\`), an explanation of the trouble, and a screenshot of the conversation. And we'll get things fixed up for you.
@@ -492,6 +495,7 @@ test('a new member with some info already', async () => {
 
   expect(getMessageThread()).toMatchInlineSnapshot(`
     "Messages in 🌊-welcome-fredjoe_1234
+    
     BOT: Hello <@mock-user> 👋
 
     I'm a bot and I'm here to welcome you to the KCD Community on Discord! Before you can join in the fun, I need to ask you a few questions. If you have any trouble, please email team@kentcdodds.com with your discord username (\`fredjoe#1234\`), an explanation of the trouble, and a screenshot of the conversation. And we'll get things fixed up for you.

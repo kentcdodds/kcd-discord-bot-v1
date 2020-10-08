@@ -123,7 +123,36 @@ test('should give an error message if the user not provide a search term', async
   const {messages} = await setup(``)
 
   expect(messages).toHaveLength(1)
-  expect(messages[0].content).toEqual(
-    `A search term is required. For example: \`?blog state management\``,
+  expect(messages[0].content).toMatchInlineSnapshot(
+    `"A search term is required. For example: \`?blog state management\`"`,
   )
+})
+
+test('should show the first 10 results if there are more', async () => {
+  const {messages} = await setup(`re`)
+
+  expect(messages).toHaveLength(1)
+  expect(messages[0].content).toMatchInlineSnapshot(`
+    "There are too many results for \\"re\\". Here are the top 10:
+    - Use react-error-boundary to handle errors in React
+      <https://kentcdodds.com/blog/use-react-error-boundary-to-handle-errors-in-react>
+    - How to React ⚛️
+      <https://kentcdodds.com/blog/how-to-react>
+    - useState lazy initialization and function updates
+      <https://kentcdodds.com/blog/use-state-lazy-initialization-and-function-updates>
+    - Use ternaries rather than && in JSX
+      <https://kentcdodds.com/blog/use-ternaries-rather-than-and-and-in-jsx>
+    - Application State Management with React
+      <https://kentcdodds.com/blog/application-state-management-with-react>
+    - JavaScript to Know for React
+      <https://kentcdodds.com/blog/javascript-to-know-for-react>
+    - 💯 UPDATED: Advanced React Component Patterns ⚛️
+      <https://kentcdodds.com/blog/updated-advanced-react-component-patterns>
+    - Testing Implementation Details
+      <https://kentcdodds.com/blog/testing-implementation-details>
+    - How I Record Educational Videos
+      <https://kentcdodds.com/blog/how-i-record-educational-videos>
+    - Should I write a test or fix a bug?
+      <https://kentcdodds.com/blog/should-i-write-a-test-or-fix-a-bug>"
+  `)
 })

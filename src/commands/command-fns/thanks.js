@@ -8,6 +8,7 @@ const {
   getMember,
   getChannel,
   getMessageLink,
+  getUsername,
 } = require('../utils')
 
 async function getThanksHistory() {
@@ -56,7 +57,7 @@ async function sayThankYou(args, message, thanksHistory) {
     )
   }
   const thankedMembersListString = listify(thankedMembers, {
-    stringify: m => `@${m.nickname ?? m.user.username}`,
+    stringify: m => `@${getUsername(m)}`,
   })
   const example = `For example: \`?thanks ${thankedMembersListString} for being so nice and answering my questions\``
   if (!args.includes(' for ')) {

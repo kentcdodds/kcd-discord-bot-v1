@@ -45,6 +45,37 @@ test('suggests similar item', async () => {
   `)
 })
 
+test('should use username in the from if nickname is not defined', async () => {
+  const {client, defaultChannels, createUser} = await makeFakeClient()
+  const userWithOnlyUsername = await createUser(null, {
+    username: 'userWithOnlyUsername',
+  })
+  const message = new Discord.Message(
+    client,
+    {
+      id: 'help_test',
+      content: '?kif peace fail',
+      author: userWithOnlyUsername.user,
+    },
+    defaultChannels.talkToBotsChannel,
+  )
+  Object.assign(message, {
+    mentions: new Discord.MessageMentions(message, [], [], false),
+  })
+  await kif(message)
+
+  const messages = Array.from(
+    defaultChannels.talkToBotsChannel.messages.cache.values(),
+  )
+
+  expect(messages).toHaveLength(1)
+  expect(messages[0].content).toMatchInlineSnapshot(`
+    "Did you mean \\"peace fall\\"?
+    From: userWithOnlyUsername
+    https://giphy.com/gifs/fall-peace-kentcdodds-U3nGECxxmHugNeAm6n"
+  `)
+})
+
 test('suggests two items', async () => {
   const {messages} = await setup('?kif peac')
 

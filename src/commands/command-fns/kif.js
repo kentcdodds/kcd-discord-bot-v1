@@ -10,6 +10,7 @@ const {
   getMember,
   rollbar,
   sendBotMessageReply,
+  getUsername,
 } = require('../utils')
 
 const kifCache = {
@@ -74,8 +75,10 @@ async function getCloseMatches(search) {
 function getKifReply(message, kif) {
   const mentionedMembersNicknames = Array.from(
     message.mentions.members.values(),
-  ).map(m => m.nickname ?? m.user.username)
-  const from = `From: ${getMember(message.guild, message.author.id).nickname}`
+  ).map(m => getUsername(m))
+  const from = `From: ${getUsername(
+    getMember(message.guild, message.author.id),
+  )}`
   const to = mentionedMembersNicknames.length
     ? `To: ${listify(mentionedMembersNicknames, {stringify: i => i})}`
     : ''

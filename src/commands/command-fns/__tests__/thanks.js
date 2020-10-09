@@ -314,3 +314,26 @@ test('should give an error if no specific thank message is provided', async () =
     `"You have to thank them for something specific. For example: \`?thanks @user1 for being so nice and answering my questions\`"`,
   )
 })
+
+test('should give an error if no user is thanked', async () => {
+  server.use(
+    rest.get(
+      `https://api.github.com/gists/${process.env.GIST_REPO_THANKS}`,
+      (req, res, ctx) => {
+        return res(
+          ctx.status(200),
+          ctx.json({files: {'thanks.json': {content: ''}}}),
+        )
+      },
+    ),
+  )
+  const {getBotMessages, getThanksMessages, message} = await setup('?thanks')
+
+  await thanks(message)
+
+  expect(getBotMessages()).toHaveLength(1)
+  expect(getThanksMessages()).toHaveLength(0)
+  expect(getBotMessages()[0].content).toMatchInlineSnapshot(
+    `"You have to mention someone specific you want to thank."`,
+  )
+})

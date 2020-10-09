@@ -64,6 +64,29 @@ const handlers = [
       return res(ctx.status(200), ctx.json(req.body))
     },
   ),
+  rest.get(
+    '*/api/:apiVersion/guilds/:guildId/members/:memberId',
+    (req, res, ctx) => {
+      const guild = DiscordManager.guilds[req.params.guildId]
+      const {
+        nickname: nick,
+        _roles: roles,
+        joinedTimestamp: joined_at,
+        premiumSinceTimestamp: premium_since,
+        user,
+      } = Array.from(guild.members.cache.values()).find(
+        member => member.user.id === req.params.memberId,
+      )
+      const objectMember = {
+        nick,
+        roles,
+        joined_at,
+        premium_since,
+        user,
+      }
+      return res(ctx.status(200), ctx.json(objectMember))
+    },
+  ),
   rest.delete(
     '*/api/:apiVersion/guilds/:guildId/members/:memberId/roles/:roleId',
     (req, res, ctx) => {

@@ -105,8 +105,10 @@ ${member.user} appreciated you for:
 Link: <${messageLink}>
     `.trim(),
   )
-  message.channel.send(`Aw! Thanks! ${getMessageLink(newThanksMessage)} 😍`)
-  return newThanksMessage
+
+  return message.channel.send(
+    `Aw! Thanks! ${getMessageLink(newThanksMessage)} 😍`,
+  )
 }
 
 async function thanks(message) {
@@ -152,8 +154,8 @@ async function thanks(message) {
       return thanksHistory[b].length - thanksHistory[a].length
     })
     const topUsers = []
-    await sortedUsers.forEach(async user => {
-      const member = await message.guild.members.fetch(user)
+    await sortedUsers.forEach(user => {
+      const member = getMember(message.channel.guild, user)
       if (member) {
         topUsers.push(member.user)
       }
@@ -172,7 +174,7 @@ ${listThanks(topUsers)}
     }
 
     const members = `member${searchedMembers.length === 1 ? '' : 's'}`
-    message.channel.send(
+    return message.channel.send(
       `
 This is the rank of the requested ${members}:
 ${listThanks(searchedMembers)}

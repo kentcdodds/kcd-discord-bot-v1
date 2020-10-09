@@ -63,6 +63,18 @@ function getRole(guild, {name}) {
   )
 }
 
+/**
+ * The name will be lowercased and the first category with a lowercased name that
+ * equals it will be returned.
+ * @param {*} guild the guild to find the role in
+ * @param {{name: string}} searchOptions
+ */
+function getCategory(guild, {name}) {
+  return guild.channels.cache.find(
+    c => c.type === 'category' && c.name.toLowerCase() === name.toLowerCase(),
+  )
+}
+
 const prodRegex = /^\?(?<command>\S+?)($| )(?<args>(.|\n)*)/
 const devRegex = /^~(?<command>\S+?)($| )(?<args>(.|\n)*)/
 const commandPrefix =
@@ -153,6 +165,7 @@ module.exports = {
   getMemberIdFromChannel,
   getBotMessages,
   getChannel,
+  getCategory,
   getRole,
   commandPrefix,
   commandRegex,

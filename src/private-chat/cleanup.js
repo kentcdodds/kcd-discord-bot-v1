@@ -1,10 +1,8 @@
-const {getSend, sleep} = require('../utils')
+/* eslint-disable no-await-in-loop */
+const {getSend, sleep, getCategory} = require('../utils')
 
 async function cleanup(guild) {
-  const categoryPrivateChat = guild.channels.cache.find(
-    ({name, type}) =>
-      type === 'category' && name.toLowerCase().includes('private chat'),
-  )
+  const categoryPrivateChat = getCategory(guild, {name: 'private chat'})
 
   const warningStep = 1000 * 60 * 5
   const maxExistingTime = 1000 * 60 * 60
@@ -13,32 +11,46 @@ async function cleanup(guild) {
   const eolReason = 'deleted for end of life 👻'
   const inactivityReason = 'deleted for inactivity 🚶‍♀️'
 
-  const allActivePrivateChannels = guild.channels.cache.filter(
-    channel =>
-      channel.type === 'text' &&
-      channel.parentID === categoryPrivateChat.id &&
-      channel.name.includes('-private-') &&
-      !channel.deleted,
+  const allActivePrivateChannels = Array.from(
+    guild.channels.cache
+      .filter(
+        channel =>
+          channel.type === 'text' &&
+          channel.parentID === categoryPrivateChat.id &&
+          channel.name.includes('-private-') &&
+          !channel.deleted,
+      )
+      .values(),
   )
 
-  allActivePrivateChannels.forEach(async channel => {
+  for (const channel of allActivePrivateChannels) {
     const channelCreateDate = channel.createdAt
-    const lastMessageDate = channel.lastMessage?.createdAt ?? channelCreateDate
-    const timeSinceChannelCreation = new Date() - channelCreateDate
-    const timeSinceLastMessage = new Date() - lastMessageDate
-    const messages = Array.from((await channel.messages.fetch()).values())
-    const hasInactiveWarned = messages.some(message => {
+
+    const timeSinceChannelCreation = Date.now() - channelCreateDate
+
+    const allMessages = Array.from((await channel.messages.fetch()).values())
+    const botMessages = allMessages.filter(message => message.author?.bot)
+    const messages = allMessages
+      .filter(message => !message.author?.bot)
+      .sort((a, b) => b.createdTimestamp - a.createdTimestamp)
+    let timeSinceLastMessage = timeSinceChannelCreation
+
+    if (messages.length > 0) {
+      timeSinceLastMessage = Date.now() - messages[0].createdTimestamp
+    }
+
+    const hasInactiveWarned = botMessages.some(message => {
       return (
         message.content.includes('5 minutes') &&
         message.content.includes(inactivityReason)
       )
     })
-    const hasEOLWarned = messages.some(
+    const hasEOLWarned = botMessages.some(
       message =>
         message.content.includes('5 minutes') &&
         message.content.includes(eolReason),
     )
-    const isGettingDeleted = messages.some(message =>
+    const isGettingDeleted = botMessages.some(message =>
       message.content.includes(
         'This channel is getting deleted for the following reason',
       ),
@@ -63,8 +75,9 @@ async function cleanup(guild) {
           `.trim(),
         )
         // Give just a while for the users to understand that the channel will be deleted soon
-        await sleep(10000)
-        await channel.delete(reason)
+        sleep(10000).then(() => {
+          channel.delete(reason)
+        })
       }
       // After two minute from deletion we try to delate the channel again
       // Maybe the server was stopped and the previous sleep was not finished
@@ -74,11 +87,7 @@ async function cleanup(guild) {
       ) {
         await channel.delete(reason)
       }
-
-      return
-    }
-
-    if (
+    } else if (
       (timeSinceChannelCreation > maxExistingTime - warningStep ||
         timeSinceLastMessage > maxInactiveTime - warningStep) &&
       !hasInactiveWarned &&
@@ -95,16 +104,16 @@ async function cleanup(guild) {
         !hasInactiveWarned
       ) {
         reason = inactivityReason
-      } else {
-        return
       }
-      await send(
-        `
+      if (reason) {
+        await send(
+          `
 This channel will be deleted in 5 minutes for the following reason: ${reason}
         `.trim(),
-      )
+        )
+      }
     }
-  })
+  }
 }
 
 module.exports = {cleanup}

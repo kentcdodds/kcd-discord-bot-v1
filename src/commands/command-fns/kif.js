@@ -74,8 +74,10 @@ async function getCloseMatches(search) {
 function getKifReply(message, kif) {
   const mentionedMembersNicknames = Array.from(
     message.mentions.members.values(),
-  ).map(m => m.nickname ?? m.user.username)
-  const from = `From: ${getMember(message.guild, message.author.id).nickname}`
+  ).map(m => m.displayName)
+  const from = `From: ${
+    getMember(message.guild, message.author.id).displayName
+  }`
   const to = mentionedMembersNicknames.length
     ? `To: ${listify(mentionedMembersNicknames, {stringify: i => i})}`
     : ''

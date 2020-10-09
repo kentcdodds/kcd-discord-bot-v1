@@ -1,14 +1,23 @@
 const Discord = require('discord.js')
-const {privateChannelPrefix, listify, sendBotMessageReply} = require('../utils')
+const {
+  privateChannelPrefix,
+  listify,
+  sendBotMessageReply,
+  getCategory,
+  getMember,
+} = require('../utils')
 
 async function privateChat(message) {
-  const mentionedMembers = [
-    ...Array.from(message.mentions.members.values()),
-    message.member,
-  ]
+  const mentionedMembers = Array.from(message.mentions.members.values()).filter(
+    user => user.user.id !== message.member.id,
+  )
   const mentionedMembersNicknames = Array.from(
     message.mentions.members.values(),
-  ).map(m => m.nickname ?? m.user.username)
+  ).map(user => user.displayName)
+  mentionedMembers.push(message.author)
+  mentionedMembersNicknames.push(
+    getMember(message.guild, message.author.id).displayName,
+  )
   if (mentionedMembers.length < 2) {
     return message.channel.send(`You should mention at least one other member.`)
   }
@@ -42,10 +51,7 @@ async function privateChat(message) {
     ({name}) => name === '@everyone',
   )
 
-  const categoryPrivateChat = message.guild.channels.cache.find(
-    ({name, type}) =>
-      type === 'category' && name.toLowerCase().includes('private chat'),
-  )
+  const categoryPrivateChat = getCategory(message.guild, {name: 'private chat'})
 
   const allActivePrivateChannels = message.guild.channels.cache.filter(
     channel =>
@@ -91,7 +97,7 @@ async function privateChat(message) {
     `
 Hello ${listify(mentionedMembers, {stringify: member => member})} 👋
 
-I'm the bot that created this channel for you. The channel will be deleted after 1 hour or after 10 minutes for inactivity. Enjoy 🗣 
+I'm the bot that created this channel for you. The channel will be deleted after 1 hour or after 10 minutes for inactivity. Enjoy 🗣
 
 > Please note that the KCD Discord Server Owners and Admins *can* see this chat. So if you want to be *completely* private, then you'll need to take your communication elsewhere.
     `.trim(),

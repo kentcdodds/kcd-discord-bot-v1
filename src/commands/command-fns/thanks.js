@@ -155,6 +155,7 @@ async function thanks(message) {
     })
     const topUsers = []
     await sortedUsers.forEach(user => {
+      if (topUsers.length > 10) return
       const member = getMember(message.channel.guild, user)
       if (member) {
         topUsers.push(member.user)

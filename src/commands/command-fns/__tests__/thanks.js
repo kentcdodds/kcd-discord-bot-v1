@@ -190,6 +190,53 @@ test('should show the rank of the mentioned user', async () => {
   `)
 })
 
+test('should show the rank of the top 10 users', async () => {
+  const {getBotMessages, getThanksMessages, message, createUser} = await setup(
+    '?thanks rank top',
+  )
+  const rankedUsers = await Promise.all(
+    Array.from(Array(20).keys()).map(index => createUser(`user${index}`)),
+  )
+
+  const ranks = {}
+  rankedUsers.forEach((rankedUser, index) => {
+    ranks[rankedUser.id] = Array.from(Array(index).keys()).map(
+      messageIndex => `link_to_message${messageIndex}`,
+    )
+  })
+
+  server.use(
+    rest.get(
+      `https://api.github.com/gists/${process.env.GIST_REPO_THANKS}`,
+      (req, res, ctx) => {
+        return res(
+          ctx.status(200),
+          ctx.json({files: {'thanks.json': {content: JSON.stringify(ranks)}}}),
+        )
+      },
+    ),
+  )
+
+  await thanks(message)
+
+  expect(getBotMessages()).toHaveLength(1)
+  expect(getThanksMessages()).toHaveLength(0)
+  expect(getBotMessages()[0].content).toMatchInlineSnapshot(`
+    "This is the list of the top thanked members 💪:
+    - user19 has been thanked 19 times 👏
+    - user18 has been thanked 18 times 👏
+    - user17 has been thanked 17 times 👏
+    - user16 has been thanked 16 times 👏
+    - user15 has been thanked 15 times 👏
+    - user14 has been thanked 14 times 👏
+    - user13 has been thanked 13 times 👏
+    - user12 has been thanked 12 times 👏
+    - user11 has been thanked 11 times 👏
+    - user10 has been thanked 10 times 👏
+    - user9 has been thanked 9 times 👏"
+  `)
+})
+
 test('should give an error if the message not contain the reason for the thank', async () => {
   server.use(
     rest.get(

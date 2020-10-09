@@ -50,6 +50,9 @@ This is the list of the last 10 articles on the blog:
 ${printArticles(lastArticles)}
       `.trim(),
     )
+  } else if (args === 'random') {
+    const randomIndex = Math.floor(Math.random() * (articles.length - 0) + 0)
+    return message.channel.send(`${articles[randomIndex].productionUrl}`)
   } else if (args) {
     const filteredArticles = searchArticles(articles, args)
     if (filteredArticles.length === 0) {
@@ -86,6 +89,8 @@ blog.description = `Find articles on Kent's blog: <https://kentcdodds.com/blog>`
 blog.help = message => {
   const commandsList = [
     `- Send \`?blog last\` for the last 10 articles.`,
+    `- Send \`?blog latest\` for the latest published article.`,
+    `- Send \`?blog random\` to get a random article.`,
     `- Send \`?blog your search string\` to find articles by categories, keyword, title and description.`,
   ]
   return message.channel.send(

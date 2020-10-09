@@ -65,6 +65,16 @@ async function sayThankYou(args, message, thanksHistory) {
     )
   }
 
+  const thanksMessage = args
+    .replace(MessageMentions.USERS_PATTERN, '')
+    .replace(/^.*?for/, '')
+    .trim()
+  if (!thanksMessage) {
+    return message.channel.send(
+      `You have to thank them for something specific. ${example}`,
+    )
+  }
+
   const messageLink = getMessageLink(message)
 
   thankedMembers.forEach(thankedMember => {
@@ -77,16 +87,6 @@ async function sayThankYou(args, message, thanksHistory) {
   } catch (_) {
     return message.channel.send(
       `There is an issue saving the history. Please try again later`,
-    )
-  }
-
-  const thanksMessage = args
-    .replace(MessageMentions.USERS_PATTERN, '')
-    .replace(/^.*?for/, '')
-    .trim()
-  if (!thanksMessage) {
-    return message.channel.send(
-      `You have to thank them for something specific. ${example}`,
     )
   }
 

@@ -287,3 +287,30 @@ test('should give an error if there are some issues retrieving data from gist', 
     `"There is an issue retrieving the history. Please try again later 🙏"`,
   )
 })
+
+test('should give an error if no specific thank message is provided', async () => {
+  server.use(
+    rest.get(
+      `https://api.github.com/gists/${process.env.GIST_REPO_THANKS}`,
+      (req, res, ctx) => {
+        return res(
+          ctx.status(200),
+          ctx.json({files: {'thanks.json': {content: ''}}}),
+        )
+      },
+    ),
+  )
+  const {
+    getBotMessages,
+    getThanksMessages,
+    message,
+  } = await setup('?thanks @user1 for ', ['user1'])
+
+  await thanks(message)
+
+  expect(getBotMessages()).toHaveLength(1)
+  expect(getThanksMessages()).toHaveLength(0)
+  expect(getBotMessages()[0].content).toMatchInlineSnapshot(
+    `"You have to thank them for something specific. For example: \`?thanks @user1 for being so nice and answering my questions\`"`,
+  )
+})

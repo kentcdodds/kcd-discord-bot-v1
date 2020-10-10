@@ -156,3 +156,10 @@ test('should show the first 10 results if there are more', async () => {
       <https://kentcdodds.com/blog/should-i-write-a-test-or-fix-a-bug>"
   `)
 })
+
+test('should return an article link for random', async () => {
+  const {messages} = await setup(`random`)
+
+  expect(messages).toHaveLength(1)
+  expect(messages[0].content).toContain(`https://kentcdodds.com/blog/`)
+})

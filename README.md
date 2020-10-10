@@ -12,7 +12,7 @@
 [![MIT License][license-badge]][license]
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-4-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-5-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 [![PRs Welcome][prs-badge]][prs]
 [![Code of Conduct][coc-badge]][coc]
@@ -87,6 +87,7 @@ Thanks goes to these people ([emoji key][emojis]):
     <td align="center"><a href="https://github.com/marcosvega91"><img src="https://avatars2.githubusercontent.com/u/5365582?v=4" width="100px;" alt=""/><br /><sub><b>Marco Moretti</b></sub></a><br /><a href="https://github.com/kentcdodds/kcd-discord-bot/commits?author=marcosvega91" title="Code">💻</a></td>
     <td align="center"><a href="https://dev.to/jacobmgevans"><img src="https://avatars1.githubusercontent.com/u/27247160?v=4" width="100px;" alt=""/><br /><sub><b>Jacob M-G Evans</b></sub></a><br /><a href="https://github.com/kentcdodds/kcd-discord-bot/commits?author=JacobMGEvans" title="Code">💻</a></td>
     <td align="center"><a href="https://michaeldeboey.be"><img src="https://avatars3.githubusercontent.com/u/6643991?v=4" width="100px;" alt=""/><br /><sub><b>Michaël De Boey</b></sub></a><br /><a href="https://github.com/kentcdodds/kcd-discord-bot/commits?author=MichaelDeBoey" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/uwuru"><img src="https://avatars1.githubusercontent.com/u/40305936?v=4" width="100px;" alt=""/><br /><sub><b>uwuru</b></sub></a><br /><a href="https://github.com/kentcdodds/kcd-discord-bot/commits?author=uwuru" title="Code">💻</a> <a href="https://github.com/kentcdodds/kcd-discord-bot/commits?author=uwuru" title="Tests">⚠️</a></td>
   </tr>
 </table>
 

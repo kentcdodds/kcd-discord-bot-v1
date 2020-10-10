@@ -49,6 +49,16 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "uwuru",
+      "name": "uwuru",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/40305936?v=4",
+      "profile": "https://github.com/uwuru",
+      "contributions": [
+        "code",
+        "test"
+      ]
     }
   ]
 }

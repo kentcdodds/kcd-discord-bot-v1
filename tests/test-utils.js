@@ -67,6 +67,9 @@ async function createChannels(client, guild) {
   const kentLiveChannel = await guild.channels.create(`💻-kent-live`)
   guild.channels.cache.set(kentLiveChannel.id, kentLiveChannel)
 
+  const thanksChannel = await guild.channels.create(`thank-you`)
+  guild.channels.cache.set(thanksChannel.id, thanksChannel)
+
   return {
     kentLiveChannel,
     kentLiveVoiceChannel,
@@ -77,6 +80,7 @@ async function createChannels(client, guild) {
     onBoardingCategory,
     privateChatCategory,
     talkToBotsChannel,
+    thanksChannel,
   }
 }
 

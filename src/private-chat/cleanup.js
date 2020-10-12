@@ -1,15 +1,15 @@
 /* eslint-disable no-await-in-loop */
-const {getSend, sleep, getCategory} = require('../utils')
+const {getSend, sleep, getCategory, timeToMs} = require('../utils')
+
+const warningStepMinute = 5
+const defaultLifeTimeMinute = 60
+const maxInactiveTimeMinute = 10
+const forceDelayTimeTimute = 2
+const eolReason = 'deleted for end of life 👻'
+const inactivityReason = 'deleted for inactivity 🚶‍♀️'
 
 async function cleanup(guild) {
   const categoryPrivateChat = getCategory(guild, {name: 'private chat'})
-
-  const warningStep = 1000 * 60 * 5
-  const maxExistingTime = 1000 * 60 * 60
-  const maxInactiveTime = 1000 * 60 * 10
-  const forceDelayTime = 1000 * 60 * 2
-  const eolReason = 'deleted for end of life 👻'
-  const inactivityReason = 'deleted for inactivity 🚶‍♀️'
 
   const allActivePrivateChannels = Array.from(
     guild.channels.cache
@@ -25,7 +25,10 @@ async function cleanup(guild) {
 
   for (const channel of allActivePrivateChannels) {
     const channelCreateDate = channel.createdAt
-
+    const match = channel.topic.match(/self-destruct in (?<time>\d+) minutes/i)
+    let currentMaxExistingTime = timeToMs.minutes(defaultLifeTimeMinute)
+    if (match)
+      currentMaxExistingTime = timeToMs.minutes(parseInt(match.groups.time, 10))
     const timeSinceChannelCreation = Date.now() - channelCreateDate
 
     const allMessages = Array.from((await channel.messages.fetch()).values())
@@ -39,15 +42,23 @@ async function cleanup(guild) {
       timeSinceLastMessage = Date.now() - messages[0].createdTimestamp
     }
 
-    const hasInactiveWarned = botMessages.some(message => {
-      return (
-        message.content.includes('5 minutes') &&
-        message.content.includes(inactivityReason)
-      )
-    })
+    const hasInactiveWarned = allMessages
+      .reverse()
+      .reduce((hasWarned, message) => {
+        const isInactiveWarning =
+          message.content.includes(`${warningStepMinute} minutes`) &&
+          message.content.includes(inactivityReason) &&
+          message.author?.bot
+        if (isInactiveWarning) return true
+
+        if (!message.author?.bot) return false
+
+        return hasWarned
+      }, false)
+
     const hasEOLWarned = botMessages.some(
       message =>
-        message.content.includes('5 minutes') &&
+        message.content.includes(`${warningStepMinute} minutes`) &&
         message.content.includes(eolReason),
     )
     const isGettingDeleted = botMessages.some(message =>
@@ -57,11 +68,11 @@ async function cleanup(guild) {
     )
     const send = getSend(channel)
     if (
-      timeSinceChannelCreation > maxExistingTime ||
-      timeSinceLastMessage > maxInactiveTime
+      timeSinceChannelCreation > currentMaxExistingTime ||
+      timeSinceLastMessage > timeToMs.minutes(maxInactiveTimeMinute)
     ) {
       let reason
-      if (timeSinceChannelCreation > maxExistingTime) {
+      if (timeSinceChannelCreation > currentMaxExistingTime) {
         reason = eolReason
       } else {
         reason = inactivityReason
@@ -82,25 +93,33 @@ async function cleanup(guild) {
       // After two minute from deletion we try to delate the channel again
       // Maybe the server was stopped and the previous sleep was not finished
       if (
-        timeSinceChannelCreation - maxExistingTime > forceDelayTime ||
-        timeSinceLastMessage - maxInactiveTime > forceDelayTime
+        timeSinceChannelCreation - currentMaxExistingTime >
+          timeToMs.minutes(forceDelayTimeTimute) ||
+        timeSinceLastMessage - timeToMs.minutes(maxInactiveTimeMinute) >
+          timeToMs.minutes(forceDelayTimeTimute)
       ) {
         await channel.delete(reason)
       }
     } else if (
-      (timeSinceChannelCreation > maxExistingTime - warningStep ||
-        timeSinceLastMessage > maxInactiveTime - warningStep) &&
+      (timeSinceChannelCreation >
+        currentMaxExistingTime - timeToMs.minutes(warningStepMinute) ||
+        timeSinceLastMessage >
+          timeToMs.minutes(maxInactiveTimeMinute) -
+            timeToMs.minutes(warningStepMinute)) &&
       !hasInactiveWarned &&
       !hasEOLWarned
     ) {
       let reason
       if (
-        timeSinceChannelCreation > maxExistingTime - warningStep &&
+        timeSinceChannelCreation >
+          currentMaxExistingTime - timeToMs.minutes(warningStepMinute) &&
         !hasEOLWarned
       ) {
         reason = eolReason
       } else if (
-        timeSinceLastMessage > maxInactiveTime - warningStep &&
+        timeSinceLastMessage >
+          timeToMs.minutes(maxInactiveTimeMinute) -
+            timeToMs.minutes(warningStepMinute) &&
         !hasInactiveWarned
       ) {
         reason = inactivityReason
@@ -108,7 +127,7 @@ async function cleanup(guild) {
       if (reason) {
         await send(
           `
-This channel will be deleted in 5 minutes for the following reason: ${reason}
+This channel will be deleted in ${warningStepMinute} minutes for the following reason: ${reason}
         `.trim(),
         )
       }
@@ -116,4 +135,10 @@ This channel will be deleted in 5 minutes for the following reason: ${reason}
   }
 }
 
-module.exports = {cleanup}
+module.exports = {
+  cleanup,
+  warningStepMinute,
+  defaultLifeTimeMinute,
+  eolReason,
+  inactivityReason,
+}

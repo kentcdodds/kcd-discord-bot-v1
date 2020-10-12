@@ -145,6 +145,17 @@ const handlers = [
       return res(ctx.status(200), ctx.json(message))
     },
   ),
+  rest.patch('*/api/:apiVersion/channels/:channelId', (req, res, ctx) => {
+    const channel = {
+      ...DiscordManager.channels[req.params.channelId],
+      ...req.body,
+    }
+
+    DiscordManager.guilds[channel.guild_id].client.actions.ChannelUpdate.handle(
+      channel,
+    )
+    return res(ctx.text('body'))
+  }),
   rest.delete('*/api/:apiVersion/channels/:channelId', (req, res, ctx) => {
     const channel = DiscordManager.channels[req.params.channelId]
     channel.deleted = true

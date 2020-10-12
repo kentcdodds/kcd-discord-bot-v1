@@ -179,4 +179,5 @@ module.exports = {
   getSelfDestructTime,
   welcomeChannelPrefix,
   privateChannelPrefix,
+  timeToMs,
 }

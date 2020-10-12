@@ -114,7 +114,7 @@ test('should create a private chat for more than two users', async () => {
 })
 
 test('should delete the private chat after 10 minutes of inactivity', async () => {
-  jest.spyOn(Date, 'now').mockImplementation(() => 1598947200000) // 10:00 UTC+2
+  Date.now.mockImplementation(() => 1598947200000) // 10:00 UTC+2
   const {
     guild,
     privateChannels,
@@ -122,11 +122,11 @@ test('should delete the private chat after 10 minutes of inactivity', async () =
     channelMembers,
   } = await createPrivateChat(['mentionedUser'])
   const privateChannel = privateChannels[0]
-  jest.spyOn(Date, 'now').mockImplementation(() => 1598947380000) //10:03:00 UTC+2
+  Date.now.mockImplementation(() => 1598947380000) //10:03:00 UTC+2
   await cleanup(guild)
   expect(privateChannel.messages.cache.size).toEqual(1)
 
-  jest.spyOn(Date, 'now').mockImplementation(() => 1598947501000) //10:05:01 UTC+2
+  Date.now.mockImplementation(() => 1598947501000) //10:05:01 UTC+2
   await cleanup(guild)
   expect(privateChannel.messages.cache.size).toEqual(2)
   expect(privateChannel.lastMessage.content).toEqual(
@@ -136,14 +136,14 @@ test('should delete the private chat after 10 minutes of inactivity', async () =
   await cleanup(guild)
   await sendFromUser({user: channelMembers[0].user, channel: privateChannel})
 
-  jest.spyOn(Date, 'now').mockImplementation(() => 1598947802000) //10:10:02 UTC+2
+  Date.now.mockImplementation(() => 1598947802000) //10:10:02 UTC+2
   await cleanup(guild)
   expect(privateChannel.messages.cache.size).toEqual(4)
   expect(privateChannel.lastMessage.content).toEqual(
     `This channel will be deleted in 5 minutes for the following reason: deleted for inactivity 🚶‍♀️`,
   )
 
-  jest.spyOn(Date, 'now').mockImplementation(() => 1598948103000) //10:15:03 UTC+2
+  Date.now.mockImplementation(() => 1598948103000) //10:15:03 UTC+2
   await cleanup(guild)
   expect(privateChannel.messages.cache.size).toEqual(5)
   expect(privateChannel.lastMessage.content).toEqual(
@@ -160,7 +160,7 @@ This channel is getting deleted for the following reason: deleted for inactivity
 })
 
 test('should delete the private chat after 60 minutes', async () => {
-  jest.spyOn(Date, 'now').mockImplementation(() => 1598947200000) // 10:00 UTC+2
+  Date.now.mockImplementation(() => 1598947200000) // 10:00 UTC+2
   const {
     guild,
     channelMembers,
@@ -169,9 +169,9 @@ test('should delete the private chat after 60 minutes', async () => {
   } = await createPrivateChat(['mentionedUser'])
   const privateChannel = privateChannels[0]
 
-  jest.spyOn(Date, 'now').mockImplementation(() => 1598947800000) //10:15:00 UTC+2
+  Date.now.mockImplementation(() => 1598947800000) //10:15:00 UTC+2
   sendFromUser({user: channelMembers[0].user, channel: privateChannel})
-  jest.spyOn(Date, 'now').mockImplementation(() => 1598950501000) //10:55:01 UTC+2
+  Date.now.mockImplementation(() => 1598950501000) //10:55:01 UTC+2
   sendFromUser({user: channelMembers[0].user, channel: privateChannel})
   await cleanup(guild)
   expect(privateChannel.messages.cache.size).toEqual(4)
@@ -181,7 +181,7 @@ test('should delete the private chat after 60 minutes', async () => {
   // run this to check that no other warning message are sent
   await cleanup(guild)
 
-  jest.spyOn(Date, 'now').mockImplementation(() => 1598950801000) //11:00:01 UTC+2
+  Date.now.mockImplementation(() => 1598950801000) //11:00:01 UTC+2
 
   await cleanup(guild)
   expect(privateChannel.messages.cache.size).toEqual(5)
@@ -209,7 +209,7 @@ test('should not create a chat without mentioned member', async () => {
 })
 
 test('should give an error if the command not exist', async () => {
-  jest.spyOn(Date, 'now').mockImplementation(() => 1598947200000) // 10:00 UTC+2
+  Date.now.mockImplementation(() => 1598947200000) // 10:00 UTC+2
   const {
     channelMembers,
     executeCommand,
@@ -327,7 +327,7 @@ test('should not extend the liftime if has been passed an invalid time', async (
 })
 
 test('should extend the time of the private-chat', async () => {
-  jest.spyOn(Date, 'now').mockImplementation(() => 1598947200000) // 10:00 UTC+2
+  Date.now.mockImplementation(() => 1598947200000) // 10:00 UTC+2
   const {
     guild,
     channelMembers,
@@ -337,7 +337,7 @@ test('should extend the time of the private-chat', async () => {
   } = await createPrivateChat(['mentionedUser'])
   const privateChannel = privateChannels[0]
 
-  jest.spyOn(Date, 'now').mockImplementation(() => 1598950501000) //10:55:01 UTC+2
+  Date.now.mockImplementation(() => 1598950501000) //10:55:01 UTC+2
   sendFromUser({user: channelMembers[0].user, channel: privateChannel})
   await cleanup(guild)
   expect(privateChannel.messages.cache.size).toEqual(3)
@@ -351,7 +351,7 @@ test('should extend the time of the private-chat', async () => {
     `The lifetime of the channel has been extended of 10 minutes more ⏱`,
   )
 
-  jest.spyOn(Date, 'now').mockImplementation(() => 1598951101000) //11:05:01 UTC+2
+  Date.now.mockImplementation(() => 1598951101000) //11:05:01 UTC+2
 
   await cleanup(guild)
   expect(privateChannel.messages.cache.size).toEqual(5)
@@ -359,7 +359,7 @@ test('should extend the time of the private-chat', async () => {
     `This channel will be deleted in 5 minutes for the following reason: deleted for end of life 👻`,
   )
 
-  jest.spyOn(Date, 'now').mockImplementation(() => 1598951401000) //11:10:01 UTC+2
+  Date.now.mockImplementation(() => 1598951401000) //11:10:01 UTC+2
   await cleanup(guild)
   expect(privateChannel.messages.cache.size).toEqual(6)
   expect(privateChannel.lastMessage.content).toEqual(

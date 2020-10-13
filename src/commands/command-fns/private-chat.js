@@ -87,10 +87,16 @@ async function createChat(message) {
     )
   }
 
+  const expirationDate = new Date(
+    Date.now() + timeToMs.minutes(defaultLifeTimeMinute),
+  )
+
   const channel = await message.guild.channels.create(
     `${privateChannelPrefix}${channelSuffix}`,
     {
-      topic: `self-destruct in ${defaultLifeTimeMinute} minutes`,
+      topic: `Private chat for ${listify(mentionedMembersNicknames, {
+        stringify: member => member,
+      })} self-destruct at ${expirationDate.toUTCString()}`,
       parent: categoryPrivateChat,
       permissionOverwrites: [
         {
@@ -122,19 +128,30 @@ async function extendTime(message, extendedTime) {
   const parsedTime = parseInt(extendedTime, 10)
   if (parsedTime > 0) {
     const privateChannel = message.channel
-    const match = privateChannel.topic.match(
-      /self-destruct in (?<time>\d+) minutes/i,
+    const topicRegex = /self-destruct at (?<utcDate>.*)$/i
+    const match = privateChannel.topic.match(topicRegex)
+    let currentExpirationDate = new Date(
+      message.channel.createdAt + timeToMs.minutes(defaultLifeTimeMinute),
     )
-    let currentTime = defaultLifeTimeMinute
-    if (match) currentTime = parseInt(match.groups.time, 10)
+    if (match && new Date(match.groups.utcDate))
+      currentExpirationDate = new Date(match.groups.utcDate)
 
-    const newLifetime = currentTime + parsedTime
+    const newExpirationDate = new Date(
+      currentExpirationDate.getTime() + timeToMs.minutes(parsedTime),
+    )
+
+    const membersNicknames = message.channel.members.map(
+      guildMember => guildMember.displayName,
+    )
+
     await privateChannel.setTopic(
-      `self-destruct in ${newLifetime} minutes`,
-      'extend lifetime',
+      `Private chat for ${listify(membersNicknames, {
+        stringify: member => member,
+      })} self-destruct at ${newExpirationDate.toUTCString()}`,
     )
     const channelCreateDate = privateChannel.createdAt
     const timeSinceChannelCreation = Date.now() - channelCreateDate
+    const newLifetime = newExpirationDate - channelCreateDate
 
     if (
       timeSinceChannelCreation <

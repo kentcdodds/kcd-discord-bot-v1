@@ -25,11 +25,15 @@ async function cleanup(guild) {
 
   for (const channel of allActivePrivateChannels) {
     const channelCreateDate = channel.createdAt
-    const match = channel.topic.match(/self-destruct in (?<time>\d+) minutes/i)
-    let currentMaxExistingTime = timeToMs.minutes(defaultLifeTimeMinute)
-    if (match)
-      currentMaxExistingTime = timeToMs.minutes(parseInt(match.groups.time, 10))
+    const match = channel.topic.match(/self-destruct at (?<utcDate>.*)$/i)
+    let currentExpirationDate = new Date(
+      channel.createdAt + timeToMs.minutes(defaultLifeTimeMinute),
+    )
+    if (match && new Date(match.groups.utcDate))
+      currentExpirationDate = new Date(match.groups.utcDate)
+
     const timeSinceChannelCreation = Date.now() - channelCreateDate
+    const currentExpiration = currentExpirationDate - channelCreateDate
 
     const allMessages = Array.from((await channel.messages.fetch()).values())
     const botMessages = allMessages.filter(message => message.author?.bot)
@@ -68,11 +72,11 @@ async function cleanup(guild) {
     )
     const send = getSend(channel)
     if (
-      timeSinceChannelCreation > currentMaxExistingTime ||
+      timeSinceChannelCreation > currentExpiration ||
       timeSinceLastMessage > timeToMs.minutes(maxInactiveTimeMinute)
     ) {
       let reason
-      if (timeSinceChannelCreation > currentMaxExistingTime) {
+      if (timeSinceChannelCreation > currentExpiration) {
         reason = eolReason
       } else {
         reason = inactivityReason
@@ -93,7 +97,7 @@ async function cleanup(guild) {
       // After two minute from deletion we try to delate the channel again
       // Maybe the server was stopped and the previous sleep was not finished
       if (
-        timeSinceChannelCreation - currentMaxExistingTime >
+        timeSinceChannelCreation - currentExpiration >
           timeToMs.minutes(forceDelayTimeTimute) ||
         timeSinceLastMessage - timeToMs.minutes(maxInactiveTimeMinute) >
           timeToMs.minutes(forceDelayTimeTimute)
@@ -102,7 +106,7 @@ async function cleanup(guild) {
       }
     } else if (
       (timeSinceChannelCreation >
-        currentMaxExistingTime - timeToMs.minutes(warningStepMinute) ||
+        currentExpiration - timeToMs.minutes(warningStepMinute) ||
         timeSinceLastMessage >
           timeToMs.minutes(maxInactiveTimeMinute) -
             timeToMs.minutes(warningStepMinute)) &&
@@ -112,7 +116,7 @@ async function cleanup(guild) {
       let reason
       if (
         timeSinceChannelCreation >
-          currentMaxExistingTime - timeToMs.minutes(warningStepMinute) &&
+          currentExpiration - timeToMs.minutes(warningStepMinute) &&
         !hasEOLWarned
       ) {
         reason = eolReason

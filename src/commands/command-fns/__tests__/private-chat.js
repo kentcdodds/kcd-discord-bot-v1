@@ -337,6 +337,10 @@ test('should extend the time of the private-chat', async () => {
   } = await createPrivateChat(['mentionedUser'])
   const privateChannel = privateChannels[0]
 
+  expect(privateChannel.topic).toMatchInlineSnapshot(
+    `"Private chat for mentionedUser and sentMessageUser self-destruct at Tue, 01 Sep 2020 09:00:00 GMT"`,
+  )
+
   Date.now.mockImplementation(() => 1598950501000) //10:55:01 UTC+2
   sendFromUser({user: channelMembers[0].user, channel: privateChannel})
   await cleanup(guild)
@@ -346,6 +350,9 @@ test('should extend the time of the private-chat', async () => {
   )
 
   await executeCommand(channelMembers[0].user, 'extend', '10')
+  expect(privateChannel.topic).toMatchInlineSnapshot(
+    `"Private chat for sentMessageUser and mentionedUser self-destruct at Tue, 01 Sep 2020 09:10:00 GMT"`,
+  )
   expect(privateChannel.messages.cache.size).toEqual(4)
   expect(privateChannel.lastMessage.content).toEqual(
     `The lifetime of the channel has been extended of 10 minutes more ⏱`,

@@ -83,10 +83,31 @@ const allSteps = [
         /^Oh, nice, (?<email>.+@.+?\..+?) is already a part/,
       )?.groups?.email ??
       null,
-    validate({message}) {
+    validate: async ({message}) => {
       const response = message.content
       if (!/^.+@.+\..+$/.test(response)) {
         return `That doesn't look like an email address. Please provide a proper email address.`
+      }
+      // before checking whether it's a disposable email
+      // let's check whether they're a subscriber first...
+      if (await getConvertKitSubscriber(response)) return
+
+      // let's make sure the given email isn't a disposable email
+      try {
+        const {result} = await got(
+          `https://api.disposable-email-detector.com/api/dea/v1/check/${response}`,
+        ).json()
+        if (result.error) {
+          throw new Error(result.error)
+        }
+        if (result.isDisposable) {
+          return `You must use your actual email address.`
+        }
+      } catch (e) {
+        console.error(
+          `Trouble checking whether the email was disposable`,
+          e.message,
+        )
       }
     },
   },

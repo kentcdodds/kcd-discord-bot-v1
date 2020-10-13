@@ -42,7 +42,7 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
   )
   if (!editedStep) return
 
-  const error = editedStep.validate({
+  const error = await editedStep.validate({
     message: newMessage,
     answers: previousAnswers,
   })
@@ -54,7 +54,7 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
   const promises = []
 
   // get the error message we printed previously due to any bad edits
-  const stepErrorMessage = editedStep.validate({
+  const stepErrorMessage = await editedStep.validate({
     message: oldMessage,
     answers: previousAnswers,
   })

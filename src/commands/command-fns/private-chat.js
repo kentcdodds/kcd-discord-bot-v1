@@ -5,7 +5,6 @@ const {
   listify,
   sendBotMessageReply,
   getCategory,
-  getMember,
   getCommandArgs,
   timeToMs,
 } = require('../utils')
@@ -24,9 +23,7 @@ async function createChat(message) {
     message.mentions.members.values(),
   ).map(user => user.displayName)
   mentionedMembers.push(message.author)
-  mentionedMembersNicknames.push(
-    getMember(message.guild, message.author.id).displayName,
-  )
+  mentionedMembersNicknames.push(message.member.displayName)
   if (mentionedMembers.length < 2) {
     return message.channel.send(`You should mention at least one other member.`)
   }

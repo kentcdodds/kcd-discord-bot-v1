@@ -74,6 +74,8 @@ In less than 5 minutes, you'll have full access to this server. So, let's get st
   )
 
   await send(getSteps(member)[0].question)
+
+  return channel
 }
 
 module.exports = {handleNewMember}

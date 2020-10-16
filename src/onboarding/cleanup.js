@@ -27,11 +27,17 @@ async function cleanup(guild) {
 
   const homelessUnconfirmedMembersKicks = guild.members.cache
     .filter(isMemberUnconfirmed)
-    .filter(({joinedAt}) => joinedAt < Date.now() - 1000 * 60)
     .filter(member => !getMemberWelcomeChannel(member))
     .mapValues(member =>
       member.kick(`Unconfirmed member with no welcome channel`),
     )
+  const oldMembersKicks = guild.members.cache
+    .filter(
+      // no roles and joined over a minute ago
+      ({roles, joinedAt}) =>
+        !roles.cache.size && joinedAt < Date.now() - 1000 * 60,
+    )
+    .mapValues(member => member.kick(`Old member with no roles`))
 
   const channelDeletes = welcomeChannels.mapValues(channel => {
     const send = getSend(channel)
@@ -116,7 +122,11 @@ async function cleanup(guild) {
     })()
   })
 
-  await Promise.all([...channelDeletes, ...homelessUnconfirmedMembersKicks])
+  await Promise.all([
+    ...channelDeletes,
+    ...homelessUnconfirmedMembersKicks,
+    ...oldMembersKicks,
+  ])
 }
 
 module.exports = {cleanup}

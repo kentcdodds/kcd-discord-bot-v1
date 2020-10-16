@@ -35,21 +35,10 @@ async function getMessageContents(msg, answers, member) {
 const getWelcomeChannels = guild =>
   guild.channels.cache.filter(isWelcomeChannel)
 
-const hasRole = (member, roleName) =>
-  member.roles.cache.some(({name}) => name === roleName)
-
-const hasMemberRole = member => hasRole(member, 'Member')
-
-function isMemberUnconfirmed(member) {
-  const memberRoles = [
-    'Owner',
-    'Admin',
-    'MegaMod',
-    'Bot',
-    'Moderator',
-    'Member',
-  ]
-  return memberRoles.some(r => hasRole(member, r))
+const isMemberUnconfirmed = member => {
+  return member.roles.cache.some(({name}) => {
+    return name === 'Unconfirmed Member'
+  })
 }
 
 const getMemberWelcomeChannel = member =>
@@ -65,7 +54,6 @@ module.exports = {
   CONVERT_KIT_API_KEY,
   getWelcomeChannels,
   isMemberUnconfirmed,
-  hasMemberRole,
   getMemberWelcomeChannel,
   getMessageContents,
   getMemberIdFromChannel,

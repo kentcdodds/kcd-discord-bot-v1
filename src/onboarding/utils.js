@@ -37,13 +37,19 @@ const getWelcomeChannels = guild =>
 
 const hasRole = (member, roleName) =>
   member.roles.cache.some(({name}) => name === roleName)
+
 const hasMemberRole = member => hasRole(member, 'Member')
 
 function isMemberUnconfirmed(member) {
-  if (member.user.bot) return false
-  if (hasMemberRole(member)) return false
-  if (hasRole(member, 'Unconfirmed Member')) return true
-  return true
+  const memberRoles = [
+    'Owner',
+    'Admin',
+    'MegaMod',
+    'Bot',
+    'Moderator',
+    'Member',
+  ]
+  return memberRoles.some(r => hasRole(member, r))
 }
 
 const getMemberWelcomeChannel = member =>

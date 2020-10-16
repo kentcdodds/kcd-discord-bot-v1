@@ -35,14 +35,16 @@ async function getMessageContents(msg, answers, member) {
 const getWelcomeChannels = guild =>
   guild.channels.cache.filter(isWelcomeChannel)
 
-const hasMemberRole = member =>
-  member.roles.cache.some(({name}) => name === 'Member')
+const hasRole = (member, roleName) =>
+  member.roles.cache.some(({name}) => name === roleName)
+const hasMemberRole = member => hasRole(member, 'Member')
 
-const isMemberUnconfirmed = member =>
-  !hasMemberRole(member) ||
-  member.roles.cache.some(({name}) => {
-    return name === 'Unconfirmed Member'
-  })
+function isMemberUnconfirmed(member) {
+  if (member.user.bot) return false
+  if (hasMemberRole(member)) return false
+  if (hasRole(member, 'Unconfirmed Member')) return true
+  return true
+}
 
 const getMemberWelcomeChannel = member =>
   getWelcomeChannels(member.guild).find(

@@ -41,7 +41,10 @@ async function cleanup(guild) {
     const send = getSend(channel)
     return (async () => {
       // load all the messages so we can get the last message
-      await Promise.all([channel.messages.fetch(), channel.fetch()])
+      await Promise.all([
+        channel.messages.fetch().catch(i => i),
+        channel.fetch().catch(i => i),
+      ])
 
       const {lastMessage} = channel
 

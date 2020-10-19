@@ -9,6 +9,8 @@ function handleNewMessage(message) {
   const commandFn = commands[command]
   if (!commandFn) return
 
+  if (commandFn.authorize && !commandFn.authorize(message)) return
+
   if (args.toLowerCase().trim() === 'help') {
     if (commandFn.help) {
       return commandFn.help(message)

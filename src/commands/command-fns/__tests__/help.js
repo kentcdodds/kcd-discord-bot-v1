@@ -3,10 +3,10 @@ const {makeFakeClient} = require('test-utils')
 const help = require('../help')
 
 test('prints help for all commands', async () => {
-  const {client, defaultChannels} = await makeFakeClient()
+  const {client, defaultChannels, kody} = await makeFakeClient()
   const message = new Discord.Message(
     client,
-    {id: 'help_test', content: '?help'},
+    {id: 'help_test', content: '?help', author: kody.user},
     defaultChannels.talkToBotsChannel,
   )
   await help(message)

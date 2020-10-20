@@ -23,7 +23,7 @@ async function cleanup(guild) {
       .values(),
   )
 
-  for (const channel of allActivePrivateChannels) {
+  async function cleanupPrivateChannel(channel) {
     const channelCreateDate = channel.createdAt
     const match = channel.topic.match(/self-destruct at (?<utcDate>.*)$/i)
     let currentExpirationDate = new Date(
@@ -84,9 +84,9 @@ async function cleanup(guild) {
       if (!isGettingDeleted) {
         await send(
           `
-  This channel is getting deleted for the following reason: ${reason}
-  
-  Goodbye 👋
+This channel is getting deleted for the following reason: ${reason}
+
+Goodbye 👋
           `.trim(),
         )
         // Give just a while for the users to understand that the channel will be deleted soon
@@ -137,6 +137,8 @@ This channel will be deleted in ${warningStepMinute} minutes for the following r
       }
     }
   }
+
+  return Promise.all(allActivePrivateChannels.map(cleanupPrivateChannel))
 }
 
 module.exports = {

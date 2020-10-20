@@ -7,40 +7,37 @@ async function cleanup(guild) {
   const messages = Array.from((await channel.messages.fetch()).values())
 
   const oneWeek = 1000 * 60 * 60 * 24 * 7
-  const messageDeletes = messages
-    .map(message => {
-      return async () => {
-        // we only want messages we sent
-        if (message.author.id !== guild.client.user.id) return
 
-        // messages older than a week are deleted automatically
-        const timeSinceMessage = new Date() - message.createdAt
-        if (timeSinceMessage > oneWeek) return message.delete()
+  async function cleanupMessage(message) {
+    // we only want messages we sent
+    if (message.author.id !== guild.client.user.id) return
 
-        // when the club captain gives a 🏁 reaction, then delete the message
-        if (message.reactions.cache.size < 1) return
+    // messages older than a week are deleted automatically
+    const timeSinceMessage = new Date() - message.createdAt
+    if (timeSinceMessage > oneWeek) return message.delete()
 
-        await Promise.all(
-          message.reactions.cache.mapValues(reaction => reaction.fetch()),
-        )
+    // when the club captain gives a 🏁 reaction, then delete the message
+    if (message.reactions.cache.size < 1) return
 
-        const flagReaction = message.reactions.cache.find(
-          ({emoji}) => emoji.name === '🏁',
-        )
+    await Promise.all(
+      message.reactions.cache.mapValues(reaction => reaction.fetch()),
+    )
 
-        if (!flagReaction) return
+    const flagReaction = message.reactions.cache.find(
+      ({emoji}) => emoji.name === '🏁',
+    )
 
-        await flagReaction.users.fetch()
-        const clubCaptain = message.mentions.users.first()
-        const captainWantsToDelete = flagReaction.users.cache.some(
-          user => clubCaptain.id === user.id,
-        )
-        if (captainWantsToDelete) return message.delete()
-      }
-    })
-    .map(fn => fn())
+    if (!flagReaction) return
 
-  return Promise.all(messageDeletes)
+    await flagReaction.users.fetch()
+    const clubCaptain = message.mentions.users.first()
+    const captainWantsToDelete = flagReaction.users.cache.some(
+      user => clubCaptain.id === user.id,
+    )
+    if (captainWantsToDelete) return message.delete()
+  }
+
+  return Promise.all(messages.map(cleanupMessage))
 }
 
 module.exports = {cleanup}

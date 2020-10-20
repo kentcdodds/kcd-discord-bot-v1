@@ -1,3 +1,5 @@
+const {cleanupGuildOnInterval} = require('./utils')
+
 const onboarding = {
   ...require('./handle-new-member'),
   ...require('./handle-new-message'),
@@ -10,11 +12,7 @@ function setup(client) {
   client.on('messageUpdate', onboarding.handleUpdatedMessage)
   client.on('guildMemberAdd', onboarding.handleNewMember)
 
-  setInterval(() => {
-    client.guilds.cache.forEach(guild => {
-      onboarding.cleanup(guild)
-    })
-  }, 5000)
+  cleanupGuildOnInterval(client, guild => onboarding.cleanup(guild), 5000)
 }
 
 module.exports = {...onboarding, setup}

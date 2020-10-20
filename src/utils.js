@@ -1,4 +1,6 @@
+const {setIntervalAsync} = require('set-interval-async/dynamic')
 const rollbar = require('./rollbar')
+
 const sleep = t =>
   new Promise(resolve =>
     setTimeout(resolve, process.env.NODE_ENV === 'test' ? 0 : t),
@@ -158,7 +160,15 @@ ${reply}
   }
 }
 
+// read up on dynamic setIntervalAsync here: https://github.com/ealmansi/set-interval-async#dynamic-and-fixed-setintervalasync
+function cleanupGuildOnInterval(client, cb, interval) {
+  setIntervalAsync(() => {
+    return Promise.all(Array.from(client.guilds.cache.values()).map(cb))
+  }, interval)
+}
+
 module.exports = {
+  cleanupGuildOnInterval,
   rollbar,
   sleep,
   getSend,

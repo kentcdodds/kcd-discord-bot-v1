@@ -1,5 +1,5 @@
 const got = require('got')
-const {default: matchSorter} = require('match-sorter')
+const {matchSorter} = require('match-sorter')
 const {getCommandArgs, sendBotMessageReply} = require('../utils')
 
 async function fetchArticles() {
@@ -17,12 +17,11 @@ function printArticles(articles) {
 function searchArticles(articles, searchText) {
   return matchSorter(articles, searchText, {
     keys: [
-      {threshold: matchSorter.rankings.STARTS_WITH, key: 'categories'},
-      {threshold: matchSorter.rankings.STARTS_WITH, key: 'keywords'},
-      'title',
-      'description',
+      {threshold: matchSorter.rankings.MATCHES, key: 'title'},
+      {threshold: matchSorter.rankings.WORD_STARTS_WITH, key: 'description'},
+      {threshold: matchSorter.rankings.WORD_STARTS_WITH, key: 'categories'},
+      {threshold: matchSorter.rankings.WORD_STARTS_WITH, key: 'keywords'},
     ],
-    threshold: matchSorter.rankings.CONTAINS,
   })
 }
 

@@ -3,7 +3,7 @@
 const {MessageMentions} = require('discord.js')
 const leven = require('leven')
 const got = require('got')
-const {default: matchSorter} = require('match-sorter')
+const {matchSorter} = require('match-sorter')
 const {
   getCommandArgs,
   listify,

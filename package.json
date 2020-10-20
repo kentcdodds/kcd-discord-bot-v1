@@ -32,20 +32,21 @@
     "validate": "kcd-scripts validate"
   },
   "dependencies": {
-    "discord.js": "^12.2.0",
+    "discord.js": "12.3.1",
     "dotenv": "^8.2.0",
-    "got": "^11.5.1",
+    "got": "^11.7.0",
     "leven": "^3.1.0",
-    "match-sorter": "^4.2.0",
+    "match-sorter": "^5.0.0",
     "md5-hash": "^1.0.1",
-    "open-graph-scraper": "^4.5.1",
-    "p-memoize": "^4.0.0",
+    "open-graph-scraper": "^4.6.0",
+    "p-memoize": "^4.0.1",
     "redent": "^3.0.0",
-    "rollbar": "^2.19.3"
+    "rollbar": "^2.19.4",
+    "set-interval-async": "^1.0.33"
   },
   "devDependencies": {
     "kcd-scripts": "^6.6.0",
-    "msw": "^0.21.2"
+    "msw": "^0.21.3"
   },
   "eslintConfig": {
     "extends": "./node_modules/kcd-scripts/eslint.js",

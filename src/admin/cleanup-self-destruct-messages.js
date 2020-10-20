@@ -1,8 +1,9 @@
-const {getSelfDestructTime} = require('../utils')
+const {cleanupGuildOnInterval, getSelfDestructTime} = require('../utils')
 
 async function cleanup(guild) {
   const channels = guild.channels.cache.filter(ch => ch.type === 'text')
   const botId = guild.client.user.id
+  const promises = []
 
   for (const channel of Array.from(channels.values())) {
     for (const message of Array.from(channel.messages.cache.values())) {
@@ -12,31 +13,35 @@ async function cleanup(guild) {
           typeof timeToSelfDestruct === 'number' &&
           message.createdAt.getTime() + timeToSelfDestruct < Date.now()
         ) {
-          // ignore the returned promise. Fire and forget
-          message.delete({
-            reason: `Self destructed after ${timeToSelfDestruct}ms`,
-          })
+          promises.push(
+            message.delete({
+              reason: `Self destructed after ${timeToSelfDestruct}ms`,
+            }),
+          )
         }
       }
     }
   }
+
+  return Promise.all(promises)
 }
 
-function setup(client) {
+async function setup(client) {
   // prime the message cache for all channels
   // this is important for situations when the bot gets restarted after
   // it had just sent a self-destruct chat
-  const guild = client.guilds.cache.find(({name}) => name === 'KCD')
-  const channels = guild.channels.cache.filter(ch => ch.type === 'text')
-  for (const channel of Array.from(channels.values())) {
-    // ignore the returned promise. Fire and forget.
-    channel.messages.fetch({limit: 30})
-  }
+  await Promise.all(
+    Array.from(client.guilds.cache.values()).map(async guild => {
+      const channels = guild.channels.cache.filter(ch => ch.type === 'text')
+      return Promise.all(
+        Array.from(channels.values()).map(channel => {
+          return channel.messages.fetch({limit: 30})
+        }),
+      )
+    }),
+  )
 
-  console.log('setting interval')
-  setInterval(() => {
-    cleanup(guild)
-  }, 5000)
+  cleanupGuildOnInterval(client, guild => cleanup(guild), 5000)
 }
 
 module.exports = {setup}

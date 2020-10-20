@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars */
 const path = require('path')
 const Discord = require('discord.js')
+const {cleanupGuildOnInterval} = require('./utils')
 
 require('dotenv').config({
   path: path.join(__dirname, '..', `/.env.${process.env.NODE_ENV || 'local'}`),
@@ -32,9 +33,5 @@ client.on('ready', () => {
 
   // onboarding.handleNewMember(getKent())
 
-  // setInterval(() => {
-  //   client.guilds.cache.forEach(guild => {
-  //     onboarding.cleanup(guild)
-  //   })
-  // }, 5000)
+  // cleanupGuildOnInterval(client, guild => onboarding.cleanup(guild), 5000)
 })

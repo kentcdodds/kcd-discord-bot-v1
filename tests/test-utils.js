@@ -32,7 +32,7 @@ async function createChannels(client, guild) {
   const talkToBotsChannel = await guild.channels.create('🤖-talk-to-bots')
   guild.channels.cache.set(talkToBotsChannel.id, talkToBotsChannel)
 
-  const privateChatCategory = await guild.channels.create('PRIVATE CHAT', {
+  const privateChatCategory = await guild.channels.create('Private Chat', {
     type: 'CATEGORY',
   })
   guild.channels.cache.set(privateChatCategory.id, privateChatCategory)
@@ -67,7 +67,7 @@ async function createChannels(client, guild) {
   const kentLiveChannel = await guild.channels.create(`💻-kent-live`)
   guild.channels.cache.set(kentLiveChannel.id, kentLiveChannel)
 
-  const thanksChannel = await guild.channels.create(`thank-you`)
+  const thanksChannel = await guild.channels.create(`😍-thank-you`)
   guild.channels.cache.set(thanksChannel.id, thanksChannel)
 
   return {

@@ -70,7 +70,7 @@ test('should show articles matching the search string', async () => {
   `)
 
   utils.cleanup()
-  utils = await setup('onditionally render content in JSX')
+  utils = await setup('conditionally render content in JSX')
 
   expect(utils.messages).toHaveLength(1)
   expect(utils.messages[0].content).toEqual(
@@ -134,8 +134,6 @@ test('should show the first 10 results if there are more', async () => {
   expect(messages).toHaveLength(1)
   expect(messages[0].content).toMatchInlineSnapshot(`
     "There are too many results for \\"re\\". Here are the top 10:
-    - Use react-error-boundary to handle errors in React
-      <https://kentcdodds.com/blog/use-react-error-boundary-to-handle-errors-in-react>
     - How to React ⚛️
       <https://kentcdodds.com/blog/how-to-react>
     - useState lazy initialization and function updates
@@ -144,6 +142,8 @@ test('should show the first 10 results if there are more', async () => {
       <https://kentcdodds.com/blog/use-ternaries-rather-than-and-and-in-jsx>
     - Application State Management with React
       <https://kentcdodds.com/blog/application-state-management-with-react>
+    - Use react-error-boundary to handle errors in React
+      <https://kentcdodds.com/blog/use-react-error-boundary-to-handle-errors-in-react>
     - JavaScript to Know for React
       <https://kentcdodds.com/blog/javascript-to-know-for-react>
     - 💯 UPDATED: Advanced React Component Patterns ⚛️

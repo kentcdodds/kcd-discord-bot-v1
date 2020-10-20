@@ -1,18 +1,13 @@
 const {rest} = require('msw')
 const {server} = require('server')
 const {makeFakeClient} = require('test-utils')
-const {getCategory} = require('../utils')
+const {isWelcomeChannel} = require('../utils')
 const {
   onboarding: {handleNewMember, handleNewMessage, handleUpdatedMessage},
 } = require('..')
 
-function getOnBoardingChannel(guild) {
-  const onboardingCategory = getCategory(guild, {name: 'Onboarding-1'})
-  return Array.from(
-    guild.channels.cache
-      .filter(channel => channel.parent?.id === onboardingCategory.id)
-      .values(),
-  )
+function getOnBoardingChannels(guild) {
+  return Array.from(guild.channels.cache.filter(isWelcomeChannel).values())
 }
 
 async function setup() {
@@ -31,7 +26,7 @@ async function setup() {
 
   await handleNewMember(member)
 
-  const onboardingChannel = getOnBoardingChannel(guild)[0]
+  const [onboardingChannel] = getOnBoardingChannels(guild)
 
   async function send(content) {
     const message = sendFromUser({

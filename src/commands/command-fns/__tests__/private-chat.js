@@ -149,8 +149,8 @@ test('should delete the private chat after 10 minutes of inactivity', async () =
   expect(privateChannel.lastMessage.content).toEqual(
     `
 This channel is getting deleted for the following reason: deleted for inactivity 🚶‍♀️
-  
-  Goodbye 👋
+
+Goodbye 👋
     `.trim(),
   )
 
@@ -188,8 +188,8 @@ test('should delete the private chat after 60 minutes', async () => {
   expect(privateChannel.lastMessage.content).toEqual(
     `
 This channel is getting deleted for the following reason: deleted for end of life 👻
-  
-  Goodbye 👋
+
+Goodbye 👋
     `.trim(),
   )
 
@@ -372,8 +372,8 @@ test('should extend the time of the private-chat', async () => {
   expect(privateChannel.lastMessage.content).toEqual(
     `
 This channel is getting deleted for the following reason: deleted for end of life 👻
-  
-  Goodbye 👋
+
+Goodbye 👋
     `.trim(),
   )
 

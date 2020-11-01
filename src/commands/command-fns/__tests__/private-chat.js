@@ -1,8 +1,8 @@
 const Discord = require('discord.js')
 const {SnowflakeUtil} = require('discord.js')
-const {makeFakeClient, waitUntil} = require('test-utils')
+const {makeFakeClient} = require('test-utils')
 const privateChat = require('../private-chat')
-const {getCategory} = require('../../utils')
+const {getCategory, timeToMs} = require('../../utils')
 const {cleanup} = require('../../../private-chat/cleanup')
 
 async function createPrivateChat(mentionedUsernames = []) {
@@ -48,8 +48,8 @@ async function createPrivateChat(mentionedUsernames = []) {
       .values(),
   )
 
-  async function executeCommand(author, command, ...rest) {
-    const commandMessage = await sendFromUser({
+  function executeCommand(author, command, ...rest) {
+    const commandMessage = sendFromUser({
       user: author,
       content: `?private-chat ${command} ${rest.join(' ')}`,
       channel: privateChannels[0],
@@ -114,37 +114,45 @@ test('should create a private chat for more than two users', async () => {
 })
 
 test('should delete the private chat after 10 minutes of inactivity', async () => {
-  Date.now.mockImplementation(() => 1598947200000) // 10:00 UTC+2
-  const {
-    guild,
-    privateChannels,
-    sendFromUser,
-    channelMembers,
-  } = await createPrivateChat(['mentionedUser'])
+  jest.useFakeTimers('modern')
+  let promise = createPrivateChat(['mentionedUser'])
+  jest.advanceTimersByTime(0)
+  const {guild, privateChannels, sendFromUser, channelMembers} = await promise
   const privateChannel = privateChannels[0]
-  Date.now.mockImplementation(() => 1598947380000) //10:03:00 UTC+2
-  await cleanup(guild)
+
+  jest.advanceTimersByTime(1000 * 60 * 3)
+  promise = cleanup(guild)
+  jest.advanceTimersByTime(0)
+  await promise
   expect(privateChannel.messages.cache.size).toEqual(1)
 
-  Date.now.mockImplementation(() => 1598947501000) //10:05:01 UTC+2
-  await cleanup(guild)
+  jest.advanceTimersByTime(1000 * 60 * 3)
+  promise = cleanup(guild)
+  jest.advanceTimersByTime(0)
+  await promise
   expect(privateChannel.messages.cache.size).toEqual(2)
   expect(privateChannel.lastMessage.content).toEqual(
     `This channel will be deleted in 5 minutes for the following reason: deleted for inactivity 🚶‍♀️`,
   )
   // run this to check that no other warning message are sent
-  await cleanup(guild)
-  await sendFromUser({user: channelMembers[0].user, channel: privateChannel})
+  promise = cleanup(guild)
+  jest.advanceTimersByTime(0)
+  await promise
+  sendFromUser({user: channelMembers[0].user, channel: privateChannel})
 
-  Date.now.mockImplementation(() => 1598947802000) //10:10:02 UTC+2
-  await cleanup(guild)
+  jest.advanceTimersByTime(1000 * 60 * 6)
+  promise = cleanup(guild)
+  jest.advanceTimersByTime(0)
+  await promise
   expect(privateChannel.messages.cache.size).toEqual(4)
   expect(privateChannel.lastMessage.content).toEqual(
     `This channel will be deleted in 5 minutes for the following reason: deleted for inactivity 🚶‍♀️`,
   )
 
-  Date.now.mockImplementation(() => 1598948103000) //10:15:03 UTC+2
-  await cleanup(guild)
+  jest.advanceTimersByTime(1000 * 60 * 5)
+  promise = cleanup(guild)
+  jest.advanceTimersByTime(0)
+  await promise
   expect(privateChannel.messages.cache.size).toEqual(5)
   expect(privateChannel.lastMessage.content).toEqual(
     `
@@ -154,36 +162,40 @@ Goodbye 👋
     `.trim(),
   )
 
-  await waitUntil(() => {
-    expect(privateChannel.deleted).toBeTruthy()
-  })
+  expect(privateChannel.deleted).toBeTruthy()
 })
 
 test('should delete the private chat after 60 minutes', async () => {
-  Date.now.mockImplementation(() => 1598947200000) // 10:00 UTC+2
-  const {
-    guild,
-    channelMembers,
-    sendFromUser,
-    privateChannels,
-  } = await createPrivateChat(['mentionedUser'])
+  jest.useFakeTimers('modern')
+  let promise = createPrivateChat(['mentionedUser'])
+
+  jest.advanceTimersByTime(0)
+  const {guild, channelMembers, sendFromUser, privateChannels} = await promise
+
   const privateChannel = privateChannels[0]
 
-  Date.now.mockImplementation(() => 1598947800000) //10:15:00 UTC+2
+  jest.advanceTimersByTime(1000 * 60 * 15)
   sendFromUser({user: channelMembers[0].user, channel: privateChannel})
-  Date.now.mockImplementation(() => 1598950501000) //10:55:01 UTC+2
+  jest.advanceTimersByTime(1000 * 60 * 40)
   sendFromUser({user: channelMembers[0].user, channel: privateChannel})
-  await cleanup(guild)
+
+  promise = cleanup(guild)
+  jest.advanceTimersByTime(0)
+  await promise
+
   expect(privateChannel.messages.cache.size).toEqual(4)
   expect(privateChannel.lastMessage.content).toEqual(
     `This channel will be deleted in 5 minutes for the following reason: deleted for end of life 👻`,
   )
   // run this to check that no other warning message are sent
-  await cleanup(guild)
+  promise = cleanup(guild)
+  jest.advanceTimersByTime(0)
+  await promise
+  jest.advanceTimersByTime(1000 * 60 * 5)
 
-  Date.now.mockImplementation(() => 1598950801000) //11:00:01 UTC+2
-
-  await cleanup(guild)
+  promise = cleanup(guild)
+  jest.advanceTimersByTime(0)
+  await promise
   expect(privateChannel.messages.cache.size).toEqual(5)
   expect(privateChannel.lastMessage.content).toEqual(
     `
@@ -193,9 +205,7 @@ Goodbye 👋
     `.trim(),
   )
 
-  await waitUntil(() => {
-    expect(privateChannel.deleted).toBeTruthy()
-  })
+  expect(privateChannel.deleted).toBeTruthy()
 })
 
 test('should not create a chat without mentioned member', async () => {
@@ -209,7 +219,6 @@ test('should not create a chat without mentioned member', async () => {
 })
 
 test('should give an error if the command not exist', async () => {
-  Date.now.mockImplementation(() => 1598947200000) // 10:00 UTC+2
   const {
     channelMembers,
     executeCommand,
@@ -327,47 +336,64 @@ test('should not extend the liftime if has been passed an invalid time', async (
 })
 
 test('should extend the time of the private-chat', async () => {
-  Date.now.mockImplementation(() => 1598947200000) // 10:00 UTC+2
+  jest.useFakeTimers('modern')
+  let promise = createPrivateChat(['mentionedUser'])
+  jest.advanceTimersByTime(0)
   const {
     guild,
     channelMembers,
     sendFromUser,
     privateChannels,
     executeCommand,
-  } = await createPrivateChat(['mentionedUser'])
+  } = await promise
   const privateChannel = privateChannels[0]
 
-  expect(privateChannel.topic).toMatchInlineSnapshot(
-    `"Private chat for mentionedUser and sentMessageUser self-destruct at Tue, 01 Sep 2020 09:00:00 GMT"`,
+  const expirationDate = new Date(
+    Date.now() + timeToMs.minutes(60),
+  ).toUTCString()
+  expect(privateChannel.topic).toEqual(
+    `Private chat for mentionedUser and sentMessageUser self-destruct at ${expirationDate}`,
   )
 
-  Date.now.mockImplementation(() => 1598950501000) //10:55:01 UTC+2
+  jest.advanceTimersByTime(1000 * 60 * 55)
   sendFromUser({user: channelMembers[0].user, channel: privateChannel})
-  await cleanup(guild)
+  promise = cleanup(guild)
+  jest.advanceTimersByTime(0)
+  await promise
   expect(privateChannel.messages.cache.size).toEqual(3)
   expect(privateChannel.lastMessage.content).toEqual(
     `This channel will be deleted in 5 minutes for the following reason: deleted for end of life 👻`,
   )
 
-  await executeCommand(channelMembers[0].user, 'extend', '10')
-  expect(privateChannel.topic).toMatchInlineSnapshot(
-    `"Private chat for sentMessageUser and mentionedUser self-destruct at Tue, 01 Sep 2020 09:10:00 GMT"`,
+  promise = executeCommand(channelMembers[0].user, 'extend', '10')
+  jest.advanceTimersByTime(0)
+  await promise
+  jest.advanceTimersByTime(1000 * 60 * 5)
+  const extendedExpirantionDate = new Date(
+    Date.now() + timeToMs.minutes(10),
+  ).toUTCString()
+  expect(privateChannel.topic).toEqual(
+    `Private chat for sentMessageUser and mentionedUser self-destruct at ${extendedExpirantionDate}`,
   )
   expect(privateChannel.messages.cache.size).toEqual(4)
   expect(privateChannel.lastMessage.content).toEqual(
     `The lifetime of the channel has been extended of 10 minutes more ⏱`,
   )
 
-  Date.now.mockImplementation(() => 1598951101000) //11:05:01 UTC+2
+  jest.advanceTimersByTime(1000 * 60 * 5)
 
-  await cleanup(guild)
+  promise = cleanup(guild)
+  jest.advanceTimersByTime(0)
+  await promise
   expect(privateChannel.messages.cache.size).toEqual(5)
   expect(privateChannel.lastMessage.content).toEqual(
     `This channel will be deleted in 5 minutes for the following reason: deleted for end of life 👻`,
   )
 
-  Date.now.mockImplementation(() => 1598951401000) //11:10:01 UTC+2
-  await cleanup(guild)
+  jest.advanceTimersByTime(1000 * 60 * 5)
+  promise = cleanup(guild)
+  jest.advanceTimersByTime(0)
+  await promise
   expect(privateChannel.messages.cache.size).toEqual(6)
   expect(privateChannel.lastMessage.content).toEqual(
     `
@@ -377,7 +403,5 @@ Goodbye 👋
     `.trim(),
   )
 
-  await waitUntil(() => {
-    expect(privateChannel.deleted).toBeTruthy()
-  })
+  expect(privateChannel.deleted).toBeTruthy()
 })

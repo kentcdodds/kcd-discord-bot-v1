@@ -13,4 +13,5 @@ afterEach(() => {
   server.resetHandlers()
   DiscordManager.cleanup()
   jest.restoreAllMocks()
+  jest.useRealTimers()
 })

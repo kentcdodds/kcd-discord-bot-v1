@@ -3,7 +3,7 @@ const rollbar = require('./rollbar')
 
 const sleep = t =>
   new Promise(resolve =>
-    setTimeout(resolve, process.env.NODE_ENV === 'test' ? 0 : t),
+    process.env.NODE_ENV === 'test' ? resolve() : setTimeout(resolve, t),
   )
 
 const privateChannelPrefix =

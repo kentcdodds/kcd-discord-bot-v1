@@ -9,7 +9,6 @@
 <!-- prettier-ignore-start -->
 [![Build Status][build-badge]][build]
 [![Code Coverage][coverage-badge]][coverage]
-[![MIT License][license-badge]][license]
 [![All Contributors][all-contributors-badge]](#contributors-)
 [![PRs Welcome][prs-badge]][prs]
 [![Code of Conduct][coc-badge]][coc]
@@ -29,7 +28,6 @@ maintain your own similar bot.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-
 
 - [Installation](#installation)
 - [Usage](#usage)
@@ -108,8 +106,6 @@ MIT
 [build]: https://github.com/kentcdodds/kcd-discord-bot/actions?query=workflow%3Avalidate
 [coverage-badge]: https://img.shields.io/codecov/c/github/kentcdodds/kcd-discord-bot.svg?style=flat-square
 [coverage]: https://codecov.io/github/kentcdodds/kcd-discord-bot
-[license-badge]: https://img.shields.io/npm/l/kcd-discord-bot.svg?style=flat-square
-[license]: https://github.com/kentcdodds/kcd-discord-bot/blob/master/LICENSE
 [prs-badge]: https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square
 [prs]: http://makeapullrequest.com
 [coc-badge]: https://img.shields.io/badge/code%20of-conduct-ff69b4.svg?style=flat-square

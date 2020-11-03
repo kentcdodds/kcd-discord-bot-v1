@@ -1,7 +1,7 @@
 name: validate
 on: [push, pull_request]
 jobs:
-  setup:
+  main:
     runs-on: ubuntu-latest
     steps:
       - name: ⬇️ Checkout repo

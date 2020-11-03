@@ -10,10 +10,7 @@
 [![Build Status][build-badge]][build]
 [![Code Coverage][coverage-badge]][coverage]
 [![MIT License][license-badge]][license]
-
-<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-5-orange.svg?style=flat-square)](#contributors-)
-<!-- ALL-CONTRIBUTORS-BADGE:END -->
+[![All Contributors][all-contributors-badge]](#contributors-)
 [![PRs Welcome][prs-badge]][prs]
 [![Code of Conduct][coc-badge]][coc]
 <!-- prettier-ignore-end -->
@@ -32,6 +29,7 @@ maintain your own similar bot.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
 
 - [Installation](#installation)
 - [Usage](#usage)
@@ -93,6 +91,7 @@ Thanks goes to these people ([emoji key][emojis]):
 
 <!-- markdownlint-enable -->
 <!-- prettier-ignore-end -->
+
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 This project follows the [all-contributors][all-contributors] specification.
@@ -105,8 +104,8 @@ MIT
 <!-- prettier-ignore-start -->
 [npm]: https://www.npmjs.com
 [node]: https://nodejs.org
-[build-badge]: https://img.shields.io/travis/com/kentcdodds/kcd-discord-bot.svg?style=flat-square
-[build]: https://travis-ci.com/kentcdodds/kcd-discord-bot
+[build-badge]: https://img.shields.io/github/workflow/status/kentcdodds/kcd-discord-bot/validate/main?logo=github&style=flat-square
+[build]: https://github.com/kentcdodds/kcd-discord-bot/actions?query=workflow%3Avalidate
 [coverage-badge]: https://img.shields.io/codecov/c/github/kentcdodds/kcd-discord-bot.svg?style=flat-square
 [coverage]: https://codecov.io/github/kentcdodds/kcd-discord-bot
 [license-badge]: https://img.shields.io/npm/l/kcd-discord-bot.svg?style=flat-square
@@ -117,6 +116,7 @@ MIT
 [coc]: https://github.com/kentcdodds/kcd-discord-bot/blob/master/other/CODE_OF_CONDUCT.md
 [emojis]: https://github.com/all-contributors/all-contributors#emoji-key
 [all-contributors]: https://github.com/all-contributors/all-contributors
+[all-contributors-badge]: https://img.shields.io/github/all-contributors/kentcdodds/kcd-discord-bot?color=orange&style=flat-square
 [bugs]: https://github.com/kentcdodds/kcd-discord-bot/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Acreated-desc+label%3Abug
 [requests]: https://github.com/kentcdodds/kcd-discord-bot/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc+label%3Aenhancement
 [good-first-issue]: https://github.com/kentcdodds/kcd-discord-bot/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc+label%3Aenhancement+label%3A%22good+first+issue%22

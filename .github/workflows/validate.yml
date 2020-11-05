@@ -2,6 +2,9 @@ name: validate
 on: [push, pull_request]
 jobs:
   main:
+    strategy:
+      matrix:
+        node: [10, 12, 14, 15]
     runs-on: ubuntu-latest
     steps:
       - name: ⬇️ Checkout repo
@@ -10,10 +13,12 @@ jobs:
       - name: ⎔ Setup node
         uses: actions/setup-node@v1
         with:
-          node-version: 14
+          node-version: ${{ matrix.node }}
 
       - name: 📥 Download deps
         uses: bahmutov/npm-install@v1
+        with:
+          useLockFile: false
 
       - name: ▶️ Run validate script
         run: npm run validate

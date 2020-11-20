@@ -28,7 +28,8 @@ jobs:
       - name: 🚀 Deploy
         # only deploy main branch on pushes
         if:
-          ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+          ${{ github.ref == 'refs/heads/master' && github.event_name == 'push'
+          }}
         uses: akhileshns/heroku-deploy@v3.6.8
         env:
           # "HD_" is removed by akhileshns/heroku-deploy

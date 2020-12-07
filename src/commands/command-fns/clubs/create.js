@@ -66,7 +66,7 @@ const validators = [
       return `The schedule is too long. It would probably be better to split this into more than one learning club.`
     }
     if (/yes/i.test(sync) && !/\d{1,2}:\d{2}/.test(schedule)) {
-      return `Because this club has sync meetings, please make sure to include the time and timezone of the meetings.`
+      return `Because this club has sync meetings, please make sure to include the time and timezone of the meetings. The time should be formatted as hh:mm or h:mm`
     }
   },
 ]

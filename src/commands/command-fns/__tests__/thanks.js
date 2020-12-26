@@ -7,18 +7,21 @@ const thanks = require('../thanks')
 
 async function setup(content, mentionedUsernames = []) {
   const {client, defaultChannels, kody, createUser} = await makeFakeClient()
+  const mentionedUsers = (
+    await Promise.all(mentionedUsernames.map(username => createUser(username)))
+  ).map(guildMember => guildMember.user)
+
   const message = new Discord.Message(
     client,
     {
       id: SnowflakeUtil.generate(),
-      content,
+      content: content.replace(/@(\S+)/, (_, mention) =>
+        mentionedUsers.find(user => user.username === mention),
+      ),
       author: kody.user,
     },
     defaultChannels.talkToBotsChannel,
   )
-  const mentionedUsers = (
-    await Promise.all(mentionedUsernames.map(username => createUser(username)))
-  ).map(guildMember => guildMember.user)
 
   Object.assign(message, {
     mentions: new Discord.MessageMentions(message, mentionedUsers, [], false),
@@ -40,7 +43,7 @@ async function setup(content, mentionedUsernames = []) {
   }
 }
 
-test('should say thank to an user', async () => {
+test('should say thanks if the message is complete', async () => {
   let thanksRetrieved = false
   let savedThanks = {}
   server.use(
@@ -99,6 +102,84 @@ Link: <${thanksMessage}>
       thanksChannel.id
     }/${getThanksMessages()[0].id} 😍`,
   )
+})
+
+test('should say thanks if there is no for', async () => {
+  server.use(
+    rest.get(
+      `https://api.github.com/gists/${process.env.GIST_REPO_THANKS}`,
+      (req, res, ctx) => {
+        return res(
+          ctx.status(200),
+          ctx.json({files: {'thanks.json': {content: ''}}}),
+        )
+      },
+    ),
+    rest.patch(
+      `https://api.github.com/gists/${process.env.GIST_REPO_THANKS}`,
+      (req, res, ctx) => {
+        return res(ctx.status(200), ctx.json({}))
+      },
+    ),
+  )
+  const {
+    getBotMessages,
+    getThanksMessages,
+    message,
+  } = await setup('?thanks @user1 tadaa', ['user1'])
+
+  await thanks(message)
+
+  expect(getBotMessages()).toHaveLength(1)
+  expect(getThanksMessages()).toHaveLength(1)
+  expect(getThanksMessages()[0].content.replace(/\d+/g, 123))
+    .toMatchInlineSnapshot(`
+    "Hey <@123>! You got thanked! 🎉
+
+    <@123> appreciated you for:
+
+    > tadaa
+
+    Link: <https://discordapp.com/channels/123/123/123>"
+  `)
+})
+
+test('should say thanks if there is no message', async () => {
+  server.use(
+    rest.get(
+      `https://api.github.com/gists/${process.env.GIST_REPO_THANKS}`,
+      (req, res, ctx) => {
+        return res(
+          ctx.status(200),
+          ctx.json({files: {'thanks.json': {content: ''}}}),
+        )
+      },
+    ),
+    rest.patch(
+      `https://api.github.com/gists/${process.env.GIST_REPO_THANKS}`,
+      (req, res, ctx) => {
+        return res(ctx.status(200), ctx.json({}))
+      },
+    ),
+  )
+  const {
+    getBotMessages,
+    getThanksMessages,
+    message,
+  } = await setup('  ?thanks    @user1    for   ', ['user1'])
+
+  await thanks(message)
+
+  expect(getBotMessages()).toHaveLength(1)
+  expect(getThanksMessages()).toHaveLength(1)
+  expect(getThanksMessages()[0].content.replace(/\d+/g, 123))
+    .toMatchInlineSnapshot(`
+    "Hey <@123>! You got thanked! 🎉
+
+    <@123> appreciated you.
+
+    Link: <https://discordapp.com/channels/123/123/123>"
+  `)
 })
 
 test('should show a message if the user has never been thanked', async () => {
@@ -237,33 +318,6 @@ test('should show the rank of the top 10 users', async () => {
   `)
 })
 
-test('should give an error if the message not contain the reason for the thank', async () => {
-  server.use(
-    rest.get(
-      `https://api.github.com/gists/${process.env.GIST_REPO_THANKS}`,
-      (req, res, ctx) => {
-        return res(
-          ctx.status(200),
-          ctx.json({files: {'thanks.json': {content: ''}}}),
-        )
-      },
-    ),
-  )
-  const {
-    getBotMessages,
-    getThanksMessages,
-    message,
-  } = await setup('?thanks @user1', ['user1'])
-
-  await thanks(message)
-
-  expect(getBotMessages()).toHaveLength(1)
-  expect(getThanksMessages()).toHaveLength(0)
-  expect(getBotMessages()[0].content).toMatchInlineSnapshot(
-    `"You have to use the word \\"for\\" when thanking someone. For example: \`?thanks @user1 for being so nice and answering my questions\`"`,
-  )
-})
-
 test('should give an error if there are some issues retrieving data from gist', async () => {
   server.use(
     rest.get(
@@ -285,33 +339,6 @@ test('should give an error if there are some issues retrieving data from gist', 
   expect(getThanksMessages()).toHaveLength(0)
   expect(getBotMessages()[0].content).toMatchInlineSnapshot(
     `"There is an issue retrieving the history. Please try again later 🙏"`,
-  )
-})
-
-test('should give an error if no specific thank message is provided', async () => {
-  server.use(
-    rest.get(
-      `https://api.github.com/gists/${process.env.GIST_REPO_THANKS}`,
-      (req, res, ctx) => {
-        return res(
-          ctx.status(200),
-          ctx.json({files: {'thanks.json': {content: ''}}}),
-        )
-      },
-    ),
-  )
-  const {
-    getBotMessages,
-    getThanksMessages,
-    message,
-  } = await setup('?thanks @user1 for ', ['user1'])
-
-  await thanks(message)
-
-  expect(getBotMessages()).toHaveLength(1)
-  expect(getThanksMessages()).toHaveLength(0)
-  expect(getBotMessages()[0].content).toMatchInlineSnapshot(
-    `"You have to thank them for something specific. For example: \`?thanks @user1 for being so nice and answering my questions\`"`,
   )
 })
 

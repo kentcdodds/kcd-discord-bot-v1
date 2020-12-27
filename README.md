@@ -84,12 +84,12 @@ Thanks goes to these people ([emoji key][emojis]):
     <td align="center"><a href="https://dev.to/jacobmgevans"><img src="https://avatars1.githubusercontent.com/u/27247160?v=4" width="100px;" alt=""/><br /><sub><b>Jacob M-G Evans</b></sub></a><br /><a href="https://github.com/kentcdodds/kcd-discord-bot/commits?author=JacobMGEvans" title="Code">💻</a></td>
     <td align="center"><a href="https://michaeldeboey.be"><img src="https://avatars3.githubusercontent.com/u/6643991?v=4" width="100px;" alt=""/><br /><sub><b>Michaël De Boey</b></sub></a><br /><a href="https://github.com/kentcdodds/kcd-discord-bot/commits?author=MichaelDeBoey" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/uwuru"><img src="https://avatars1.githubusercontent.com/u/40305936?v=4" width="100px;" alt=""/><br /><sub><b>uwuru</b></sub></a><br /><a href="https://github.com/kentcdodds/kcd-discord-bot/commits?author=uwuru" title="Code">💻</a> <a href="https://github.com/kentcdodds/kcd-discord-bot/commits?author=uwuru" title="Tests">⚠️</a></td>
+    <td align="center"><a href="http://peter.hozak.info/"><img src="https://avatars0.githubusercontent.com/u/1087670?v=4" width="100px;" alt=""/><br /><sub><b>Peter Hozák</b></sub></a><br /><a href="https://github.com/kentcdodds/kcd-discord-bot/commits?author=Aprillion" title="Code">💻</a> <a href="https://github.com/kentcdodds/kcd-discord-bot/commits?author=Aprillion" title="Tests">⚠️</a></td>
   </tr>
 </table>
 
 <!-- markdownlint-enable -->
 <!-- prettier-ignore-end -->
-
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 This project follows the [all-contributors][all-contributors] specification.

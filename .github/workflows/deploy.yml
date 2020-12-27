@@ -1,11 +1,14 @@
 name: deploy
 on:
   push:
-    branches: ['master', '!all-contributors/**']
-  pull_request:
-    branches-ignore: ['all-contributors/**']
+    branches:
+      - 'master'
+      - '!all-contributors/**'
+  pull_request: {}
 jobs:
   main:
+    # ignore all-contributors PRs
+    if: ${{ !contains(github.head_ref, 'all-contributors') }}
     runs-on: ubuntu-latest
     steps:
       - name: 🛑 Cancel Previous Runs

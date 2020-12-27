@@ -55,25 +55,11 @@ async function sayThankYou(args, message, thanksHistory) {
       `You have to mention someone specific you want to thank.`,
     )
   }
-  const thankedMembersListString = listify(thankedMembers, {
-    stringify: m => `@${m.displayName}`,
-  })
-  const example = `For example: \`?thanks ${thankedMembersListString} for being so nice and answering my questions\``
-  if (!args.includes(' for ')) {
-    return message.channel.send(
-      `You have to use the word "for" when thanking someone. ${example}`,
-    )
-  }
 
   const thanksMessage = args
     .replace(MessageMentions.USERS_PATTERN, '')
-    .replace(/^.*?for/, '')
+    .replace(/^ *(?:for *)?/, '')
     .trim()
-  if (!thanksMessage) {
-    return message.channel.send(
-      `You have to thank them for something specific. ${example}`,
-    )
-  }
 
   const messageLink = getMessageLink(message)
 
@@ -94,16 +80,25 @@ async function sayThankYou(args, message, thanksHistory) {
   const thankedMembersList = listify(thankedMembers, {
     stringify: m => m.user.toString(),
   })
-  const newThanksMessage = await thanksChannel.send(
-    `
+
+  const textOfNewThanksMessage = thanksMessage
+    ? `
 Hey ${thankedMembersList}! You got thanked! 🎉
 
 ${member.user} appreciated you for:
 
 > ${thanksMessage}
 
-Link: <${messageLink}>
-    `.trim(),
+Link: <${messageLink}>`
+    : `
+Hey ${thankedMembersList}! You got thanked! 🎉
+
+${member.user} appreciated you.
+
+Link: <${messageLink}>`
+
+  const newThanksMessage = await thanksChannel.send(
+    textOfNewThanksMessage.trim(),
   )
 
   return message.channel.send(

@@ -70,6 +70,9 @@ async function createChannels(client, guild) {
   const thanksChannel = await guild.channels.create(`😍-thank-you`)
   guild.channels.cache.set(thanksChannel.id, thanksChannel)
 
+  const streamerChannel = await guild.channels.create(`📅-stream-schedule`)
+  guild.channels.cache.set(streamerChannel.id, streamerChannel)
+
   return {
     kentLiveChannel,
     kentLiveVoiceChannel,
@@ -81,6 +84,7 @@ async function createChannels(client, guild) {
     privateChatCategory,
     talkToBotsChannel,
     thanksChannel,
+    streamerChannel,
   }
 }
 
@@ -126,6 +130,13 @@ function createRoles(client, guild) {
     guild,
   )
   guild.roles.cache.set(newConfirmedMemberRole.id, newConfirmedMemberRole)
+
+  const streamerRole = new Discord.Role(
+    client,
+    {id: SnowflakeUtil.generate(), name: 'Streamer'},
+    guild,
+  )
+  guild.roles.cache.set(streamerRole.id, streamerRole)
 
   return {
     memberRole,

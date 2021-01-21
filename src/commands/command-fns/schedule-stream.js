@@ -3,10 +3,10 @@ const {
   getCommandArgs,
   getMember,
   getRole,
-  getChannel,
   commandPrefix,
   sendBotMessageReply,
 } = require('../utils')
+const {getStreamerChannel} = require('../../schedule-stream/utils')
 
 const invalidCommandMessage = `The command is not valid. use \`${commandPrefix}schedule-stream help\` to know more about the command.`
 
@@ -36,9 +36,7 @@ async function scheduleStream(message) {
     return sendBotMessageReply(message, invalidCommandMessage)
   }
 
-  const streamerChannel = getChannel(message.guild, {
-    name: '📅-stream-schedule',
-  })
+  const streamerChannel = getStreamerChannel(message.guild)
 
   const streamerMessage = await streamerChannel.send(
     `📣 On ${scheduleTime} ${member} will be live streaming "${subject}". React with ✋ to be notified when the time arrives.`,

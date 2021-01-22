@@ -23,6 +23,7 @@ async function scheduleStream(message) {
   if (
     parsedTime.length > 1 ||
     !parsedTime.length ||
+    //If the string is partially malformed chrono will parse only the valid string
     parsedTime[0].text !== scheduleTime
   ) {
     return sendBotMessageReply(message, invalidCommandMessage)

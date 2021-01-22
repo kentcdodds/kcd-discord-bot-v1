@@ -131,13 +131,6 @@ function createRoles(client, guild) {
   )
   guild.roles.cache.set(newConfirmedMemberRole.id, newConfirmedMemberRole)
 
-  const streamerRole = new Discord.Role(
-    client,
-    {id: SnowflakeUtil.generate(), name: 'Streamer'},
-    guild,
-  )
-  guild.roles.cache.set(streamerRole.id, streamerRole)
-
   return {
     memberRole,
     unconfirmedRole,

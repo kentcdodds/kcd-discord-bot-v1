@@ -2,7 +2,6 @@ const chrono = require('chrono-node')
 const {
   getCommandArgs,
   getMember,
-  getRole,
   commandPrefix,
   sendBotMessageReply,
 } = require('../utils')
@@ -12,15 +11,8 @@ const invalidCommandMessage = `The command is not valid. use \`${commandPrefix}s
 
 async function scheduleStream(message) {
   const args = getCommandArgs(message.content)
-  const streamerRole = getRole(message.guild, {name: 'Streamer'})
   const member = getMember(message.guild, message.author.id)
 
-  if (!member.roles.cache.has(streamerRole.id)) {
-    return sendBotMessageReply(
-      message,
-      'Sorry but this command is only available for streamers.',
-    )
-  }
   const match = args.match(/^"(?<subject>.+)" on (?<scheduleTime>.+)$/i)
 
   if (!match) return sendBotMessageReply(message, invalidCommandMessage)

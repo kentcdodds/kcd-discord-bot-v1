@@ -6,7 +6,9 @@ const {server} = require('server')
 const scheduleStream = require('../schedule-stream')
 const {cleanup} = require('../../../schedule-stream/cleanup')
 
-async function setup() {
+async function setup(date) {
+  jest.useFakeTimers('modern')
+  jest.setSystemTime(new Date(date))
   const {client, defaultChannels, kody, guild} = await makeFakeClient()
 
   const createMessage = (content, user) => {
@@ -38,23 +40,27 @@ async function setup() {
 }
 
 test('should schedule a new stream', async () => {
-  const {kody, createMessage, getStreamerMessages} = await setup()
+  const {kody, createMessage, getStreamerMessages} = await setup(
+    new Date(Date.UTC(2021, 0, 20, 14)),
+  )
 
   await scheduleStream(
     createMessage(
-      `?schedule-stream "Migrating to Tailwind" on January 20th from 3:00 PM - 8:00 PM MDT`,
+      `?schedule-stream "Migrating to Tailwind" on January 20th from 3:00 PM - 8:00 PM UTC`,
       kody.user,
     ),
   )
   const messages = getStreamerMessages()
   expect(messages).toHaveLength(1)
   expect(messages[0].content).toEqual(
-    `📣 On January 20th from 3:00 PM - 8:00 PM MDT <@!${kody.id}> will be live streaming "Migrating to Tailwind". React with ✋ to be notified when the time arrives.`,
+    `📣 On January 20th from 3:00 PM - 8:00 PM UTC <@!${kody.id}> will be live streaming "Migrating to Tailwind". React with ✋ to be notified when the time arrives.`,
   )
 })
 
 test('should give an error if the message is malformed', async () => {
-  const {getBotMessages, createMessage, kody} = await setup()
+  const {getBotMessages, createMessage, kody} = await setup(
+    new Date(Date.UTC(2021, 0, 20, 14)),
+  )
 
   await scheduleStream(
     createMessage(`?schedule-stream "Migrating to Tailwind"`, kody.user),
@@ -68,7 +74,9 @@ test('should give an error if the message is malformed', async () => {
 })
 
 test('should give an error if the message contains an invalid time', async () => {
-  const {kody, createMessage, getBotMessages} = await setup()
+  const {kody, createMessage, getBotMessages} = await setup(
+    new Date(Date.UTC(2021, 0, 20, 14)),
+  )
 
   await scheduleStream(
     createMessage(
@@ -84,11 +92,27 @@ test('should give an error if the message contains an invalid time', async () =>
   )
 })
 
-test('should send a message to all users that reacted to the message and delete it then', async () => {
-  jest.useFakeTimers('modern')
-  jest.setSystemTime(new Date(Date.UTC(2021, 0, 20, 14)))
+test('should give an error if the start time is in the past', async () => {
+  const {kody, createMessage, getBotMessages} = await setup(
+    new Date(Date.UTC(2021, 0, 20, 14)),
+  )
 
-  const {guild, kody, createMessage, getStreamerMessages} = await setup()
+  await scheduleStream(
+    createMessage(
+      `?schedule-stream "Migrating to Tailwind" on January 19th from 3:00 PM - 8:00 PM UTC`,
+      kody.user,
+    ),
+  )
+
+  const messages = getBotMessages()
+  expect(messages).toHaveLength(1)
+  expect(messages[0].content).toEqual(`The scheduled time can't be in the past`)
+})
+
+test('should send a message to all users that reacted to the message and delete it then', async () => {
+  const {guild, kody, createMessage, getStreamerMessages} = await setup(
+    new Date(Date.UTC(2021, 0, 20, 14)),
+  )
 
   await scheduleStream(
     createMessage(

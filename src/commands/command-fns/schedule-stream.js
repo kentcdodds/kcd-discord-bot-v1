@@ -12,6 +12,7 @@ const invalidCommandMessage = `The command is not valid. use \`${commandPrefix}s
 async function scheduleStream(message) {
   const args = getCommandArgs(message.content)
   const member = getMember(message.guild, message.author.id)
+  const now = new Date()
 
   const match = args.match(/^"(?<subject>.+)" on (?<scheduleTime>.+)$/i)
 
@@ -27,6 +28,13 @@ async function scheduleStream(message) {
     parsedTime[0].text !== scheduleTime
   ) {
     return sendBotMessageReply(message, invalidCommandMessage)
+  }
+
+  if (parsedTime[0].start.date() < now) {
+    return sendBotMessageReply(
+      message,
+      "The scheduled time can't be in the past",
+    )
   }
 
   const streamerChannel = getStreamerChannel(message.guild)

@@ -92,11 +92,18 @@ test('should send a message to all users that reacted to the message and delete 
 
   await scheduleStream(
     createMessage(
+      `?schedule-stream "Migrating to Tailwind" on January 21th from 3:00 PM - 8:00 PM UTC`,
+      kody.user,
+    ),
+  )
+
+  await scheduleStream(
+    createMessage(
       `?schedule-stream "Migrating to Tailwind" on January 20th from 3:00 PM - 8:00 PM UTC`,
       kody.user,
     ),
   )
-  expect(getStreamerMessages()).toHaveLength(1)
+  expect(getStreamerMessages()).toHaveLength(2)
   let dmMessage = ''
   server.use(
     rest.get(
@@ -116,10 +123,13 @@ test('should send a message to all users that reacted to the message and delete 
 
   jest.advanceTimersByTime(1000 * 60 * 10)
   await cleanup(guild)
-  expect(getStreamerMessages()).toHaveLength(1)
+  expect(getStreamerMessages()).toHaveLength(2)
 
   jest.advanceTimersByTime(1000 * 60 * 70)
   await cleanup(guild)
-  expect(getStreamerMessages()).toHaveLength(0)
+  expect(getStreamerMessages()).toHaveLength(1)
+  expect(getStreamerMessages()[0].content).toContain(
+    'January 21th from 3:00 PM - 8:00 PM UTC',
+  )
   expect(dmMessage).toEqual(`Hey, <@${kody.id}> is going to stream!!`)
 })

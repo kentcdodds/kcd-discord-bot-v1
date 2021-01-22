@@ -86,19 +86,16 @@ test('should give an error if the message contains an invalid time', async () =>
 
 test('should send a message to all users that reacted to the message and delete it then', async () => {
   jest.useFakeTimers('modern')
+  jest.setSystemTime(new Date(Date.UTC(2021, 0, 20, 14)))
 
   const {guild, kody, createMessage, getStreamerMessages} = await setup()
 
-  const eventTime = new Date()
-  eventTime.setMinutes(eventTime.getMinutes() + 30)
-
   await scheduleStream(
     createMessage(
-      `?schedule-stream "Migrating to Tailwind" on ${eventTime.toISOString()}`,
+      `?schedule-stream "Migrating to Tailwind" on January 20th from 3:00 PM - 8:00 PM UTC`,
       kody.user,
     ),
   )
-
   expect(getStreamerMessages()).toHaveLength(1)
   let dmMessage = ''
   server.use(
@@ -121,7 +118,7 @@ test('should send a message to all users that reacted to the message and delete 
   await cleanup(guild)
   expect(getStreamerMessages()).toHaveLength(1)
 
-  jest.advanceTimersByTime(1000 * 60 * 21)
+  jest.advanceTimersByTime(1000 * 60 * 70)
   await cleanup(guild)
   expect(getStreamerMessages()).toHaveLength(0)
   expect(dmMessage).toEqual(`Hey, <@${kody.id}> is going to stream!!`)

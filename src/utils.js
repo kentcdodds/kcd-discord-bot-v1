@@ -54,7 +54,7 @@ function getChannel(guild, {name, type = 'text'}) {
 }
 
 /**
- * The name will be lowercased and the first channel with a lowercased name that
+ * The name will be lowercased and the first role with a lowercased name that
  * equals it will be returned.
  * @param {*} guild the guild to find the role in
  * @param {{name: string}} searchOptions

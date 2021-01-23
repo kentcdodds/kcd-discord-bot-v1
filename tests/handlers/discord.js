@@ -1,8 +1,18 @@
 const {rest} = require('msw')
-const {SnowflakeUtil} = require('discord.js')
+const {SnowflakeUtil, Constants} = require('discord.js')
 const {DiscordManager} = require('test-utils')
 
 const handlers = [
+  rest.post('*/api/:apiVersion/users/:userid/channels', (req, res, ctx) => {
+    const createdChannel = {
+      id: SnowflakeUtil.generate(),
+      type: Constants.ChannelTypes.DM,
+    }
+    DiscordManager.channels[createdChannel.id] = {
+      ...createdChannel,
+    }
+    return res(ctx.status(200), ctx.json(createdChannel))
+  }),
   rest.post('*/api/:apiVersion/guilds/:guild/channels', (req, res, ctx) => {
     const createdChannel = {
       id: SnowflakeUtil.generate(),
@@ -22,10 +32,22 @@ const handlers = [
       const discordChannel = Array.from(
         DiscordManager.guilds[cachedChannel.guild_id].channels.cache.values(),
       ).find(channel => channel.id === cachedChannel.id)
-      return res(
-        ctx.status(200),
-        ctx.json(Array.from(discordChannel.messages.cache.values()).reverse()),
+      const messages = Array.from(discordChannel.messages.cache.values()).map(
+        message => {
+          return {
+            ...message,
+            mentions: Array.from(message.mentions.users.values()),
+            reactions: Array.from(message.reactions.cache.values()).map(
+              reaction => ({
+                count: reaction.count,
+                emoji: reaction.emoji,
+              }),
+            ),
+          }
+        },
       )
+
+      return res(ctx.status(200), ctx.json(messages.reverse()))
     },
   ),
   rest.delete(
@@ -134,12 +156,20 @@ const handlers = [
     (req, res, ctx) => {
       const channel = DiscordManager.channels[req.params.channelId]
       const guild = DiscordManager.guilds[channel.guild_id]
+      const members = Array.from(guild.members.cache.values())
+      const mentions = Array.from(
+        req.body.content.matchAll(/<@!(?<userId>\d+)>/g),
+      ).map(
+        mention => members.find(user => user.id === mention.groups.userId).user,
+      )
+
       const message = {
         id: SnowflakeUtil.generate(),
         channel_id: channel.id,
         guild_id: channel.guild_id,
         timestamp: new Date().toISOString(),
         author: guild.client.user,
+        mentions,
         ...req.body,
       }
       return res(ctx.status(200), ctx.json(message))

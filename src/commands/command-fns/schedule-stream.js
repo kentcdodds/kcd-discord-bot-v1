@@ -4,6 +4,7 @@ const {
   getMember,
   commandPrefix,
   sendBotMessageReply,
+  getMessageLink,
 } = require('../utils')
 const {getStreamerChannel} = require('../../schedule-stream/utils')
 
@@ -41,6 +42,14 @@ async function scheduleStream(message) {
 
   const streamerMessage = await streamerChannel.send(
     `📣 On ${scheduleTime} ${member} will be live streaming "${subject}". React with ✋ to be notified when the time arrives.`,
+  )
+
+  await sendBotMessageReply(
+    message,
+    `
+Your stream has been scheduled: ${getMessageLink(streamerMessage)}.
+To cancel, react to that message with ❌. If you want to reschedule, then cancel the old one and schedule a new stream.
+`.trim(),
   )
 
   return streamerMessage.react('✋')

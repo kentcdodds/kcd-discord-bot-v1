@@ -174,7 +174,7 @@ test('should send a message to all users that reacted to the message and delete 
   expect(dmMessage).toEqual(`Hey, <@${kody.id}> is going to stream!!`)
 })
 
-test('should delete the scheduled stream if the streamer react to it', async () => {
+test('should delete the scheduled stream if the streamer react to it with ❌', async () => {
   const {guild, kody, createMessage, getStreamerMessages} = await setup(
     new Date(Date.UTC(2021, 0, 20, 14)),
   )

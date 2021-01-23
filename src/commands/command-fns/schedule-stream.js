@@ -50,7 +50,7 @@ scheduleStream.help = message =>
   sendBotMessageReply(
     message,
     ` 
-This command, available only for streamers, gives the ability to schedule a new streaming: 
+This command gives the ability to schedule a new streaming:
 
 Example:
 

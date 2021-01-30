@@ -24,6 +24,9 @@ things.
 I built this bot specific to my use cases. Feel free to fork if you want to
 maintain your own similar bot.
 
+To get a list of commands, run: `?help` in
+[`#🤖-talk-to-bots`](https://discord.com/channels/715220730605731931/721074443694374943)
+
 ## Table of Contents
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->

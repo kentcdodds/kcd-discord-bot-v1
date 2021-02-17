@@ -4,6 +4,7 @@ const {
   startMeetup,
   getChannel,
   listify,
+  getMeetupChannels,
 } = require('./utils')
 
 function getStreamer(message) {
@@ -39,12 +40,24 @@ async function filterNotDeletedMessages(messages) {
 }
 
 async function cleanup(guild) {
+  const meetupChannels = getMeetupChannels(guild)
+
+  const now = Date.now()
+
+  const deletingMeetups = []
+  const cutoffAge = now - 1000 * 60 * 15
+  for (const meetupChannel of meetupChannels.values()) {
+    if (
+      meetupChannel.createdAt.getTime() < cutoffAge &&
+      meetupChannel.members.size === 0
+    ) {
+      deletingMeetups.push(meetupChannel.delete())
+    }
+  }
   const scheduledMeetupsChannel = getScheduledMeetupsChannel(guild)
   const allMessages = await filterNotDeletedMessages(
     Array.from((await scheduledMeetupsChannel.messages.fetch()).values()),
   )
-
-  const now = new Date()
 
   const parsedMessages = allMessages.reduce(
     (acc, message) => {
@@ -103,7 +116,7 @@ async function cleanup(guild) {
     await message.delete()
   }
 
-  await Promise.all([...invalidMessages, ...meetupsStarted])
+  await Promise.all([...invalidMessages, ...meetupsStarted, ...deletingMeetups])
 }
 
 module.exports = {

@@ -266,3 +266,47 @@ test('can start a meetup right away with the start subcommand', async () => {
     `"🤪 Meetup: kody \\"Migrating to Tailwind\\""`,
   )
 })
+
+test('deletes meetup channels that are over 15 minutes old with nobody in them', async () => {
+  const {guild, kody, hannah, createMessage} = await setup(
+    new Date(Date.UTC(2021, 0, 20, 14)),
+  )
+
+  await meetup(
+    createMessage(`?meetup start "Migrating to Tailwind"`, kody.user),
+  )
+
+  const mins = 1000 * 60
+  // nobody has joined yet, and 10 minutes go by
+  jest.advanceTimersByTime(mins * 10)
+  await cleanup(guild)
+  let meetupChannels = Array.from(getMeetupChannels(guild).values())
+  expect(meetupChannels).toHaveLength(1)
+
+  // people join
+  const meetupChannel = meetupChannels[0]
+  // we have to override the members because it's read-only and only a getter
+  Object.defineProperty(meetupChannel, 'members', {
+    writeable: false,
+    enumerable: true,
+    configurable: true,
+    value: new Discord.Collection(),
+  })
+  meetupChannel.members.set(kody.id, kody)
+  meetupChannel.members.set(hannah.id, hannah)
+
+  // 6 minutes go by
+  jest.advanceTimersByTime(mins * 6)
+  await cleanup(guild)
+  meetupChannels = Array.from(getMeetupChannels(guild).values())
+  expect(meetupChannels).toHaveLength(1)
+
+  // people leave
+  meetupChannel.members.delete(kody.id)
+  meetupChannel.members.delete(hannah.id)
+
+  // cleanup should remove the channel now that it's empty and it's over 15 minutes old
+  await cleanup(guild)
+  meetupChannels = Array.from(getMeetupChannels(guild).values())
+  expect(meetupChannels).toHaveLength(0)
+})

@@ -29,6 +29,7 @@
     "setup": "npm install && npm run validate -s",
     "test": "kcd-scripts test",
     "test:update": "npm test -- --updateSnapshot --coverage",
+    "test:debug": "node --inspect-brk ./node_modules/kcd-scripts/dist/scripts/test.js --runInBand",
     "validate": "kcd-scripts validate"
   },
   "dependencies": {

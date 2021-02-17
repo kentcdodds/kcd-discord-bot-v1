@@ -6,4 +6,5 @@ function getStreamerChannel(guild) {
 
 module.exports = {
   getStreamerChannel,
+  ...require('../utils'),
 }

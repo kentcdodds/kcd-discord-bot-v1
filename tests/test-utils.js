@@ -177,6 +177,8 @@ async function makeFakeClient() {
   }
 
   const kody = await createUser('kody')
+  const marty = await createUser('marty')
+  const hannah = await createUser('hannah')
 
   function sendFromUser({
     user = kody,
@@ -220,6 +222,8 @@ async function makeFakeClient() {
     guild,
     bot: client.user,
     kody,
+    marty,
+    hannah,
     defaultChannels,
     createUser,
     sendFromUser,

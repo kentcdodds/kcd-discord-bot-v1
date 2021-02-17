@@ -1,5 +1,5 @@
 const chrono = require('chrono-node')
-const {getStreamerChannel} = require('./utils')
+const {getStreamerChannel, getChannel, listify} = require('./utils')
 
 function getStreamer(message) {
   // if someone has been tagged into the subject the first mention is always the streamer
@@ -76,13 +76,18 @@ async function cleanup(guild) {
       ({emoji}) => emoji.name === '✋',
     )
     if (notificationReactionMessage) {
-      const notificationUsers = ( // eslint-disable-next-line no-await-in-loop
-        await notificationReactionMessage.users.fetch()
+      const notificationUsers = Array.from(
+        // eslint-disable-next-line no-await-in-loop
+        (await notificationReactionMessage.users.fetch()).values(),
       ).filter(user => !user.bot)
 
-      notificationUsers.forEach(user => {
-        promises.push(user.send(`Hey, ${streamerUser} is going to stream!!`))
-      })
+      const botsChannel = getChannel(guild, {name: 'talk-to-bots'})
+      // eslint-disable-next-line no-await-in-loop
+      await botsChannel.send(
+        `${streamerUser} is live! Notifying: ${listify(notificationUsers, {
+          stringify: i => i,
+        })}`,
+      )
     }
     promises.push(message.delete())
   }

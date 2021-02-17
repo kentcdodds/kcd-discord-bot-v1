@@ -14,6 +14,8 @@ async function setup(date) {
     client,
     defaultChannels,
     kody,
+    marty,
+    hannah,
     guild,
     createUser,
   } = await makeFakeClient()
@@ -40,6 +42,8 @@ async function setup(date) {
     getBotMessages,
     getStreamerMessages,
     kody,
+    marty,
+    hannah,
     botChannel: defaultChannels.talkToBotsChannel,
     streamerChannel: defaultChannels.streamerChannel,
     createMessage,
@@ -126,9 +130,15 @@ test('should give an error if the start time is in the past', async () => {
 })
 
 test('should send a message to all users that reacted to the message and delete it then', async () => {
-  const {guild, kody, createMessage, getStreamerMessages} = await setup(
-    new Date(Date.UTC(2021, 0, 20, 14)),
-  )
+  const {
+    guild,
+    kody,
+    hannah,
+    marty,
+    createMessage,
+    getStreamerMessages,
+    getBotMessages,
+  } = await setup(new Date(Date.UTC(2021, 0, 20, 14)))
 
   await scheduleStream(
     createMessage(
@@ -144,19 +154,11 @@ test('should send a message to all users that reacted to the message and delete 
     ),
   )
   expect(getStreamerMessages()).toHaveLength(2)
-  let dmMessage = ''
   server.use(
     rest.get(
       '*/api/:apiVersion/channels/:channelId/messages/:messageId/reactions/:reaction',
       (req, res, ctx) => {
-        return res(ctx.json([kody.user]))
-      },
-    ),
-    rest.post(
-      '*/api/:apiVersion/channels/:channelId/messages',
-      (req, res, ctx) => {
-        dmMessage = req.body.content
-        return res(ctx.status(201), ctx.json({}))
+        return res(ctx.json([hannah.user, marty.user]))
       },
     ),
   )
@@ -171,7 +173,10 @@ test('should send a message to all users that reacted to the message and delete 
   expect(getStreamerMessages()[0].content).toContain(
     'January 21th from 3:00 PM - 8:00 PM UTC',
   )
-  expect(dmMessage).toEqual(`Hey, <@${kody.id}> is going to stream!!`)
+  const botMessages = getBotMessages()
+  expect(botMessages[botMessages.length - 1].content).toBe(
+    `${kody.user} is live! Notifying: ${hannah.user} and ${marty.user}`,
+  )
 })
 
 test('should delete the scheduled stream if the streamer react to it with ❌', async () => {

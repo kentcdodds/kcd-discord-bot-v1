@@ -76,12 +76,13 @@ meetup.description = 'Enable users to start and schedule meetups'
 meetup.help = message =>
   sendBotMessageReply(
     message,
-    ` 
+    `
 This command gives the ability to start and schedule meetups:
 
-Example:
+Examples:
 
-${commandPrefix}meetup schedule "Migrating to Tailwind" on January 20th from 3:00 PM - 8:00 PM MDT"
+Schedule a meetup for later: ${commandPrefix}meetup schedule "Migrating to Tailwind" on January 20th from 3:00 PM - 8:00 PM MDT
+Start a new meetup right now: ${commandPrefix}meetup start "Remix and Progressive Enhancement"
     `.trim(),
   )
 

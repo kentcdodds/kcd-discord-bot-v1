@@ -4,7 +4,8 @@ function getScheduledMeetupsChannel(guild) {
   return getChannel(guild, {name: 'upcoming-meetups'})
 }
 
-const isMeetupChannel = ch => ch.name?.startsWith(meetupChannelPrefix)
+const isMeetupChannel = ch =>
+  ch.name?.startsWith(meetupChannelPrefix) && ch.type === 'voice'
 
 async function startMeetup({guild, host, subject}) {
   const meetupCategory = getChannel(guild, {name: 'meetups', type: 'category'})
@@ -12,7 +13,8 @@ async function startMeetup({guild, host, subject}) {
   const channel = await guild.channels.create(
     `${meetupChannelPrefix}${host.nickname} "${subject}"`.slice(0, 100),
     {
-      topic: `A meetup hosted by ${host.user} about "${subject}"`,
+      type: 'voice',
+      topic: `A meetup hosted by ${host.nickname} about "${subject}"`,
       reason: `Meetup started`,
       parent: meetupCategory,
       permissionOverwrites: [

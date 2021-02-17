@@ -7,5 +7,5 @@ module.exports = {
   info: require('./command-fns/info'),
   'private-chat': require('./command-fns/private-chat'),
   blog: require('./command-fns/blog'),
-  'schedule-stream': require('./command-fns/schedule-stream'),
+  meetup: require('./command-fns/meetup'),
 }

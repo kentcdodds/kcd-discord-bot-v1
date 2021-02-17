@@ -12,6 +12,9 @@ const privateChannelPrefix =
 const welcomeChannelPrefix =
   process.env.NODE_ENV === 'production' ? '👋-welcome-' : '🌊-welcome-'
 
+const meetupChannelPrefix =
+  process.env.NODE_ENV === 'production' ? '🪢 Meetup: ' : '🤪 Meetup: '
+
 const isWelcomeChannel = ch => ch.name?.startsWith(welcomeChannelPrefix)
 const getSend = channel => async (...args) => {
   if (!args[0]) {
@@ -44,7 +47,7 @@ function getMember(guild, memberId) {
  * The name will be lowercased and the first channel that includes the given
  * name will be returned
  * @param {*} guild the guild to find the channel in
- * @param {{name: string, type: 'text' | 'voice'}} searchOptions
+ * @param {{name: string, type: 'text' | 'voice' | 'category'}} searchOptions
  */
 function getChannel(guild, {name, type = 'text'}) {
   return guild.channels.cache.find(
@@ -189,5 +192,6 @@ module.exports = {
   getSelfDestructTime,
   welcomeChannelPrefix,
   privateChannelPrefix,
+  meetupChannelPrefix,
   timeToMs,
 }

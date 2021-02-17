@@ -31,6 +31,6 @@ test('handles incoming messages', async () => {
     - info: Gives information about the bot (deploy date etc.)
     - private-chat: Create a private channel with who you want. This channel is temporary.
     - blog: Find articles on Kent's blog: <https://kentcdodds.com/blog>
-    - schedule-stream: Enable users to schedule a stream"
+    - meetup: Enable users to start and schedule meetups"
   `)
 })

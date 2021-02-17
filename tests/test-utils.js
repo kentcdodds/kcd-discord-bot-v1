@@ -70,8 +70,10 @@ async function createChannels(client, guild) {
   const thanksChannel = await guild.channels.create(`😍-thank-you`)
   guild.channels.cache.set(thanksChannel.id, thanksChannel)
 
-  const streamerChannel = await guild.channels.create(`⏱-upcoming-streams`)
-  guild.channels.cache.set(streamerChannel.id, streamerChannel)
+  const scheduledMeetupsChannel = await guild.channels.create(
+    `⏱-upcoming-meetups`,
+  )
+  guild.channels.cache.set(scheduledMeetupsChannel.id, scheduledMeetupsChannel)
 
   return {
     kentLiveChannel,
@@ -84,7 +86,7 @@ async function createChannels(client, guild) {
     privateChatCategory,
     talkToBotsChannel,
     thanksChannel,
-    streamerChannel,
+    scheduledMeetupsChannel,
   }
 }
 

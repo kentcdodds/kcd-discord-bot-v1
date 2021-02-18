@@ -13,7 +13,7 @@ const welcomeChannelPrefix =
   process.env.NODE_ENV === 'production' ? '👋-welcome-' : '🌊-welcome-'
 
 const meetupChannelPrefix =
-  process.env.NODE_ENV === 'production' ? '🪢 Meetup: ' : '🤪 Meetup: '
+  process.env.NODE_ENV === 'production' ? '💡 Meetup: ' : '🤪 Meetup: '
 
 const isWelcomeChannel = ch => ch.name?.startsWith(welcomeChannelPrefix)
 const getSend = channel => async (...args) => {

@@ -79,7 +79,7 @@ function getKifReply(message, kif) {
     getMember(message.guild, message.author.id).displayName
   }`
   const to = mentionedMembersNicknames.length
-    ? `To: ${listify(mentionedMembersNicknames, {stringify: i => i})}`
+    ? `To: ${listify(mentionedMembersNicknames)}`
     : ''
   return [from, to, kif].filter(Boolean).join('\n')
 }
@@ -110,7 +110,8 @@ async function handleKifCommand(message) {
   }
   const didYouMean = closeMatches.length
     ? `Did you mean ${listify(closeMatches, {
-        conjunction: 'or ',
+        type: 'disjunction',
+        stringify: JSON.stringify,
       })}?`
     : ''
   return message.channel.send(

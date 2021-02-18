@@ -62,7 +62,7 @@ async function roles(message) {
   }
 }
 
-const rolesDisplayList = listify(availableRoles)
+const rolesDisplayList = listify(availableRoles, {stringify: JSON.stringify})
 roles.description = `Add or remove yourself from these roles: ${rolesDisplayList}`
 roles.help = message =>
   sendBotMessageReply(

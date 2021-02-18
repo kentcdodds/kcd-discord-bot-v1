@@ -25,7 +25,7 @@ async function meetup(message) {
       return scheduleMeetup(message, args)
     }
     case 'start': {
-      const subject = args.match(/"(?<subject>.+)"$/i)?.groups?.subject
+      const subject = args.trim()
       if (!subject) return sendBotMessageReply(message, invalidCommandMessage)
       return startMeetup({guild: message.guild, host: message.member, subject})
     }
@@ -125,7 +125,6 @@ To cancel, react to that message with ❌. If you want to reschedule, then cance
     await botsChannel.send(
       `${member} has scheduled a "${subject}" meetup for ${scheduleTime}! CC: ${listify(
         followers,
-        {stringify: i => i},
       )}`,
     )
   }
@@ -140,11 +139,13 @@ This command gives the ability to start and schedule meetups:
 
 Examples:
 
-Schedule a meetup for later: ${commandPrefix}meetup schedule "Migrating to Tailwind" on January 20th from 3:00 PM - 8:00 PM MDT
-Start a new meetup right now: ${commandPrefix}meetup start "Remix and Progressive Enhancement"
+Schedule a meetup for later: \`${commandPrefix}meetup schedule "Migrating to Tailwind" on January 20th from 3:00 PM - 8:00 PM MDT\`
+Start a new meetup right now: \`${commandPrefix}meetup start Remix and Progressive Enhancement\`
 Add yourself to ${getFollowMeChannel(
       message.guild,
     )}: ${commandPrefix}meetup follow-me Here's a brief description about me
+
+NOTE: For bo the schedule and start commands, if you include a Zoom link, that will be shared instead of creating a voice channel.
     `.trim(),
   )
 

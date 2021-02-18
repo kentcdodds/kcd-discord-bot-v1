@@ -32,35 +32,40 @@ async function getFollowers(guild, member) {
 }
 
 async function startMeetup({guild, host, subject, notificationUsers = []}) {
-  const meetupCategory = getChannel(guild, {name: 'meetups', type: 'category'})
+  if (!subject.includes('zoom.us')) {
+    const meetupCategory = getChannel(guild, {
+      name: 'meetups',
+      type: 'category',
+    })
 
-  await guild.channels.create(
-    `${meetupChannelPrefix}${host.nickname} "${subject}"`.slice(0, 100),
-    {
-      type: 'voice',
-      topic: `A meetup hosted by ${host.nickname} about "${subject}"`,
-      reason: `Meetup started`,
-      parent: meetupCategory,
-      permissionOverwrites: [
-        {
-          type: 'member',
-          id: host.id,
-          allow: ['MANAGE_CHANNELS', 'MUTE_MEMBERS', 'DEAFEN_MEMBERS'],
-        },
-      ],
-    },
-  )
-  const botsChannel = getChannel(guild, {name: 'talk-to-bots'})
+    await guild.channels.create(
+      `${meetupChannelPrefix}${host.nickname} "${subject}"`.slice(0, 100),
+      {
+        type: 'voice',
+        topic: `A meetup hosted by ${host.nickname} about "${subject}"`,
+        reason: `Meetup started`,
+        parent: meetupCategory,
+        permissionOverwrites: [
+          {
+            type: 'member',
+            id: host.id,
+            allow: ['MANAGE_CHANNELS', 'MUTE_MEMBERS', 'DEAFEN_MEMBERS'],
+          },
+        ],
+      },
+    )
+  }
+  const meetupStartingChannel = getChannel(guild, {name: 'meetup-starting'})
 
   const followers = await getFollowers(guild, host)
   const usersToNotify = Array.from(
     new Set([...followers, ...notificationUsers]),
   )
 
-  await botsChannel.send(
-    `The "${subject}" meetup by ${
-      host.user
-    } has started! CC: ${listify(usersToNotify, {stringify: i => i})}`,
+  const cc = usersToNotify.length ? `CC: ${listify(usersToNotify)}` : ''
+
+  await meetupStartingChannel.send(
+    `The "${subject}" meetup by ${host.user} has started! ${cc}`,
   )
 }
 

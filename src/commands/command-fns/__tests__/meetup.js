@@ -43,6 +43,7 @@ async function setup(date) {
     botChannel: defaultChannels.talkToBotsChannel,
     scheduledMeetupsChannel: defaultChannels.scheduledMeetupsChannel,
     followMeChannel: defaultChannels.followMeChannel,
+    meetupStartingChannel: defaultChannels.meetupStartingChannel,
     createMessage,
   }
 }
@@ -135,8 +136,8 @@ test('should send a message to all users that reacted to the message and delete 
     hannah,
     marty,
     createMessage,
+    meetupStartingChannel,
     getScheduledMeetupMessages,
-    getBotMessages,
   } = await setup(new Date(Date.UTC(2021, 0, 20, 14)))
 
   await meetup(
@@ -172,8 +173,7 @@ test('should send a message to all users that reacted to the message and delete 
   expect(getScheduledMeetupMessages()[0].content).toContain(
     'January 21th from 3:00 PM - 8:00 PM UTC',
   )
-  const botMessages = getBotMessages()
-  expect(botMessages[botMessages.length - 1].content).toBe(
+  expect(meetupStartingChannel.lastMessage.content).toBe(
     `The "Migrating to Tailwind" meetup by ${kody.user} has started! CC: ${hannah.user} and ${marty.user}`,
   )
 })
@@ -249,13 +249,9 @@ test('should not delete the scheduled meetup if the some user react with ❌', a
 })
 
 test('can start a meetup right away with the start subcommand', async () => {
-  const {guild, kody, createMessage} = await setup(
-    new Date(Date.UTC(2021, 0, 20, 14)),
-  )
+  const {guild, kody, createMessage} = await setup()
 
-  await meetup(
-    createMessage(`?meetup start "Migrating to Tailwind"`, kody.user),
-  )
+  await meetup(createMessage(`?meetup start Migrating to Tailwind`, kody.user))
   const meetupChannels = Array.from(getMeetupChannels(guild).values())
   expect(meetupChannels).toHaveLength(1)
   expect(meetupChannels[0].name).toMatchInlineSnapshot(
@@ -268,9 +264,7 @@ test('deletes meetup channels that are over 15 minutes old with nobody in them',
     new Date(Date.UTC(2021, 0, 20, 14)),
   )
 
-  await meetup(
-    createMessage(`?meetup start "Migrating to Tailwind"`, kody.user),
-  )
+  await meetup(createMessage(`?meetup start Migrating to Tailwind`, kody.user))
 
   const mins = 1000 * 60
   // nobody has joined yet, and 10 minutes go by
@@ -380,6 +374,7 @@ test('followers are notified when you schedule and start a meetup', async () => 
     createMessage,
     getBotMessages,
     getScheduledMeetupMessages,
+    meetupStartingChannel,
   } = await setup(new Date(Date.UTC(2021, 0, 20, 14)))
   await meetup(createMessage(`?meetup follow-me I am Kody`, kody.user))
   const followMeChannel = getFollowMeChannel(guild)
@@ -414,15 +409,27 @@ test('followers are notified when you schedule and start a meetup', async () => 
 
   scheduledMeetupMessage = getScheduledMeetupMessages()[0]
 
-  let botMessages = getBotMessages()
+  const botMessages = getBotMessages()
   expect(botMessages[botMessages.length - 1].content).toContain(
     `has scheduled a "Migrating to Tailwind" meetup for January 20th from 3:00 PM - 8:00 PM UTC! CC: ${hannah.user}`,
   )
 
   jest.advanceTimersByTime(1000 * 60 * 80)
   await cleanup(guild)
-  botMessages = getBotMessages()
-  expect(botMessages[botMessages.length - 1].content).toBe(
+  expect(meetupStartingChannel.lastMessage.content).toBe(
     `The "Migrating to Tailwind" meetup by ${kody.user} has started! CC: ${hannah.user} and ${marty.user}`,
   )
+})
+
+test('if the meetup command includes a zoom link, that is shared instead of creating a voice channel', async () => {
+  const {guild, kody, createMessage} = await setup()
+
+  await meetup(
+    createMessage(
+      `?meetup start Migrating to Tailwind https://egghead.zoom.us/j/97341329204?pwd=MTRPc1p4Uit4K2ZpVjNDSWFxNTRlUT09`,
+      kody.user,
+    ),
+  )
+  const meetupChannels = Array.from(getMeetupChannels(guild).values())
+  expect(meetupChannels).toHaveLength(0)
 })

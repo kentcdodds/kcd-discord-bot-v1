@@ -78,6 +78,11 @@ async function createChannels(client, guild) {
   const followMeChannel = await guild.channels.create('➡️-follow-me')
   guild.channels.cache.set(followMeChannel.id, followMeChannel)
 
+  const meetupStartingChannel = await guild.channels.create(
+    '🏁-meetup-starting',
+  )
+  guild.channels.cache.set(meetupStartingChannel.id, meetupStartingChannel)
+
   return {
     kentLiveChannel,
     kentLiveVoiceChannel,
@@ -91,6 +96,7 @@ async function createChannels(client, guild) {
     thanksChannel,
     scheduledMeetupsChannel,
     followMeChannel,
+    meetupStartingChannel,
   }
 }
 

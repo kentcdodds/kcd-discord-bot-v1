@@ -88,9 +88,9 @@ test('should say thanks if the message is complete', async () => {
   expect(getThanksMessages()).toHaveLength(1)
   expect(getThanksMessages()[0].content).toEqual(
     `
-Hey <@${mentionedUsers[0].id}>! You got thanked! 🎉
+Hey <@!${mentionedUsers[0].id}>! You got thanked! 🎉
 
-<@${kody.id}> appreciated you for:
+<@!${kody.id}> appreciated you for:
 
 > the help with epicReact
 
@@ -134,9 +134,9 @@ test('should say thanks if there is no for', async () => {
   expect(getThanksMessages()).toHaveLength(1)
   expect(getThanksMessages()[0].content.replace(/\d+/g, 123))
     .toMatchInlineSnapshot(`
-    "Hey <@123>! You got thanked! 🎉
+    "Hey <@!123>! You got thanked! 🎉
 
-    <@123> appreciated you for:
+    <@!123> appreciated you for:
 
     > tadaa
 
@@ -174,7 +174,7 @@ test('should say thanks if there is no message', async () => {
   expect(getThanksMessages()).toHaveLength(1)
   expect(getThanksMessages()[0].content.replace(/\d+/g, 123))
     .toMatchInlineSnapshot(`
-    "Hey <@123>! You got thanked! 🎉
+    "Hey <@!123>! You got thanked! 🎉
 
     <@123> appreciated you.
 

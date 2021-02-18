@@ -77,15 +77,13 @@ async function sayThankYou(args, message, thanksHistory) {
   }
 
   const thanksChannel = getChannel(message.guild, {name: 'thank-you'})
-  const thankedMembersList = listify(thankedMembers, {
-    stringify: m => m.user.toString(),
-  })
+  const thankedMembersList = listify(thankedMembers)
 
   const textOfNewThanksMessage = thanksMessage
     ? `
 Hey ${thankedMembersList}! You got thanked! 🎉
 
-${member.user} appreciated you for:
+${member} appreciated you for:
 
 > ${thanksMessage}
 

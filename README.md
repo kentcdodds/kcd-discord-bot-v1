@@ -93,6 +93,7 @@ Thanks goes to these people ([emoji key][emojis]):
 
 <!-- markdownlint-enable -->
 <!-- prettier-ignore-end -->
+
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 This project follows the [all-contributors][all-contributors] specification.
@@ -105,8 +106,8 @@ MIT
 <!-- prettier-ignore-start -->
 [npm]: https://www.npmjs.com
 [node]: https://nodejs.org
-[build-badge]: https://img.shields.io/github/workflow/status/kentcdodds/kcd-discord-bot/validate/main?logo=github&style=flat-square
-[build]: https://github.com/kentcdodds/kcd-discord-bot/actions?query=workflow%3Avalidate
+[build-badge]: https://img.shields.io/github/workflow/status/kentcdodds/kcd-discord-bot/deploy/main?logo=github&style=flat-square
+[build]: https://github.com/kentcdodds/kcd-discord-bot/actions?query=workflow%3Adeploy
 [coverage-badge]: https://img.shields.io/codecov/c/github/kentcdodds/kcd-discord-bot.svg?style=flat-square
 [coverage]: https://codecov.io/github/kentcdodds/kcd-discord-bot
 [prs-badge]: https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square

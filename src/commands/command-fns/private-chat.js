@@ -94,9 +94,9 @@ async function createChat(message) {
   const channel = await message.guild.channels.create(
     `${privateChannelPrefix}${channelSuffix}`,
     {
-      topic: `Private chat for ${listify(mentionedMembersNicknames, {
-        stringify: member => member,
-      })} self-destruct at ${expirationDate.toUTCString()}`,
+      topic: `Private chat for ${listify(
+        mentionedMembersNicknames,
+      )} self-destruct at ${expirationDate.toUTCString()}`,
       parent: categoryPrivateChat,
       permissionOverwrites: [
         {
@@ -111,7 +111,7 @@ async function createChat(message) {
   return Promise.all([
     channel.send(
       `
-Hello ${listify(mentionedMembers, {stringify: member => member})} 👋
+Hello ${listify(mentionedMembers)} 👋
 
 I'm the bot that created this channel for you. The channel will be deleted after 1 hour or after 10 minutes for inactivity. Enjoy 🗣
 
@@ -145,9 +145,9 @@ async function extendTime(message, extendedTime) {
     )
 
     await privateChannel.setTopic(
-      `Private chat for ${listify(membersNicknames, {
-        stringify: member => member,
-      })} self-destruct at ${newExpirationDate.toUTCString()}`,
+      `Private chat for ${listify(
+        membersNicknames,
+      )} self-destruct at ${newExpirationDate.toUTCString()}`,
     )
     const channelCreateDate = privateChannel.createdAt
     const timeSinceChannelCreation = Date.now() - channelCreateDate

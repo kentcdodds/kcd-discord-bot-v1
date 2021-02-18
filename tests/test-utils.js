@@ -204,8 +204,12 @@ async function makeFakeClient() {
     return userMessage
   }
 
-  function reactFromUser({user = kody, message, reactionName = 'react'} = {}) {
-    const emoji = guild.emojis.cache.find(({name}) => reactionName === name)
+  function reactFromUser({
+    user = kody,
+    message,
+    reactionName,
+    emoji = guild.emojis.cache.find(({name}) => reactionName === name),
+  } = {}) {
     let re = message.reactions.cache.get(emoji.name)
     if (!re) {
       re = {

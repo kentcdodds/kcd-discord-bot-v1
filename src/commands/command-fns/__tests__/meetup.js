@@ -16,15 +16,8 @@ async function setup(date) {
     jest.useFakeTimers('modern')
     jest.setSystemTime(new Date(date))
   }
-  const {
-    client,
-    defaultChannels,
-    kody,
-    marty,
-    hannah,
-    guild,
-    createUser,
-  } = await makeFakeClient()
+  const utils = await makeFakeClient()
+  const {client, defaultChannels} = utils
 
   const createMessage = (content, user) => {
     return new Discord.Message(
@@ -44,17 +37,13 @@ async function setup(date) {
     Array.from(defaultChannels.scheduledMeetupsChannel.messages.cache.values())
 
   return {
-    guild,
+    ...utils,
     getBotMessages,
     getScheduledMeetupMessages,
-    kody,
-    marty,
-    hannah,
     botChannel: defaultChannels.talkToBotsChannel,
     scheduledMeetupsChannel: defaultChannels.scheduledMeetupsChannel,
     followMeChannel: defaultChannels.followMeChannel,
     createMessage,
-    createUser,
   }
 }
 
@@ -319,7 +308,14 @@ test('deletes meetup channels that are over 15 minutes old with nobody in them',
 })
 
 test('can add yourself to the follow-me channel', async () => {
-  const {kody, createMessage, followMeChannel, getBotMessages} = await setup()
+  const {
+    kody,
+    createMessage,
+    followMeChannel,
+    getBotMessages,
+    guild,
+    reactFromUser,
+  } = await setup()
   let followMeUserMessage = `I am a neat person who likes to schedule meetups`
   await meetup(
     createMessage(`?meetup follow-me ${followMeUserMessage}`, kody.user),
@@ -341,7 +337,8 @@ Raise your hand ✋ to be notified whenever ${kody.user} schedules and starts me
   await meetup(
     createMessage(`?meetup follow-me ${followMeUserMessage}`, kody.user),
   )
-  expect(followMeChannel.lastMessage.content).toEqual(
+  const botFollowMeMessage = followMeChannel.lastMessage
+  expect(botFollowMeMessage.content).toEqual(
     `
 Raise your hand ✋ to be notified whenever ${kody.user} schedules and starts meetups. Here's a bit about ${kody.user}:
 
@@ -353,6 +350,25 @@ Raise your hand ✋ to be notified whenever ${kody.user} schedules and starts me
   botMessages = getBotMessages()
   expect(botMessages).toHaveLength(2)
   expect(botMessages[1].content).toContain(`I've updated your message in`)
+
+  // kody wants to delete the follow-me message so kody reacts with ❌
+  server.use(
+    rest.get(
+      '*/api/:apiVersion/channels/:channelId/messages/:messageId/reactions/:reaction',
+      (req, res, ctx) => {
+        if (
+          req.params.messageId === botFollowMeMessage.id &&
+          decodeURIComponent(req.params.reaction) === '❌'
+        ) {
+          return res(ctx.json([kody.user]))
+        }
+        return res(ctx.json([]))
+      },
+    ),
+  )
+  reactFromUser({user: kody, message: botFollowMeMessage, emoji: {name: '❌'}})
+  await cleanup(guild)
+  expect(followMeChannel.messages.cache.size).toBe(0)
 })
 
 test('followers are notified when you schedule and start a meetup', async () => {

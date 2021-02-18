@@ -11,9 +11,13 @@ function getFollowMeChannel(guild) {
 const isMeetupChannel = ch =>
   ch.name?.startsWith(meetupChannelPrefix) && ch.type === 'voice'
 
-async function getFollowers(guild, member) {
+async function getFollowMeMessages(guild) {
   const followMeChannel = getFollowMeChannel(guild)
-  const followMeMessage = followMeChannel.messages.cache.find(msg =>
+  return followMeChannel.messages.fetch()
+}
+
+async function getFollowers(guild, member) {
+  const followMeMessage = (await getFollowMeMessages(guild)).find(msg =>
     msg.content.includes(member.id),
   )
   if (!followMeMessage) {
@@ -66,6 +70,7 @@ module.exports = {
   ...require('../utils'),
   getScheduledMeetupsChannel,
   getFollowMeChannel,
+  getFollowMeMessages,
   getFollowers,
   startMeetup,
   getMeetupChannels,

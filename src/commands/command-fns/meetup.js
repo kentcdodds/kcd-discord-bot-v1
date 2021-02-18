@@ -1,12 +1,19 @@
 const chrono = require('chrono-node')
 const {
+  getChannel,
   getCommandArgs,
   getMember,
   commandPrefix,
   sendBotMessageReply,
   getMessageLink,
+  listify,
 } = require('../utils')
-const {getScheduledMeetupsChannel, startMeetup} = require('../../meetup/utils')
+const {
+  getScheduledMeetupsChannel,
+  getFollowMeChannel,
+  startMeetup,
+  getFollowers,
+} = require('../../meetup/utils')
 
 const invalidCommandMessage = `The command is not valid. use \`${commandPrefix}meetup help\` to know more about the command.`
 
@@ -22,9 +29,51 @@ async function meetup(message) {
       if (!subject) return sendBotMessageReply(message, invalidCommandMessage)
       return startMeetup({guild: message.guild, host: message.member, subject})
     }
+    case 'follow-me': {
+      return followMe(message, args)
+    }
     default: {
       return sendBotMessageReply(message, invalidCommandMessage)
     }
+  }
+}
+
+async function followMe(message, args) {
+  const followMeChannel = getFollowMeChannel(message.guild)
+  const existingFollowMeMessage = followMeChannel.messages.cache.find(msg =>
+    msg.content.includes(message.author.id),
+  )
+  const messageContent = `
+Raise your hand ✋ to be notified whenever ${message.author} schedules and starts meetups. Here's a bit about ${message.author}:
+
+> ${args}
+      `.trim()
+  if (existingFollowMeMessage) {
+    await existingFollowMeMessage.edit(messageContent)
+    return sendBotMessageReply(
+      message,
+      `
+I've updated your message in ${followMeChannel} for you ${
+        message.author
+      }! Find it here: ${getMessageLink(existingFollowMeMessage)}
+
+You can update it by re-running \`${commandPrefix}meetup follow-me New bio here.\` and you can delete it by adding a ❌ emoji reaction to the message.
+          `.trim(),
+    )
+  } else {
+    const followMeMessage = await followMeChannel.send(messageContent)
+    await followMeMessage.react('✋')
+
+    return sendBotMessageReply(
+      message,
+      `
+I've posted a message in ${followMeChannel} for you ${
+        message.author
+      }! Find it here: ${getMessageLink(followMeMessage)}
+
+You can update it by re-running \`${commandPrefix}meetup follow-me New bio here.\` and you can delete it by adding a ❌ emoji reaction to the message.
+          `.trim(),
+    )
   }
 }
 
@@ -69,7 +118,17 @@ To cancel, react to that message with ❌. If you want to reschedule, then cance
 `.trim(),
   )
 
-  return scheduledMeetupMessage.react('✋')
+  await scheduledMeetupMessage.react('✋')
+  const botsChannel = getChannel(message.guild, {name: 'talk-to-bots'})
+  const followers = await getFollowers(message.guild, member)
+  if (followers.length) {
+    await botsChannel.send(
+      `${member} has scheduled a "${subject}" meetup for ${scheduleTime}! CC: ${listify(
+        followers,
+        {stringify: i => i},
+      )}`,
+    )
+  }
 }
 
 meetup.description = 'Enable users to start and schedule meetups'
@@ -83,6 +142,9 @@ Examples:
 
 Schedule a meetup for later: ${commandPrefix}meetup schedule "Migrating to Tailwind" on January 20th from 3:00 PM - 8:00 PM MDT
 Start a new meetup right now: ${commandPrefix}meetup start "Remix and Progressive Enhancement"
+Add yourself to ${getFollowMeChannel(
+      message.guild,
+    )}: ${commandPrefix}meetup follow-me Here's a brief description about me
     `.trim(),
   )
 

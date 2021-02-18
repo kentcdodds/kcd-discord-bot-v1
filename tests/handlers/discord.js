@@ -87,6 +87,12 @@ const handlers = [
     },
   ),
   rest.get(
+    '*/api/:apiVersion/channels/:channelId/messages/:messageId/reactions/:reaction',
+    (req, res, ctx) => {
+      return res(ctx.json([]))
+    },
+  ),
+  rest.get(
     '*/api/:apiVersion/guilds/:guildId/members/:memberId',
     (req, res, ctx) => {
       const guild = DiscordManager.guilds[req.params.guildId]

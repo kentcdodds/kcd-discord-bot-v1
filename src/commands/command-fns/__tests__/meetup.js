@@ -3,13 +3,19 @@ const {rest} = require('msw')
 const {SnowflakeUtil, Util} = require('discord.js')
 const {makeFakeClient} = require('test-utils')
 const {server} = require('server')
-const {getMessageLink, getMeetupChannels} = require('../../../meetup/utils')
+const {
+  getMessageLink,
+  getMeetupChannels,
+  getFollowMeChannel,
+} = require('../../../meetup/utils')
 const meetup = require('../meetup')
 const {cleanup} = require('../../../meetup/cleanup')
 
 async function setup(date) {
-  jest.useFakeTimers('modern')
-  jest.setSystemTime(new Date(date))
+  if (date) {
+    jest.useFakeTimers('modern')
+    jest.setSystemTime(new Date(date))
+  }
   const {
     client,
     defaultChannels,
@@ -46,6 +52,7 @@ async function setup(date) {
     hannah,
     botChannel: defaultChannels.talkToBotsChannel,
     scheduledMeetupsChannel: defaultChannels.scheduledMeetupsChannel,
+    followMeChannel: defaultChannels.followMeChannel,
     createMessage,
     createUser,
   }
@@ -178,7 +185,7 @@ test('should send a message to all users that reacted to the message and delete 
   )
   const botMessages = getBotMessages()
   expect(botMessages[botMessages.length - 1].content).toBe(
-    `${kody.user} is live! Notifying: ${hannah.user} and ${marty.user}`,
+    `The "Migrating to Tailwind" meetup by ${kody.user} has started! CC: ${hannah.user} and ${marty.user}`,
   )
 })
 
@@ -309,4 +316,97 @@ test('deletes meetup channels that are over 15 minutes old with nobody in them',
   await cleanup(guild)
   meetupChannels = Array.from(getMeetupChannels(guild).values())
   expect(meetupChannels).toHaveLength(0)
+})
+
+test('can add yourself to the follow-me channel', async () => {
+  const {kody, createMessage, followMeChannel, getBotMessages} = await setup()
+  let followMeUserMessage = `I am a neat person who likes to schedule meetups`
+  await meetup(
+    createMessage(`?meetup follow-me ${followMeUserMessage}`, kody.user),
+  )
+  expect(followMeChannel.lastMessage.content).toEqual(
+    `
+Raise your hand ✋ to be notified whenever ${kody.user} schedules and starts meetups. Here's a bit about ${kody.user}:
+
+> ${followMeUserMessage}
+  `.trim(),
+  )
+
+  let botMessages = getBotMessages()
+  expect(botMessages).toHaveLength(1)
+  expect(botMessages[0].content).toContain(`I've posted a message in`)
+
+  // can update the follow-me bio
+  followMeUserMessage = `I am a super neat person who likes to schedule meetups`
+  await meetup(
+    createMessage(`?meetup follow-me ${followMeUserMessage}`, kody.user),
+  )
+  expect(followMeChannel.lastMessage.content).toEqual(
+    `
+Raise your hand ✋ to be notified whenever ${kody.user} schedules and starts meetups. Here's a bit about ${kody.user}:
+
+> ${followMeUserMessage}
+  `.trim(),
+  )
+  expect(followMeChannel.messages.cache.size).toBe(1)
+
+  botMessages = getBotMessages()
+  expect(botMessages).toHaveLength(2)
+  expect(botMessages[1].content).toContain(`I've updated your message in`)
+})
+
+test('followers are notified when you schedule and start a meetup', async () => {
+  const {
+    guild,
+    kody,
+    hannah,
+    marty,
+    createMessage,
+    getBotMessages,
+    getScheduledMeetupMessages,
+  } = await setup(new Date(Date.UTC(2021, 0, 20, 14)))
+  await meetup(createMessage(`?meetup follow-me I am Kody`, kody.user))
+  const followMeChannel = getFollowMeChannel(guild)
+  const followMeMessage = followMeChannel.messages.cache.find(msg =>
+    msg.content.includes(kody.id),
+  )
+
+  let scheduledMeetupMessage = null
+
+  // marty signs up to be notified about this event
+  // hannah is a follower and will be notified when it's scheduled *and* when it starts
+  server.use(
+    rest.get(
+      '*/api/:apiVersion/channels/:channelId/messages/:messageId/reactions/:reaction',
+      (req, res, ctx) => {
+        if (req.params.messageId === scheduledMeetupMessage?.id) {
+          return res(ctx.json([marty.user]))
+        } else if (req.params.messageId === followMeMessage.id) {
+          return res(ctx.json([hannah.user]))
+        }
+        return res(ctx.json([]))
+      },
+    ),
+  )
+
+  await meetup(
+    createMessage(
+      `?meetup schedule "Migrating to Tailwind" on January 20th from 3:00 PM - 8:00 PM UTC`,
+      kody.user,
+    ),
+  )
+
+  scheduledMeetupMessage = getScheduledMeetupMessages()[0]
+
+  let botMessages = getBotMessages()
+  expect(botMessages[botMessages.length - 1].content).toContain(
+    `has scheduled a "Migrating to Tailwind" meetup for January 20th from 3:00 PM - 8:00 PM UTC! CC: ${hannah.user}`,
+  )
+
+  jest.advanceTimersByTime(1000 * 60 * 80)
+  await cleanup(guild)
+  botMessages = getBotMessages()
+  expect(botMessages[botMessages.length - 1].content).toBe(
+    `The "Migrating to Tailwind" meetup by ${kody.user} has started! CC: ${hannah.user} and ${marty.user}`,
+  )
 })

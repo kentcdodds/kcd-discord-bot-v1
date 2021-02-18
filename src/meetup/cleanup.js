@@ -2,8 +2,6 @@ const chrono = require('chrono-node')
 const {
   getScheduledMeetupsChannel,
   startMeetup,
-  getChannel,
-  listify,
   getMeetupChannels,
 } = require('./utils')
 
@@ -97,22 +95,14 @@ async function cleanup(guild) {
     const subject = message.content.match(
       /will be hosting a meetup about "(?<subject>.+)"./,
     )?.groups?.subject
-    await startMeetup({guild, host: hostMember, subject})
     const notificationReactionMessage = message.reactions.cache.find(
       ({emoji}) => emoji.name === '✋',
     )
-    if (notificationReactionMessage) {
-      const notificationUsers = Array.from(
-        (await notificationReactionMessage.users.fetch()).values(),
-      ).filter(user => !user.bot)
+    const notificationUsers = Array.from(
+      (await notificationReactionMessage.users.fetch()).values(),
+    ).filter(user => !user.bot)
+    await startMeetup({guild, host: hostMember, subject, notificationUsers})
 
-      const botsChannel = getChannel(guild, {name: 'talk-to-bots'})
-      await botsChannel.send(
-        `${hostMember.user} is live! Notifying: ${listify(notificationUsers, {
-          stringify: i => i,
-        })}`,
-      )
-    }
     await message.delete()
   }
 

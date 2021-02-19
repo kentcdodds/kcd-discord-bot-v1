@@ -1,4 +1,3 @@
-const chrono = require('chrono-node')
 const {
   getChannel,
   getCommandArgs,
@@ -19,7 +18,7 @@ const invalidCommandMessage = `The command is not valid. use \`${commandPrefix}m
 
 async function meetup(message) {
   const [command, ...rest] = getCommandArgs(message.content).split(' ')
-  const args = rest.join(' ')
+  const args = rest.join(' ').trim()
   switch (command) {
     case 'schedule': {
       return scheduleMeetup(message, args)
@@ -27,7 +26,7 @@ async function meetup(message) {
     case 'start': {
       const subject = args.trim()
       if (!subject) return sendBotMessageReply(message, invalidCommandMessage)
-      return startMeetup({guild: message.guild, host: message.member, subject})
+      return startMeetup({host: message.member, subject})
     }
     case 'follow-me': {
       return followMe(message, args)
@@ -77,55 +76,54 @@ You can update it by re-running \`${commandPrefix}meetup follow-me New bio here.
   }
 }
 
-async function scheduleMeetup(message, args) {
+async function scheduleMeetup(message, meetupDetails) {
   const member = getMember(message.guild, message.author.id)
-  const now = new Date()
 
-  const match = args.match(/^"(?<subject>.+)" on (?<scheduleTime>.+)$/i)
+  const recurring = meetupDetails.startsWith('recurring')
+  meetupDetails = meetupDetails.replace(/^recurring /, '')
 
-  if (!match) return sendBotMessageReply(message, invalidCommandMessage)
-  const {subject, scheduleTime} = match.groups
-
-  const parsedTime = chrono.parse(scheduleTime)
-
-  if (
-    parsedTime.length > 1 ||
-    !parsedTime.length ||
-    //If the string is partially malformed chrono will parse only the valid string
-    parsedTime[0].text !== scheduleTime
-  ) {
-    return sendBotMessageReply(message, invalidCommandMessage)
-  }
-
-  if (parsedTime[0].start.date() < now) {
+  if (!/^"(.+)"/i.test(meetupDetails)) {
     return sendBotMessageReply(
       message,
-      "The scheduled time can't be in the past",
+      'Make sure to include the subject of your meetup in quotes. Send `?meetup help` for more info.',
     )
   }
 
   const scheduledMeetupsChannel = getScheduledMeetupsChannel(message.guild)
 
+  const recurringPart = recurring ? 'recurring ' : ''
   const scheduledMeetupMessage = await scheduledMeetupsChannel.send(
-    `📣 On ${scheduleTime} ${member} will be hosting a meetup about "${subject}". React with ✋ to be notified when the time arrives.`,
+    `📣 ${member} is hosting a ${recurringPart}meetup: ${meetupDetails}. React with ✋ to be notified when it starts.`,
   )
+
+  const scheduledMessageLink = getMessageLink(scheduledMeetupMessage)
 
   await sendBotMessageReply(
     message,
     `
-Your meetup has been scheduled: ${getMessageLink(scheduledMeetupMessage)}.
-To cancel, react to that message with ❌. If you want to reschedule, then cancel the old one and schedule a new meetup.
+Your ${recurringPart}meetup has been scheduled: ${scheduledMessageLink}. You can control the meetup by reacting to that message with the following emoji:
+
+- 🏁 to start the meetup and notify everyone it's begun.
+- ❌ to cancel the meetup and notify everyone it's been canceled.
+- 🛑 to cancel the meetup and NOT notify everyone it's been canceled.
+
+If you want to reschedule, then cancel the old one and schedule a new meetup.
 `.trim(),
   )
 
   await scheduledMeetupMessage.react('✋')
   const botsChannel = getChannel(message.guild, {name: 'talk-to-bots'})
-  const followers = await getFollowers(message.guild, member)
+  const followers = await getFollowers(member)
   if (followers.length) {
+    const followersList = listify(followers)
     await botsChannel.send(
-      `${member} has scheduled a "${subject}" meetup for ${scheduleTime}! CC: ${listify(
-        followers,
-      )}`,
+      `
+${member} has scheduled a ${recurringPart}meetup: ${meetupDetails}!
+
+CC: ${followersList}
+
+I will notify you when ${member} starts the meetup.
+      `.trim(),
     )
   }
 }
@@ -139,13 +137,19 @@ This command gives the ability to start and schedule meetups:
 
 Examples:
 
-Schedule a meetup for later: \`${commandPrefix}meetup schedule "Migrating to Tailwind" on January 20th from 3:00 PM - 8:00 PM MDT\`
+Schedule a one-time meetup: \`${commandPrefix}meetup schedule "Migrating to Tailwind" on January 20th from 3:00 PM - 8:00 PM MDT\`
+  Make sure the meetup subject is first and in quotes.
+
+Schedule a recurring meetup: \`${commandPrefix}meetup schedule recurring "Migrating to Tailwind" on Wednesdays from 3:00 PM - 8:00 PM MDT\`
+  Make sure the meetup subject is first and in quotes.
+
 Start a new meetup right now: \`${commandPrefix}meetup start Remix and Progressive Enhancement\`
+
 Add yourself to ${getFollowMeChannel(
       message.guild,
     )}: ${commandPrefix}meetup follow-me Here's a brief description about me
 
-NOTE: For bo the schedule and start commands, if you include a Zoom link, that will be shared instead of creating a voice channel.
+NOTE: For both the schedule and start commands, if you include a Zoom link, that will be shared instead of creating a voice channel.
     `.trim(),
   )
 

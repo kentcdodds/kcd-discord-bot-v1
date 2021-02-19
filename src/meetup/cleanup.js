@@ -1,10 +1,13 @@
-const chrono = require('chrono-node')
 const {
   getScheduledMeetupsChannel,
   startMeetup,
   getMeetupChannels,
   getFollowMeMessages,
   getMessageLink,
+  getChannel,
+  getMeetupSubject,
+  getFollowers,
+  listify,
 } = require('./utils')
 
 // we'd just use the message.mentions here, but sometimes the mentions aren't there for some reason 🤷‍♂️
@@ -26,6 +29,61 @@ async function maybeDeleteMessage(message, member) {
   if (!deleteMessageReaction) return
   const deleteReactions = await deleteMessageReaction.users.fetch()
   if (deleteReactions.some(user => user.id === member.id)) {
+    await message.delete()
+  }
+}
+
+/*
+  - 🏁 to start the meetup and notify everyone it's begun.
+  - ❌ to cancel the meetup and notify everyone it's been canceled.
+  - 🛑 to cancel the meetup and NOT notify everyone it's been canceled.
+  */
+
+async function hasHostReaction(message, host, emoji) {
+  const reaction = message.reactions.cache.get(emoji)
+  if (!reaction) return false
+  const usersWhoReacted = await reaction.users.fetch()
+  return usersWhoReacted.some(user => user.id === host.id)
+}
+
+async function getNotificationUsers(message) {
+  const notificationReactionMessage = message.reactions.cache.get('✋')
+  return Array.from(
+    (await notificationReactionMessage.users.fetch()).values(),
+  ).filter(user => !user.bot)
+}
+
+async function handleHostReactions(message) {
+  const host = getMentionedUser(message)
+  const hasReaction = hasHostReaction.bind(null, message, host)
+  const subject = getMeetupSubject(message)
+  if (await hasReaction('🏁')) {
+    await startMeetup({
+      host,
+      subject,
+      notificationUsers: await getNotificationUsers(message),
+    })
+
+    if (message.content.includes('recurring')) {
+      await message.reactions.cache.get('🏁').remove()
+    } else {
+      await message.delete()
+    }
+  } else if (await hasReaction('❌')) {
+    await message.delete()
+    const meetupInfoChannel = getChannel(message.guild, {
+      name: 'meetup-starting',
+    })
+
+    const followers = await getFollowers(host)
+    const usersToNotify = Array.from(
+      new Set([...followers, ...(await getNotificationUsers(message))]),
+    )
+    const cc = usersToNotify.length ? `CC: ${listify(usersToNotify)}` : ''
+    await meetupInfoChannel.send(
+      `${host} has canceled the meetup: ${subject}. ${cc}`.trim(),
+    )
+  } else if (await hasReaction('🛑')) {
     await message.delete()
   }
 }
@@ -55,56 +113,23 @@ async function cleanup(guild) {
     (await scheduledMeetupsChannel.messages.fetch()).values(),
   ).map(msg => maybeDeleteMessage(msg, getMentionedUser(msg)))
 
-  const parsedMessages = scheduledMeetupsChannel.messages.cache.reduce(
-    (acc, message) => {
-      const content = message.content
-      const match = content.match(/^📣 On (?<scheduleTime>.+) <.+$/i)
-      if (match) {
-        const parsedTime = chrono.parse(match.groups.scheduleTime)
-        if (
-          parsedTime.length > 1 ||
-          !parsedTime.length ||
-          parsedTime[0].text !== match.groups.scheduleTime
-        ) {
-          acc.invalidMessages.push(message)
-        } else if (parsedTime[0].start.date() <= now) {
-          acc.meetupsToStart.push(message)
-        }
-      } else {
-        acc.invalidMessages.push(message)
+  const handleReactions = scheduledMeetupsChannel.messages.cache.map(
+    async message => {
+      const subject = getMeetupSubject(message)
+
+      if (!subject) {
+        console.error(
+          `Cannot find subject from ${message.content}. This should never happen... Deleting message so it never happens again.`,
+        )
+        return message.delete()
       }
-      return acc
-    },
-    {
-      invalidMessages: [],
-      meetupsToStart: [],
+
+      return handleHostReactions(message)
     },
   )
-
-  const invalidMessages = parsedMessages.invalidMessages.map(message =>
-    message.delete(),
-  )
-  const meetupsStarted = parsedMessages.meetupsToStart.map(
-    startMeetupFromMessage,
-  )
-
-  async function startMeetupFromMessage(message) {
-    const hostMember = getMentionedUser(message)
-    const subject = message.content.match(
-      /will be hosting a meetup about "(?<subject>.+)"./,
-    )?.groups?.subject
-    const notificationReactionMessage = message.reactions.cache.get('✋')
-    const notificationUsers = Array.from(
-      (await notificationReactionMessage.users.fetch()).values(),
-    ).filter(user => !user.bot)
-    await startMeetup({guild, host: hostMember, subject, notificationUsers})
-
-    await message.delete()
-  }
 
   await Promise.all([
-    ...invalidMessages,
-    ...meetupsStarted,
+    ...handleReactions,
     ...deletingMeetups,
     ...deletingFollowMeMessages,
     ...deletingScheduledMeetupMessages,

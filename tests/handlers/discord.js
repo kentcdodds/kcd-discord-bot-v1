@@ -92,6 +92,12 @@ const handlers = [
       return res(ctx.json([]))
     },
   ),
+  rest.delete(
+    '*/api/:apiVersion/channels/:channelId/messages/:messageId/reactions/:reaction',
+    (req, res, ctx) => {
+      return res(ctx.json([]))
+    },
+  ),
   rest.get(
     '*/api/:apiVersion/guilds/:guildId/members/:memberId',
     (req, res, ctx) => {

@@ -16,29 +16,30 @@ async function getFollowMeMessages(guild) {
   return followMeChannel.messages.fetch()
 }
 
-async function getFollowers(guild, member) {
-  const followMeMessage = (await getFollowMeMessages(guild)).find(msg =>
+const getMeetupSubject = message =>
+  message.content.match(/"(?<subject>.+)"/i)?.groups?.subject ?? null
+
+async function getFollowers(member) {
+  const followMeMessage = (await getFollowMeMessages(member.guild)).find(msg =>
     msg.content.includes(member.id),
   )
   if (!followMeMessage) {
     return []
   }
-  const followMeMessageReactions = followMeMessage.reactions.cache.find(
-    ({emoji}) => emoji.name === '✋',
-  )
+  const followMeMessageReactions = followMeMessage.reactions.cache.get('✋')
   return Array.from(
     (await followMeMessageReactions.users.fetch()).values(),
   ).filter(user => !user.bot)
 }
 
-async function startMeetup({guild, host, subject, notificationUsers = []}) {
+async function startMeetup({host, subject, notificationUsers = []}) {
   if (!subject.includes('zoom.us')) {
-    const meetupCategory = getChannel(guild, {
+    const meetupCategory = getChannel(host.guild, {
       name: 'meetups',
       type: 'category',
     })
 
-    await guild.channels.create(
+    await host.guild.channels.create(
       `${meetupChannelPrefix}${host.nickname} "${subject}"`.slice(0, 100),
       {
         type: 'voice',
@@ -55,17 +56,21 @@ async function startMeetup({guild, host, subject, notificationUsers = []}) {
       },
     )
   }
-  const meetupStartingChannel = getChannel(guild, {name: 'meetup-starting'})
+  const meetupStartingChannel = getChannel(host.guild, {
+    name: 'meetup-starting',
+  })
 
-  const followers = await getFollowers(guild, host)
+  const followers = await getFollowers(host)
   const usersToNotify = Array.from(
     new Set([...followers, ...notificationUsers]),
   )
 
-  const cc = usersToNotify.length ? `CC: ${listify(usersToNotify)}` : ''
-
   await meetupStartingChannel.send(
-    `The "${subject}" meetup by ${host.user} has started! ${cc}`,
+    `
+🏁 ${host} has started ${subject}.
+
+${usersToNotify.length ? `CC: ${listify(usersToNotify)}` : ''}
+    `.trim(),
   )
 }
 
@@ -79,4 +84,5 @@ module.exports = {
   getFollowers,
   startMeetup,
   getMeetupChannels,
+  getMeetupSubject,
 }

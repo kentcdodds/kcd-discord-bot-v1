@@ -48,169 +48,230 @@ async function setup(date) {
   }
 }
 
-test('should schedule a new meetup', async () => {
-  const {
-    kody,
-    createMessage,
-    getScheduledMeetupMessages,
-    botChannel,
-  } = await setup(new Date(Date.UTC(2021, 0, 20, 14)))
-
-  await meetup(
-    createMessage(
-      `?meetup schedule "Migrating to Tailwind" on January 20th from 3:00 PM - 8:00 PM UTC`,
-      kody.user,
-    ),
-  )
-
-  const scheduledMeetupMessages = getScheduledMeetupMessages()
-  expect(scheduledMeetupMessages).toHaveLength(1)
-  expect(scheduledMeetupMessages[0].content).toEqual(
-    `📣 On January 20th from 3:00 PM - 8:00 PM UTC <@!${kody.id}> will be hosting a meetup about "Migrating to Tailwind". React with ✋ to be notified when the time arrives.`,
-  )
-
-  expect(botChannel.lastMessage.content).toEqual(
-    `
-Your meetup has been scheduled: ${getMessageLink(scheduledMeetupMessages[0])}.
-To cancel, react to that message with ❌. If you want to reschedule, then cancel the old one and schedule a new meetup.
-`.trim(),
-  )
-})
-
-test('should give an error if the message is malformed', async () => {
-  const {getBotMessages, createMessage, kody} = await setup(
-    new Date(Date.UTC(2021, 0, 20, 14)),
-  )
-
-  await meetup(
-    createMessage(`?meetup schedule "Migrating to Tailwind"`, kody.user),
-  )
-
-  const messages = getBotMessages()
-  expect(messages).toHaveLength(1)
-  expect(messages[0].content).toEqual(
-    'The command is not valid. use `?meetup help` to know more about the command.',
-  )
-})
-
-test('should give an error if the message contains an invalid time', async () => {
-  const {kody, createMessage, getBotMessages} = await setup(
-    new Date(Date.UTC(2021, 0, 20, 14)),
-  )
-
-  await meetup(
-    createMessage(
-      `?meetup schedule "Migrating to Tailwind" on January 32th from 3:00 PM - 8:00 PM MDT`,
-      kody.user,
-    ),
-  )
-
-  const messages = getBotMessages()
-  expect(messages).toHaveLength(1)
-  expect(messages[0].content).toEqual(
-    'The command is not valid. use `?meetup help` to know more about the command.',
-  )
-})
-
-test('should give an error if the start time is in the past', async () => {
-  const {kody, createMessage, getBotMessages} = await setup(
-    new Date(Date.UTC(2021, 0, 20, 14)),
-  )
-
-  await meetup(
-    createMessage(
-      `?meetup schedule "Migrating to Tailwind" on January 19th from 3:00 PM - 8:00 PM UTC`,
-      kody.user,
-    ),
-  )
-
-  const messages = getBotMessages()
-  expect(messages).toHaveLength(1)
-  expect(messages[0].content).toEqual(`The scheduled time can't be in the past`)
-})
-
-test('should send a message to all users that reacted to the message and delete it then', async () => {
+test('users should be able to schedule and start meetups', async () => {
   const {
     guild,
     kody,
     hannah,
-    marty,
     createMessage,
+    reactFromUser,
+    scheduledMeetupsChannel,
     meetupStartingChannel,
-    getScheduledMeetupMessages,
-  } = await setup(new Date(Date.UTC(2021, 0, 20, 14)))
+    botChannel,
+  } = await setup()
 
-  await meetup(
-    createMessage(
-      `?meetup schedule "Migrating to Tailwind" on January 21th from 3:00 PM - 8:00 PM UTC`,
-      kody.user,
-    ),
+  const meetupSubject = 'Migrating to Tailwind'
+  const meetupTitle = `"${meetupSubject}" on January 20th from 3:00 PM - 8:00 PM UTC`
+
+  await meetup(createMessage(`?meetup schedule ${meetupTitle}`, kody.user))
+
+  const scheduledMeetupMessage = scheduledMeetupsChannel.lastMessage
+
+  expect(scheduledMeetupsChannel.messages.cache.size).toBe(1)
+  expect(scheduledMeetupMessage.content).toEqual(
+    `📣 <@!${kody.id}> is hosting a meetup: ${meetupTitle}. React with ✋ to be notified when it starts.`,
   )
 
-  await meetup(
-    createMessage(
-      `?meetup schedule "Migrating to Tailwind" on January 20th from 3:00 PM - 8:00 PM UTC`,
-      kody.user,
-    ),
+  expect(botChannel.lastMessage.content).toEqual(
+    `
+Your meetup has been scheduled: ${getMessageLink(
+      scheduledMeetupMessage,
+    )}. You can control the meetup by reacting to that message with the following emoji:
+
+- 🏁 to start the meetup and notify everyone it's begun.
+- ❌ to cancel the meetup and notify everyone it's been canceled.
+- 🛑 to cancel the meetup and NOT notify everyone it's been canceled.
+
+If you want to reschedule, then cancel the old one and schedule a new meetup.
+`.trim(),
   )
-  expect(getScheduledMeetupMessages()).toHaveLength(2)
+
+  // add some reactions
+  reactFromUser({
+    user: hannah,
+    message: scheduledMeetupMessage,
+    emoji: {name: '✋'},
+  })
+  reactFromUser({
+    user: kody,
+    message: scheduledMeetupMessage,
+    emoji: {name: '🏁'},
+  })
+
   server.use(
     rest.get(
       '*/api/:apiVersion/channels/:channelId/messages/:messageId/reactions/:reaction',
       (req, res, ctx) => {
-        return res(ctx.json([hannah.user, marty.user]))
+        const emoji = Util.parseEmoji(req.params.reaction).name
+        if (req.params.messageId === scheduledMeetupMessage.id) {
+          if (emoji === '🏁') {
+            return res(ctx.json([kody.user]))
+          }
+          if (emoji === '✋') {
+            return res(ctx.json([hannah.user]))
+          }
+        }
+        return res(ctx.json([]))
       },
     ),
   )
 
-  jest.advanceTimersByTime(1000 * 60 * 10)
+  // run cleanup to get things started
   await cleanup(guild)
-  expect(getScheduledMeetupMessages()).toHaveLength(2)
 
-  jest.advanceTimersByTime(1000 * 60 * 70)
-  await cleanup(guild)
-  expect(getScheduledMeetupMessages()).toHaveLength(1)
-  expect(getScheduledMeetupMessages()[0].content).toContain(
-    'January 21th from 3:00 PM - 8:00 PM UTC',
-  )
+  // the message is deleted
+  expect(scheduledMeetupsChannel.messages.cache.size).toBe(0)
   expect(meetupStartingChannel.lastMessage.content).toBe(
-    `The "Migrating to Tailwind" meetup by ${kody.user} has started! CC: ${hannah.user} and ${marty.user}`,
+    `
+🏁 ${kody} has started ${meetupSubject}.
+
+CC: ${hannah.user}
+    `.trim(),
+  )
+})
+
+test('users can schedule recurring meetups', async () => {
+  const {
+    guild,
+    kody,
+    hannah,
+    createMessage,
+    reactFromUser,
+    scheduledMeetupsChannel,
+    meetupStartingChannel,
+    botChannel,
+  } = await setup()
+
+  const meetupSubject = 'Migrating to Tailwind'
+  const meetupTitle = `"${meetupSubject}" on January 20th from 3:00 PM - 8:00 PM UTC`
+
+  await meetup(
+    createMessage(`?meetup schedule recurring ${meetupTitle}`, kody.user),
+  )
+
+  const scheduledMeetupMessage = scheduledMeetupsChannel.lastMessage
+
+  expect(scheduledMeetupsChannel.messages.cache.size).toBe(1)
+  expect(scheduledMeetupMessage.content).toEqual(
+    `📣 <@!${kody.id}> is hosting a recurring meetup: ${meetupTitle}. React with ✋ to be notified when it starts.`,
+  )
+
+  expect(botChannel.lastMessage.content).toEqual(
+    `
+Your recurring meetup has been scheduled: ${getMessageLink(
+      scheduledMeetupMessage,
+    )}. You can control the meetup by reacting to that message with the following emoji:
+
+- 🏁 to start the meetup and notify everyone it's begun.
+- ❌ to cancel the meetup and notify everyone it's been canceled.
+- 🛑 to cancel the meetup and NOT notify everyone it's been canceled.
+
+If you want to reschedule, then cancel the old one and schedule a new meetup.
+`.trim(),
+  )
+
+  // add some reactions
+  reactFromUser({
+    user: hannah,
+    message: scheduledMeetupMessage,
+    emoji: {name: '✋'},
+  })
+  reactFromUser({
+    user: kody,
+    message: scheduledMeetupMessage,
+    emoji: {name: '🏁'},
+  })
+
+  server.use(
+    rest.get(
+      '*/api/:apiVersion/channels/:channelId/messages/:messageId/reactions/:reaction',
+      (req, res, ctx) => {
+        const emoji = Util.parseEmoji(req.params.reaction).name
+        if (req.params.messageId === scheduledMeetupMessage.id) {
+          if (emoji === '🏁') {
+            return res(ctx.json([kody.user]))
+          }
+          if (emoji === '✋') {
+            return res(ctx.json([hannah.user]))
+          }
+        }
+        return res(ctx.json([]))
+      },
+    ),
+  )
+
+  // run cleanup to get things started
+  await cleanup(guild)
+
+  // the message is not deleted
+  expect(scheduledMeetupsChannel.messages.cache.size).toBe(1)
+  // the 🏁 reaction is removed
+  // TODO: need to improve our mocking of emoji reactions...
+  // expect(
+  //   scheduledMeetupsChannel.lastMessage.reactions.cache.get('🏁'),
+  // ).toBeNull()
+  expect(meetupStartingChannel.lastMessage.content).toBe(
+    `
+🏁 ${kody} has started ${meetupSubject}.
+
+CC: ${hannah.user}
+    `.trim(),
+  )
+})
+
+test('should give an error if no subject is specified', async () => {
+  const {botChannel, createMessage, kody} = await setup()
+
+  await meetup(createMessage(`?meetup schedule No quotes here`, kody.user))
+
+  expect(botChannel.messages.cache.size).toBe(1)
+  expect(botChannel.lastMessage.content).toEqual(
+    'Make sure to include the subject of your meetup in quotes. Send `?meetup help` for more info.',
   )
 })
 
 test('should delete the scheduled meetup if the host react to it with ❌', async () => {
-  const {guild, kody, createMessage, getScheduledMeetupMessages} = await setup(
-    new Date(Date.UTC(2021, 0, 20, 14)),
-  )
+  const {
+    guild,
+    kody,
+    createMessage,
+    reactFromUser,
+    scheduledMeetupsChannel,
+    meetupStartingChannel,
+  } = await setup()
 
-  await meetup(
-    createMessage(
-      `?meetup schedule "Migrating to Tailwind" on January 21th from 3:00 PM - 8:00 PM UTC`,
-      kody.user,
-    ),
-  )
-  const scheduledMeetupMessages = getScheduledMeetupMessages()
-  expect(scheduledMeetupMessages).toHaveLength(1)
+  await meetup(createMessage(`?meetup schedule "Test meetup"`, kody.user))
 
-  // The meetup should start but the host deletes the message
-  jest.advanceTimersByTime(1000 * 60 * 80)
-  await scheduledMeetupMessages[0].react('❌')
+  const scheduledMeetupMessage = scheduledMeetupsChannel.lastMessage
+
+  reactFromUser({
+    user: kody,
+    message: scheduledMeetupMessage,
+    emoji: {name: '❌'},
+  })
+
   server.use(
     rest.get(
       '*/api/:apiVersion/channels/:channelId/messages/:messageId/reactions/:reaction',
       (req, res, ctx) => {
-        if (Util.parseEmoji(req.params.reaction).name === '❌')
+        const emoji = Util.parseEmoji(req.params.reaction).name
+        if (
+          req.params.messageId === scheduledMeetupMessage.id &&
+          emoji === '❌'
+        ) {
           return res(ctx.json([kody.user]))
-        throw Error(
-          'If this API is called with ✋ there is a problem because the message should be deleted.',
-        )
+        }
+        return res(ctx.json([]))
       },
     ),
   )
 
   await cleanup(guild)
 
-  expect(getScheduledMeetupMessages()).toHaveLength(0)
+  expect(scheduledMeetupsChannel.messages.cache.size).toBe(0)
+  expect(meetupStartingChannel.lastMessage.content).toBe(
+    `${kody} has canceled the meetup: Test meetup.`,
+  )
 })
 
 test('should not delete the scheduled meetup if the some user react with ❌', async () => {
@@ -218,21 +279,16 @@ test('should not delete the scheduled meetup if the some user react with ❌', a
     guild,
     kody,
     createMessage,
-    getScheduledMeetupMessages,
+    scheduledMeetupsChannel,
     createUser,
-  } = await setup(new Date(Date.UTC(2021, 0, 20, 14)))
+    reactFromUser,
+  } = await setup()
 
-  await meetup(
-    createMessage(
-      `?meetup schedule "Migrating to Tailwind" on January 21th from 3:00 PM - 8:00 PM UTC`,
-      kody.user,
-    ),
-  )
-  const scheduledMeetupMessages = getScheduledMeetupMessages()
-  expect(scheduledMeetupMessages).toHaveLength(1)
+  await meetup(createMessage(`?meetup schedule "Test meetup"`, kody.user))
+  const scheduledMessage = scheduledMeetupsChannel.lastMessage
 
-  await scheduledMeetupMessages[0].react('❌')
   const josh = await createUser('Josh')
+  reactFromUser({user: josh, message: scheduledMessage, emoji: {name: '❌'}})
   server.use(
     rest.get(
       '*/api/:apiVersion/channels/:channelId/messages/:messageId/reactions/:reaction',
@@ -245,7 +301,7 @@ test('should not delete the scheduled meetup if the some user react with ❌', a
 
   await cleanup(guild)
 
-  expect(getScheduledMeetupMessages()).toHaveLength(1)
+  expect(scheduledMeetupsChannel.messages.cache.size).toBe(1)
 })
 
 test('can start a meetup right away with the start subcommand', async () => {
@@ -350,10 +406,8 @@ Raise your hand ✋ to be notified whenever ${kody.user} schedules and starts me
     rest.get(
       '*/api/:apiVersion/channels/:channelId/messages/:messageId/reactions/:reaction',
       (req, res, ctx) => {
-        if (
-          req.params.messageId === botFollowMeMessage.id &&
-          decodeURIComponent(req.params.reaction) === '❌'
-        ) {
+        const emoji = Util.parseEmoji(req.params.reaction).name
+        if (req.params.messageId === botFollowMeMessage.id && emoji === '❌') {
           return res(ctx.json([kody.user]))
         }
         return res(ctx.json([]))
@@ -372,10 +426,11 @@ test('followers are notified when you schedule and start a meetup', async () => 
     hannah,
     marty,
     createMessage,
-    getBotMessages,
+    botChannel,
     getScheduledMeetupMessages,
     meetupStartingChannel,
-  } = await setup(new Date(Date.UTC(2021, 0, 20, 14)))
+    reactFromUser,
+  } = await setup()
   await meetup(createMessage(`?meetup follow-me I am Kody`, kody.user))
   const followMeChannel = getFollowMeChannel(guild)
   const followMeMessage = followMeChannel.messages.cache.find(msg =>
@@ -384,16 +439,29 @@ test('followers are notified when you schedule and start a meetup', async () => 
 
   let scheduledMeetupMessage = null
 
+  reactFromUser({
+    user: hannah,
+    message: followMeMessage,
+    emoji: {name: '✋'},
+  })
+
+  let started = false
+
   // marty signs up to be notified about this event
   // hannah is a follower and will be notified when it's scheduled *and* when it starts
   server.use(
     rest.get(
       '*/api/:apiVersion/channels/:channelId/messages/:messageId/reactions/:reaction',
       (req, res, ctx) => {
-        if (req.params.messageId === scheduledMeetupMessage?.id) {
-          return res(ctx.json([marty.user]))
-        } else if (req.params.messageId === followMeMessage.id) {
-          return res(ctx.json([hannah.user]))
+        const emoji = Util.parseEmoji(req.params.reaction).name
+        if (emoji === '✋') {
+          if (req.params.messageId === scheduledMeetupMessage?.id) {
+            return res(ctx.json([marty.user]))
+          } else if (req.params.messageId === followMeMessage.id) {
+            return res(ctx.json([hannah.user]))
+          }
+        } else if (emoji === '🏁' && started) {
+          return res(ctx.json([kody.user]))
         }
         return res(ctx.json([]))
       },
@@ -401,23 +469,41 @@ test('followers are notified when you schedule and start a meetup', async () => 
   )
 
   await meetup(
-    createMessage(
-      `?meetup schedule "Migrating to Tailwind" on January 20th from 3:00 PM - 8:00 PM UTC`,
-      kody.user,
-    ),
+    createMessage(`?meetup schedule "Migrating to Tailwind"`, kody.user),
   )
 
   scheduledMeetupMessage = getScheduledMeetupMessages()[0]
 
-  const botMessages = getBotMessages()
-  expect(botMessages[botMessages.length - 1].content).toContain(
-    `has scheduled a "Migrating to Tailwind" meetup for January 20th from 3:00 PM - 8:00 PM UTC! CC: ${hannah.user}`,
+  reactFromUser({
+    user: marty,
+    message: scheduledMeetupMessage,
+    emoji: {name: '✋'},
+  })
+
+  expect(botChannel.lastMessage.content).toBe(
+    `
+${kody} has scheduled a meetup: "Migrating to Tailwind"!
+
+CC: ${hannah.user}
+
+I will notify you when ${kody} starts the meetup.
+    `.trim(),
   )
 
-  jest.advanceTimersByTime(1000 * 60 * 80)
+  reactFromUser({
+    user: kody,
+    message: scheduledMeetupMessage,
+    emoji: {name: '🏁'},
+  })
+  started = true
+
   await cleanup(guild)
   expect(meetupStartingChannel.lastMessage.content).toBe(
-    `The "Migrating to Tailwind" meetup by ${kody.user} has started! CC: ${hannah.user} and ${marty.user}`,
+    `
+🏁 ${kody} has started Migrating to Tailwind.
+
+CC: ${hannah.user} and ${marty.user}
+    `.trim(),
   )
 })
 

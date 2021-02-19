@@ -64,7 +64,7 @@ async function startMeetup({host, subject, notificationUsers = []}) {
   const followers = await getFollowers(host)
   const usersToNotify = Array.from(
     new Set([...followers, ...notificationUsers]),
-  ).map(notifee => (testing ? notifee.nickname : notifee.toString()))
+  ).map(notifee => (testing ? notifee.displayName : notifee.toString()))
 
   const cc = usersToNotify.length ? `CC: ${listify(usersToNotify)}` : ''
 

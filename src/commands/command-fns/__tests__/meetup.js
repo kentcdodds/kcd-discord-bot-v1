@@ -593,7 +593,7 @@ test('can use "TESTING" in the subject to test things out and not notify anyone'
     `
 ${kody} has scheduled a meetup: "Migrating to Tailwind TESTING"!
 
-CC: ${hannah.nickname}
+CC: ${hannah.displayName}
 
 I will notify you when ${kody} starts the meetup.
     `.trim(),
@@ -611,7 +611,7 @@ I will notify you when ${kody} starts the meetup.
     `
 🏁 ${kody} has started the meetup: Migrating to Tailwind TESTING.
 
-CC: ${hannah.nickname} and ${marty.nickname}
+CC: ${hannah.displayName} and ${marty.displayName}
     `.trim(),
   )
 })

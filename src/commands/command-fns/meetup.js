@@ -128,7 +128,7 @@ If you want to reschedule, then cancel the old one and schedule a new meetup.
     name: 'meetup-notifications',
   })
   const followers = (await getFollowers(host)).map(follower =>
-    testing ? follower.nickname : follower.toString(),
+    testing ? follower.displayName : follower.toString(),
   )
   if (followers.length) {
     const followersList = listify(followers)

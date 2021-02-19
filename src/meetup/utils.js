@@ -56,8 +56,8 @@ async function startMeetup({host, subject, notificationUsers = []}) {
       },
     )
   }
-  const meetupStartingChannel = getChannel(host.guild, {
-    name: 'meetup-starting',
+  const meetupNotifications = getChannel(host.guild, {
+    name: 'meetup-notifications',
   })
 
   const followers = await getFollowers(host)
@@ -65,11 +65,20 @@ async function startMeetup({host, subject, notificationUsers = []}) {
     new Set([...followers, ...notificationUsers]),
   )
 
-  await meetupStartingChannel.send(
-    `
-🏁 ${host} has started ${subject}.
+  const testing = subject.includes('TESTING')
+  const cc = usersToNotify.length
+    ? `CC: ${listify(usersToNotify, {
+        stringify: notifee => {
+          return testing ? notifee.nickname : notifee.toString()
+        },
+      })}`
+    : ''
 
-${usersToNotify.length ? `CC: ${listify(usersToNotify)}` : ''}
+  await meetupNotifications.send(
+    `
+🏁 ${host} has started the meetup: ${subject}.
+
+${cc}
     `.trim(),
   )
 }

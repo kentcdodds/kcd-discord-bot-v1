@@ -43,7 +43,7 @@ async function setup(date) {
     botChannel: defaultChannels.talkToBotsChannel,
     scheduledMeetupsChannel: defaultChannels.scheduledMeetupsChannel,
     followMeChannel: defaultChannels.followMeChannel,
-    meetupStartingChannel: defaultChannels.meetupStartingChannel,
+    meetupNotificationsChannel: defaultChannels.meetupNotificationsChannel,
     createMessage,
   }
 }
@@ -56,7 +56,7 @@ test('users should be able to schedule and start meetups', async () => {
     createMessage,
     reactFromUser,
     scheduledMeetupsChannel,
-    meetupStartingChannel,
+    meetupNotificationsChannel,
     botChannel,
   } = await setup()
 
@@ -121,9 +121,9 @@ If you want to reschedule, then cancel the old one and schedule a new meetup.
 
   // the message is deleted
   expect(scheduledMeetupsChannel.messages.cache.size).toBe(0)
-  expect(meetupStartingChannel.lastMessage.content).toBe(
+  expect(meetupNotificationsChannel.lastMessage.content).toBe(
     `
-🏁 ${kody} has started ${meetupSubject}.
+🏁 ${kody} has started the meetup: ${meetupSubject}.
 
 CC: ${hannah}
     `.trim(),
@@ -138,7 +138,7 @@ test('users can schedule recurring meetups', async () => {
     createMessage,
     reactFromUser,
     scheduledMeetupsChannel,
-    meetupStartingChannel,
+    meetupNotificationsChannel,
     botChannel,
   } = await setup()
 
@@ -210,9 +210,9 @@ If you want to reschedule, then cancel the old one and schedule a new meetup.
   // expect(
   //   scheduledMeetupsChannel.lastMessage.reactions.cache.get('🏁'),
   // ).toBeNull()
-  expect(meetupStartingChannel.lastMessage.content).toBe(
+  expect(meetupNotificationsChannel.lastMessage.content).toBe(
     `
-🏁 ${kody} has started ${meetupSubject}.
+🏁 ${kody} has started the meetup: ${meetupSubject}.
 
 CC: ${hannah}
     `.trim(),
@@ -237,7 +237,7 @@ test('should delete the scheduled meetup if the host react to it with ❌', asyn
     createMessage,
     reactFromUser,
     scheduledMeetupsChannel,
-    meetupStartingChannel,
+    meetupNotificationsChannel,
   } = await setup()
 
   await meetup(createMessage(`?meetup schedule "Test meetup"`, kody.user))
@@ -269,7 +269,7 @@ test('should delete the scheduled meetup if the host react to it with ❌', asyn
   await cleanup(guild)
 
   expect(scheduledMeetupsChannel.messages.cache.size).toBe(0)
-  expect(meetupStartingChannel.lastMessage.content).toBe(
+  expect(meetupNotificationsChannel.lastMessage.content).toBe(
     `${kody} has canceled the meetup: Test meetup.`,
   )
 })
@@ -426,9 +426,8 @@ test('followers are notified when you schedule and start a meetup', async () => 
     hannah,
     marty,
     createMessage,
-    botChannel,
     getScheduledMeetupMessages,
-    meetupStartingChannel,
+    meetupNotificationsChannel,
     reactFromUser,
   } = await setup()
   await meetup(createMessage(`?meetup follow-me I am Kody`, kody.user))
@@ -480,7 +479,7 @@ test('followers are notified when you schedule and start a meetup', async () => 
     emoji: {name: '✋'},
   })
 
-  expect(botChannel.lastMessage.content).toBe(
+  expect(meetupNotificationsChannel.lastMessage.content).toBe(
     `
 ${kody} has scheduled a meetup: "Migrating to Tailwind"!
 
@@ -498,9 +497,9 @@ I will notify you when ${kody} starts the meetup.
   started = true
 
   await cleanup(guild)
-  expect(meetupStartingChannel.lastMessage.content).toBe(
+  expect(meetupNotificationsChannel.lastMessage.content).toBe(
     `
-🏁 ${kody} has started Migrating to Tailwind.
+🏁 ${kody} has started the meetup: Migrating to Tailwind.
 
 CC: ${hannah} and ${marty}
     `.trim(),

@@ -71,8 +71,8 @@ async function handleHostReactions(message) {
     }
   } else if (await hasReaction('❌')) {
     await message.delete()
-    const meetupInfoChannel = getChannel(message.guild, {
-      name: 'meetup-starting',
+    const meetupNotifications = getChannel(message.guild, {
+      name: 'meetup-notifications',
     })
 
     const followers = await getFollowers(host)
@@ -87,7 +87,7 @@ async function handleHostReactions(message) {
           },
         })}`
       : ''
-    await meetupInfoChannel.send(
+    await meetupNotifications.send(
       `${host} has canceled the meetup: ${subject}. ${cc}`.trim(),
     )
   } else if (await hasReaction('🛑')) {

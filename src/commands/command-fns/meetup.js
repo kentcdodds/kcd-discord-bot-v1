@@ -54,7 +54,7 @@ Raise your hand ✋ to be notified whenever ${message.author} schedules and star
       `
 I've updated your message in ${followMeChannel} for you ${
         message.author
-      }! Find it here: ${getMessageLink(existingFollowMeMessage)}
+      }! Find it here: <${getMessageLink(existingFollowMeMessage)}>
 
 You can update it by re-running \`${commandPrefix}meetup follow-me New bio here.\` and you can delete it by adding a ❌ emoji reaction to the message.
           `.trim(),
@@ -114,7 +114,9 @@ If you want to reschedule, then cancel the old one and schedule a new meetup.
   await scheduledMeetupMessage.react('✋')
 
   const testing = meetupDetails.includes('TESTING')
-  const botsChannel = getChannel(message.guild, {name: 'talk-to-bots'})
+  const meetupNotifications = getChannel(message.guild, {
+    name: 'meetup-notifications',
+  })
   const followers = await getFollowers(member)
   if (followers.length) {
     const followersList = listify(followers, {
@@ -122,7 +124,7 @@ If you want to reschedule, then cancel the old one and schedule a new meetup.
         return testing ? follower.nickname : follower.toString()
       },
     })
-    await botsChannel.send(
+    await meetupNotifications.send(
       `
 ${member} has scheduled a ${recurringPart}meetup: ${meetupDetails}!
 

@@ -3,26 +3,12 @@ const {
   startMeetup,
   getMeetupChannels,
   getFollowMeMessages,
-  getMessageLink,
+  getMentionedUser,
   getChannel,
   getMeetupSubject,
   getFollowers,
   listify,
 } = require('./utils')
-
-// we'd just use the message.mentions here, but sometimes the mentions aren't there for some reason 🤷‍♂️
-// so we parse it out ourselves
-function getMentionedUser(message) {
-  const mentionId = message.content.match(/<@!?(\d+)>/)?.[1]
-  if (!mentionId) {
-    throw new Error(
-      `This message (${getMessageLink(message)}) has no mentions: ${
-        message.content
-      }`,
-    )
-  }
-  return message.guild.members.cache.get(mentionId)
-}
 
 async function maybeDeleteMessage(message, member) {
   const deleteMessageReaction = message.reactions.cache.get('❌')
@@ -32,12 +18,6 @@ async function maybeDeleteMessage(message, member) {
     await message.delete()
   }
 }
-
-/*
-  - 🏁 to start the meetup and notify everyone it's begun.
-  - ❌ to cancel the meetup and notify everyone it's been canceled.
-  - 🛑 to cancel the meetup and NOT notify everyone it's been canceled.
-  */
 
 async function hasHostReaction(message, host, emoji) {
   const reaction = message.reactions.cache.get(emoji)
@@ -55,6 +35,7 @@ async function getNotificationUsers(message) {
 
 async function handleHostReactions(message) {
   const host = getMentionedUser(message)
+  if (!host) return
   const hasReaction = hasHostReaction.bind(null, message, host)
   const subject = getMeetupSubject(message)
   if (await hasReaction('🏁')) {

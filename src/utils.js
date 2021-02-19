@@ -114,6 +114,21 @@ function listify(
 const getMessageLink = msg =>
   `https://discordapp.com/channels/${msg.guild.id}/${msg.channel.id}/${msg.id}`
 
+// we'd just use the message.mentions here, but sometimes the mentions aren't there for some reason 🤷‍♂️
+// so we parse it out ourselves
+function getMentionedUser(message) {
+  const mentionId = message.content.match(/<@!?(\d+)>/)?.[1]
+  if (!mentionId) {
+    console.error(
+      `This message (${getMessageLink(message)}) has no mentions: ${
+        message.content
+      }`,
+    )
+    return null
+  }
+  return message.guild.members.cache.get(mentionId)
+}
+
 async function sendSelfDestructMessage(
   channel,
   messageContent,
@@ -198,5 +213,6 @@ module.exports = {
   welcomeChannelPrefix,
   privateChannelPrefix,
   meetupChannelPrefix,
+  getMentionedUser,
   timeToMs,
 }

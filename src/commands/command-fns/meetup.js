@@ -6,8 +6,7 @@ const {
   sendBotMessageReply,
   getMessageLink,
   listify,
-} = require('../utils')
-const {
+  getMentionedUser,
   getScheduledMeetupsChannel,
   getFollowMeChannel,
   startMeetup,
@@ -22,6 +21,9 @@ async function meetup(message) {
   switch (command) {
     case 'schedule': {
       return scheduleMeetup(message, args)
+    }
+    case 'update': {
+      return updateScheduledMeetup(message, args)
     }
     case 'start': {
       const subject = args.trim()
@@ -76,8 +78,16 @@ You can update it by re-running \`${commandPrefix}meetup follow-me New bio here.
   }
 }
 
+function getScheduleMessage({host, recurringPart, meetupDetails}) {
+  return `
+📣 ${host} is hosting a ${recurringPart}meetup: ${meetupDetails}.
+
+React with ✋ to be notified when it starts.
+  `.trim()
+}
+
 async function scheduleMeetup(message, meetupDetails) {
-  const member = getMember(message.guild, message.author.id)
+  const host = getMember(message.guild, message.author.id)
 
   const recurring = meetupDetails.startsWith('recurring')
   meetupDetails = meetupDetails.replace(/^recurring /, '')
@@ -93,7 +103,7 @@ async function scheduleMeetup(message, meetupDetails) {
 
   const recurringPart = recurring ? 'recurring ' : ''
   const scheduledMeetupMessage = await scheduledMeetupsChannel.send(
-    `📣 ${member} is hosting a ${recurringPart}meetup: ${meetupDetails}. React with ✋ to be notified when it starts.`,
+    getScheduleMessage({host, recurringPart, meetupDetails}),
   )
 
   const scheduledMessageLink = getMessageLink(scheduledMeetupMessage)
@@ -117,21 +127,63 @@ If you want to reschedule, then cancel the old one and schedule a new meetup.
   const meetupNotifications = getChannel(message.guild, {
     name: 'meetup-notifications',
   })
-  const followers = (await getFollowers(member)).map(follower =>
+  const followers = (await getFollowers(host)).map(follower =>
     testing ? follower.nickname : follower.toString(),
   )
   if (followers.length) {
     const followersList = listify(followers)
     await meetupNotifications.send(
       `
-${member} has scheduled a ${recurringPart}meetup: ${meetupDetails}!
+${host} has scheduled a ${recurringPart}meetup: ${meetupDetails}!
 
 CC: ${followersList}
 
-I will notify you when ${member} starts the meetup.
+I will notify you when ${host} starts the meetup.
       `.trim(),
     )
   }
+}
+
+async function updateScheduledMeetup(message, args) {
+  const [link, ...rest] = args.split(' ')
+  // Some folks use the angle brackets (`<link>` syntax) to avoid discord expanding the link
+  const bracketlessLink = link.replace(/<|>/g, '')
+  const updatedDetails = rest.join(' ')
+  const messageId = bracketlessLink.split('/').slice(-1)[0]
+  const scheduledMeetupsChannel = getScheduledMeetupsChannel(message.guild)
+  const originalMessage = await scheduledMeetupsChannel.messages.fetch(
+    messageId,
+  )
+  if (!originalMessage) {
+    return sendBotMessageReply(
+      message,
+      `Could not find (<${link}>) in ${scheduledMeetupsChannel}`,
+    )
+  }
+  const host = getMentionedUser(originalMessage)
+  if (host.id !== message.author.id) {
+    return sendBotMessageReply(
+      message,
+      `You cannot update a scheduled meetup you are not hosting. ${host} is the host for <${bracketlessLink}>.`,
+    )
+  }
+
+  const recurring = updatedDetails.startsWith('recurring')
+  const meetupDetails = updatedDetails.replace(/^recurring /, '')
+
+  if (!/^"(.+)"/i.test(updatedDetails)) {
+    return sendBotMessageReply(
+      message,
+      'Make sure to include the subject of your meetup in quotes. Send `?meetup help` for more info.',
+    )
+  }
+
+  const recurringPart = recurring ? 'recurring ' : ''
+  await originalMessage.edit(
+    getScheduleMessage({host, recurringPart, meetupDetails}),
+  )
+
+  return sendBotMessageReply(message, `Your meetup info has been updated.`)
 }
 
 meetup.description = 'Enable users to start and schedule meetups'
@@ -150,6 +202,9 @@ Schedule a one-time meetup:
 Schedule a recurring meetup:
   \`${commandPrefix}meetup schedule recurring "Migrating to Tailwind" on Wednesdays from 3:00 PM - 8:00 PM MDT\`
   Make sure the meetup subject is first and in quotes.
+
+Update a scheduled a recurring meetup:
+  \`${commandPrefix}meetup update <link-to-upcoming-meetup-message> "Updated Subject" and any additional details\`
 
 Start a new meetup right now:
   \`${commandPrefix}meetup start Remix and Progressive Enhancement\`

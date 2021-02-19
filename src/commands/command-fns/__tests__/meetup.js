@@ -68,12 +68,16 @@ test('users should be able to schedule and start meetups', async () => {
   const scheduledMeetupMessage = scheduledMeetupsChannel.lastMessage
 
   expect(scheduledMeetupsChannel.messages.cache.size).toBe(1)
-  expect(scheduledMeetupMessage.content).toEqual(
-    `📣 <@!${kody.id}> is hosting a meetup: ${meetupTitle}. React with ✋ to be notified when it starts.`,
+  expect(scheduledMeetupMessage.content).toBe(
+    `
+📣 <@!${kody.id}> is hosting a meetup: ${meetupTitle}.
+
+React with ✋ to be notified when it starts.
+    `.trim(),
   )
 
   const scheduledLink = getMessageLink(scheduledMeetupMessage)
-  expect(botChannel.lastMessage.content).toEqual(
+  expect(botChannel.lastMessage.content).toBe(
     `
 Your meetup has been scheduled: <${scheduledLink}>. You can control the meetup by reacting to that message with the following emoji:
 
@@ -151,8 +155,12 @@ test('users can schedule recurring meetups', async () => {
   const scheduledMeetupMessage = scheduledMeetupsChannel.lastMessage
 
   expect(scheduledMeetupsChannel.messages.cache.size).toBe(1)
-  expect(scheduledMeetupMessage.content).toEqual(
-    `📣 <@!${kody.id}> is hosting a recurring meetup: ${meetupTitle}. React with ✋ to be notified when it starts.`,
+  expect(scheduledMeetupMessage.content).toBe(
+    `
+📣 <@!${kody.id}> is hosting a recurring meetup: ${meetupTitle}.
+
+React with ✋ to be notified when it starts.
+    `.trim(),
   )
 
   expect(botChannel.lastMessage.content).toEqual(
@@ -166,7 +174,7 @@ Your recurring meetup has been scheduled: <${getMessageLink(
 - 🛑 to cancel the meetup and NOT notify everyone it's been canceled.
 
 If you want to reschedule, then cancel the old one and schedule a new meetup.
-`.trim(),
+    `.trim(),
   )
 
   // add some reactions
@@ -604,6 +612,34 @@ I will notify you when ${kody} starts the meetup.
 🏁 ${kody} has started the meetup: Migrating to Tailwind TESTING.
 
 CC: ${hannah.nickname} and ${marty.nickname}
+    `.trim(),
+  )
+})
+
+test('users can update scheduled meetups', async () => {
+  const {scheduledMeetupsChannel, kody, createMessage} = await setup()
+
+  await meetup(
+    createMessage(`?meetup schedule "Migrating to Tailwind"`, kody.user),
+  )
+  const scheduledMessage = scheduledMeetupsChannel.lastMessage
+
+  await meetup(
+    createMessage(
+      `?meetup update <${getMessageLink(
+        scheduledMessage,
+      )}> "Migrating to Tailwind" more useful info`,
+      kody.user,
+    ),
+  )
+  // did not create a new message, just updated the old one
+  expect(scheduledMeetupsChannel.messages.cache.size).toBe(1)
+  expect(scheduledMessage).toBe(scheduledMeetupsChannel.lastMessage)
+  expect(scheduledMessage.content).toBe(
+    `
+📣 ${kody} is hosting a meetup: "Migrating to Tailwind" more useful info.
+
+React with ✋ to be notified when it starts.
     `.trim(),
   )
 })

@@ -27,9 +27,9 @@ async function getFollowers(member) {
     return []
   }
   const followMeMessageReactions = followMeMessage.reactions.cache.get('✋')
-  return Array.from(
-    (await followMeMessageReactions.users.fetch()).values(),
-  ).filter(user => !user.bot)
+  return Array.from((await followMeMessageReactions.users.fetch()).values())
+    .filter(user => !user.bot)
+    .map(user => member.guild.members.cache.get(user.id))
 }
 
 async function startMeetup({host, subject, notificationUsers = []}) {

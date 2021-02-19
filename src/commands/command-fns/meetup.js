@@ -112,10 +112,16 @@ If you want to reschedule, then cancel the old one and schedule a new meetup.
   )
 
   await scheduledMeetupMessage.react('✋')
+
+  const testing = meetupDetails.includes('TESTING')
   const botsChannel = getChannel(message.guild, {name: 'talk-to-bots'})
   const followers = await getFollowers(member)
   if (followers.length) {
-    const followersList = listify(followers)
+    const followersList = listify(followers, {
+      stringify: follower => {
+        return testing ? follower.nickname : follower.toString()
+      },
+    })
     await botsChannel.send(
       `
 ${member} has scheduled a ${recurringPart}meetup: ${meetupDetails}!
@@ -150,6 +156,7 @@ Add yourself to ${getFollowMeChannel(
     )}: ${commandPrefix}meetup follow-me Here's a brief description about me
 
 NOTE: For both the schedule and start commands, if you include a Zoom link, that will be shared instead of creating a voice channel.
+NOTE: If you just want to test things out and not notify people, include the text "TESTING" in your subject.
     `.trim(),
   )
 

@@ -48,9 +48,9 @@ async function hasHostReaction(message, host, emoji) {
 
 async function getNotificationUsers(message) {
   const notificationReactionMessage = message.reactions.cache.get('✋')
-  return Array.from(
-    (await notificationReactionMessage.users.fetch()).values(),
-  ).filter(user => !user.bot)
+  return Array.from((await notificationReactionMessage.users.fetch()).values())
+    .filter(user => !user.bot)
+    .map(user => message.guild.members.cache.get(user.id))
 }
 
 async function handleHostReactions(message) {
@@ -79,7 +79,14 @@ async function handleHostReactions(message) {
     const usersToNotify = Array.from(
       new Set([...followers, ...(await getNotificationUsers(message))]),
     )
-    const cc = usersToNotify.length ? `CC: ${listify(usersToNotify)}` : ''
+    const testing = message.content.includes('TESTING')
+    const cc = usersToNotify.length
+      ? `CC: ${listify(usersToNotify, {
+          stringify: notifee => {
+            return testing ? notifee.nickname : notifee.toString()
+          },
+        })}`
+      : ''
     await meetupInfoChannel.send(
       `${host} has canceled the meetup: ${subject}. ${cc}`.trim(),
     )

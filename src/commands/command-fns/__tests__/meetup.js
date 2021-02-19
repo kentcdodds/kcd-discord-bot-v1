@@ -125,7 +125,7 @@ If you want to reschedule, then cancel the old one and schedule a new meetup.
     `
 🏁 ${kody} has started ${meetupSubject}.
 
-CC: ${hannah.user}
+CC: ${hannah}
     `.trim(),
   )
 })
@@ -214,7 +214,7 @@ If you want to reschedule, then cancel the old one and schedule a new meetup.
     `
 🏁 ${kody} has started ${meetupSubject}.
 
-CC: ${hannah.user}
+CC: ${hannah}
     `.trim(),
   )
 })
@@ -484,7 +484,7 @@ test('followers are notified when you schedule and start a meetup', async () => 
     `
 ${kody} has scheduled a meetup: "Migrating to Tailwind"!
 
-CC: ${hannah.user}
+CC: ${hannah}
 
 I will notify you when ${kody} starts the meetup.
     `.trim(),
@@ -502,7 +502,7 @@ I will notify you when ${kody} starts the meetup.
     `
 🏁 ${kody} has started Migrating to Tailwind.
 
-CC: ${hannah.user} and ${marty.user}
+CC: ${hannah} and ${marty}
     `.trim(),
   )
 })

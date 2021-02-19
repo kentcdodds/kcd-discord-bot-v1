@@ -79,7 +79,7 @@ async function createChannels(client, guild) {
   guild.channels.cache.set(followMeChannel.id, followMeChannel)
 
   const meetupNotificationsChannel = await guild.channels.create(
-    '🏁-meetup-notifications',
+    '🔔-meetup-notifications',
   )
   guild.channels.cache.set(
     meetupNotificationsChannel.id,

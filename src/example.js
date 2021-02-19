@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 const path = require('path')
 const Discord = require('discord.js')
-const {cleanupGuildOnInterval} = require('./utils')
+const {cleanupGuildOnInterval, getChannel} = require('./utils')
 
 require('dotenv').config({
   path: path.join(__dirname, '..', `/.env.${process.env.NODE_ENV || 'local'}`),
@@ -21,9 +21,13 @@ const getKent = () =>
       username === 'kentcdodds' && discriminator === '0001',
   )
 
-client.on('ready', () => {
+client.on('ready', async () => {
   console.log('ready to go')
-  commands.setup(client)
+  // commands.setup(client)
+  const kcd = getKcdGuild()
+  const upcomingMeetups = getChannel(kcd, {name: 'upcoming-meetups'})
+  await upcomingMeetups.messages.fetch()
+  console.log(upcomingMeetups.messages.cache)
   // clubApplication.setup(client)
   // admin.setup(client)
   // onboarding.setup(client)

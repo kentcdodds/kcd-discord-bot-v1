@@ -68,7 +68,7 @@ You can update it by re-running \`${commandPrefix}meetup follow-me New bio here.
       `
 I've posted a message in ${followMeChannel} for you ${
         message.author
-      }! Find it here: ${getMessageLink(followMeMessage)}
+      }! Find it here: <${getMessageLink(followMeMessage)}>
 
 You can update it by re-running \`${commandPrefix}meetup follow-me New bio here.\` and you can delete it by adding a ❌ emoji reaction to the message.
           `.trim(),
@@ -101,7 +101,7 @@ async function scheduleMeetup(message, meetupDetails) {
   await sendBotMessageReply(
     message,
     `
-Your ${recurringPart}meetup has been scheduled: ${scheduledMessageLink}. You can control the meetup by reacting to that message with the following emoji:
+Your ${recurringPart}meetup has been scheduled: <${scheduledMessageLink}>. You can control the meetup by reacting to that message with the following emoji:
 
 - 🏁 to start the meetup and notify everyone it's begun.
 - ❌ to cancel the meetup and notify everyone it's been canceled.
@@ -117,13 +117,11 @@ If you want to reschedule, then cancel the old one and schedule a new meetup.
   const meetupNotifications = getChannel(message.guild, {
     name: 'meetup-notifications',
   })
-  const followers = await getFollowers(member)
+  const followers = (await getFollowers(member)).map(follower =>
+    testing ? follower.nickname : follower.toString(),
+  )
   if (followers.length) {
-    const followersList = listify(followers, {
-      stringify: follower => {
-        return testing ? follower.nickname : follower.toString()
-      },
-    })
+    const followersList = listify(followers)
     await meetupNotifications.send(
       `
 ${member} has scheduled a ${recurringPart}meetup: ${meetupDetails}!

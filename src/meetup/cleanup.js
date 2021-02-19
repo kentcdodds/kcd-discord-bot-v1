@@ -75,18 +75,12 @@ async function handleHostReactions(message) {
       name: 'meetup-notifications',
     })
 
+    const testing = message.content.includes('TESTING')
     const followers = await getFollowers(host)
     const usersToNotify = Array.from(
       new Set([...followers, ...(await getNotificationUsers(message))]),
-    )
-    const testing = message.content.includes('TESTING')
-    const cc = usersToNotify.length
-      ? `CC: ${listify(usersToNotify, {
-          stringify: notifee => {
-            return testing ? notifee.nickname : notifee.toString()
-          },
-        })}`
-      : ''
+    ).map(notifee => (testing ? notifee.nickname : notifee.toString()))
+    const cc = usersToNotify.length ? `CC: ${listify(usersToNotify)}` : ''
     await meetupNotifications.send(
       `${host} has canceled the meetup: ${subject}. ${cc}`.trim(),
     )

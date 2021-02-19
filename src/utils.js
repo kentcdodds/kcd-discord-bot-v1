@@ -103,7 +103,12 @@ function listify(
 ) {
   const stringified = array.map(item => stringify(item))
   const formatter = new Intl.ListFormat('en', {style, type})
-  return formatter.format(stringified)
+  try {
+    return formatter.format(stringified)
+  } catch (error) {
+    console.error('Trouble formatting this:', stringified)
+    throw error
+  }
 }
 
 const getMessageLink = msg =>

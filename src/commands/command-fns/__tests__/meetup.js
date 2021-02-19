@@ -72,11 +72,10 @@ test('users should be able to schedule and start meetups', async () => {
     `📣 <@!${kody.id}> is hosting a meetup: ${meetupTitle}. React with ✋ to be notified when it starts.`,
   )
 
+  const scheduledLink = getMessageLink(scheduledMeetupMessage)
   expect(botChannel.lastMessage.content).toEqual(
     `
-Your meetup has been scheduled: ${getMessageLink(
-      scheduledMeetupMessage,
-    )}. You can control the meetup by reacting to that message with the following emoji:
+Your meetup has been scheduled: <${scheduledLink}>. You can control the meetup by reacting to that message with the following emoji:
 
 - 🏁 to start the meetup and notify everyone it's begun.
 - ❌ to cancel the meetup and notify everyone it's been canceled.
@@ -158,9 +157,9 @@ test('users can schedule recurring meetups', async () => {
 
   expect(botChannel.lastMessage.content).toEqual(
     `
-Your recurring meetup has been scheduled: ${getMessageLink(
+Your recurring meetup has been scheduled: <${getMessageLink(
       scheduledMeetupMessage,
-    )}. You can control the meetup by reacting to that message with the following emoji:
+    )}>. You can control the meetup by reacting to that message with the following emoji:
 
 - 🏁 to start the meetup and notify everyone it's begun.
 - ❌ to cancel the meetup and notify everyone it's been canceled.
@@ -517,4 +516,94 @@ test('if the meetup command includes a zoom link, that is shared instead of crea
   )
   const meetupChannels = Array.from(getMeetupChannels(guild).values())
   expect(meetupChannels).toHaveLength(0)
+})
+
+test('can use "TESTING" in the subject to test things out and not notify anyone', async () => {
+  const {
+    guild,
+    kody,
+    hannah,
+    marty,
+    createMessage,
+    getScheduledMeetupMessages,
+    meetupNotificationsChannel,
+    reactFromUser,
+  } = await setup()
+  await meetup(createMessage(`?meetup follow-me I am Kody`, kody.user))
+  const followMeChannel = getFollowMeChannel(guild)
+  const followMeMessage = followMeChannel.messages.cache.find(msg =>
+    msg.content.includes(kody.id),
+  )
+
+  let scheduledMeetupMessage = null
+
+  reactFromUser({
+    user: hannah,
+    message: followMeMessage,
+    emoji: {name: '✋'},
+  })
+
+  let started = false
+
+  // marty signs up to be notified about this event
+  // hannah is a follower and will be notified when it's scheduled *and* when it starts
+  server.use(
+    rest.get(
+      '*/api/:apiVersion/channels/:channelId/messages/:messageId/reactions/:reaction',
+      (req, res, ctx) => {
+        const emoji = Util.parseEmoji(req.params.reaction).name
+        if (emoji === '✋') {
+          if (req.params.messageId === scheduledMeetupMessage?.id) {
+            return res(ctx.json([marty.user]))
+          } else if (req.params.messageId === followMeMessage.id) {
+            return res(ctx.json([hannah.user]))
+          }
+        } else if (emoji === '🏁' && started) {
+          return res(ctx.json([kody.user]))
+        }
+        return res(ctx.json([]))
+      },
+    ),
+  )
+
+  await meetup(
+    createMessage(
+      `?meetup schedule "Migrating to Tailwind TESTING"`,
+      kody.user,
+    ),
+  )
+
+  scheduledMeetupMessage = getScheduledMeetupMessages()[0]
+
+  reactFromUser({
+    user: marty,
+    message: scheduledMeetupMessage,
+    emoji: {name: '✋'},
+  })
+
+  expect(meetupNotificationsChannel.lastMessage.content).toBe(
+    `
+${kody} has scheduled a meetup: "Migrating to Tailwind TESTING"!
+
+CC: ${hannah.nickname}
+
+I will notify you when ${kody} starts the meetup.
+    `.trim(),
+  )
+
+  reactFromUser({
+    user: kody,
+    message: scheduledMeetupMessage,
+    emoji: {name: '🏁'},
+  })
+  started = true
+
+  await cleanup(guild)
+  expect(meetupNotificationsChannel.lastMessage.content).toBe(
+    `
+🏁 ${kody} has started the meetup: Migrating to Tailwind TESTING.
+
+CC: ${hannah.nickname} and ${marty.nickname}
+    `.trim(),
+  )
 })

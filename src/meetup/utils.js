@@ -60,19 +60,13 @@ async function startMeetup({host, subject, notificationUsers = []}) {
     name: 'meetup-notifications',
   })
 
+  const testing = subject.includes('TESTING')
   const followers = await getFollowers(host)
   const usersToNotify = Array.from(
     new Set([...followers, ...notificationUsers]),
-  )
+  ).map(notifee => (testing ? notifee.nickname : notifee.toString()))
 
-  const testing = subject.includes('TESTING')
-  const cc = usersToNotify.length
-    ? `CC: ${listify(usersToNotify, {
-        stringify: notifee => {
-          return testing ? notifee.nickname : notifee.toString()
-        },
-      })}`
-    : ''
+  const cc = usersToNotify.length ? `CC: ${listify(usersToNotify)}` : ''
 
   await meetupNotifications.send(
     `

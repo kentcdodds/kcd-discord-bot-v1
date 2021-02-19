@@ -69,6 +69,7 @@
   "eslintIgnore": [
     "node_modules",
     "coverage",
-    "dist"
+    "dist",
+    "*.ignored.*"
   ]
 }

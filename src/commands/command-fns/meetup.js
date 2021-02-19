@@ -143,17 +143,19 @@ This command gives the ability to start and schedule meetups:
 
 Examples:
 
-Schedule a one-time meetup: \`${commandPrefix}meetup schedule "Migrating to Tailwind" on January 20th from 3:00 PM - 8:00 PM MDT\`
+Schedule a one-time meetup:
+  \`${commandPrefix}meetup schedule "Migrating to Tailwind" on January 20th from 3:00 PM - 8:00 PM MDT\`
   Make sure the meetup subject is first and in quotes.
 
-Schedule a recurring meetup: \`${commandPrefix}meetup schedule recurring "Migrating to Tailwind" on Wednesdays from 3:00 PM - 8:00 PM MDT\`
+Schedule a recurring meetup:
+  \`${commandPrefix}meetup schedule recurring "Migrating to Tailwind" on Wednesdays from 3:00 PM - 8:00 PM MDT\`
   Make sure the meetup subject is first and in quotes.
 
-Start a new meetup right now: \`${commandPrefix}meetup start Remix and Progressive Enhancement\`
+Start a new meetup right now:
+  \`${commandPrefix}meetup start Remix and Progressive Enhancement\`
 
-Add yourself to ${getFollowMeChannel(
-      message.guild,
-    )}: ${commandPrefix}meetup follow-me Here's a brief description about me
+Add yourself to ${getFollowMeChannel(message.guild)}:
+  \`${commandPrefix}meetup follow-me Here's a brief description about me\`
 
 NOTE: For both the schedule and start commands, if you include a Zoom link, that will be shared instead of creating a voice channel.
 NOTE: If you just want to test things out and not notify people, include the text "TESTING" in your subject.

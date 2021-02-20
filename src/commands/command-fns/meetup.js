@@ -26,11 +26,11 @@ async function meetup(message) {
       return updateScheduledMeetup(message, args)
     }
     case 'start': {
-      const subject = args.trim()
-      if (!subject) return sendBotMessageReply(message, invalidCommandMessage)
-      return startMeetup({host: message.member, subject})
+      if (!args) return sendBotMessageReply(message, invalidCommandMessage)
+      return startMeetup({host: message.member, subject: args})
     }
     case 'follow-me': {
+      if (!args) return sendBotMessageReply(message, invalidCommandMessage)
       return followMe(message, args)
     }
     default: {

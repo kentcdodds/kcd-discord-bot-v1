@@ -207,7 +207,7 @@ Schedule a recurring meetup:
   \`${commandPrefix}meetup schedule recurring "Migrating to Tailwind" on Wednesdays from 3:00 PM - 8:00 PM MDT\`
   Make sure the meetup subject is first and in quotes.
 
-Update a scheduled a recurring meetup:
+Update a scheduled meetup:
   \`${commandPrefix}meetup update <link-to-upcoming-meetup-message> "Updated Subject" and any additional details\`
 
 Start a new meetup right now:

@@ -45,27 +45,11 @@ async function createChannels(client, guild) {
   const introductionChannel = await guild.channels.create('👶-introductions')
   guild.channels.cache.set(introductionChannel.id, introductionChannel)
 
+  const tipsChannel = await guild.channels.create('💁-tips')
+  guild.channels.cache.set(tipsChannel.id, tipsChannel)
+
   const botsOnlyChannel = await guild.channels.create('🤖-bots-only')
   guild.channels.cache.set(botsOnlyChannel.id, botsOnlyChannel)
-
-  const officeHoursVoiceChannel = await guild.channels.create(
-    `🏫 Kent's Office Hours`,
-    {
-      type: 'VOICE',
-    },
-  )
-  guild.channels.cache.set(officeHoursVoiceChannel.id, officeHoursVoiceChannel)
-
-  const officeHoursChannel = await guild.channels.create(`🏫-office-hours`)
-  guild.channels.cache.set(officeHoursChannel.id, officeHoursChannel)
-
-  const kentLiveVoiceChannel = await guild.channels.create(`💻-kent-live`, {
-    type: 'VOICE',
-  })
-  guild.channels.cache.set(kentLiveVoiceChannel.id, kentLiveVoiceChannel)
-
-  const kentLiveChannel = await guild.channels.create(`💻-kent-live`)
-  guild.channels.cache.set(kentLiveChannel.id, kentLiveChannel)
 
   const thanksChannel = await guild.channels.create(`😍-thank-you`)
   guild.channels.cache.set(thanksChannel.id, thanksChannel)
@@ -87,10 +71,7 @@ async function createChannels(client, guild) {
   )
 
   return {
-    kentLiveChannel,
-    kentLiveVoiceChannel,
-    officeHoursChannel,
-    officeHoursVoiceChannel,
+    tipsChannel,
     botsOnlyChannel,
     introductionChannel,
     onBoardingCategory,

@@ -58,14 +58,7 @@ ${Array.from(onboardingChannel.messages.cache.values())
   .map(m => {
     const content = m.content
       .replace(`<@${member.id}>`, '<@mock-user>')
-      .replace(
-        `<#${defaultChannels.kentLiveChannel.id}>`,
-        'channel_💻-kent-live-id',
-      )
-      .replace(
-        `<#${defaultChannels.officeHoursChannel.id}>`,
-        'channel_🏫-office-hours-id',
-      )
+      .replace(`<#${defaultChannels.tipsChannel.id}>`, 'channel_💁-tips-id')
       .replace(
         `<#${defaultChannels.introductionChannel.id}>`,
         'channel_👶-introductions-id',
@@ -126,6 +119,7 @@ test('the typical flow', async () => {
   await send(email) // What's your email
   await send('yes') // coc?
   await send('team@kentcdodds.com') // coc check
+  await send('done') // avatar
   await send('yes') // confirm
 
   // now they're subscribed
@@ -178,15 +172,12 @@ test('the typical flow', async () => {
   await react(techMessage, 'jest')
   await react(techMessage, 'cypress')
 
-  await send('yes') // notified of live stream
-  await send('yes') // notified of office hours
-  await send('done') // avatar
   await send('anything else?')
   await send('delete')
 
   expect(getMessageThread()).toMatchInlineSnapshot(`
     "Messages in 🌊-welcome-fredjoe_1234
-    
+
     BOT: Hello <@mock-user> 👋
 
     I'm a bot and I'm here to welcome you to the KCD Community on Discord! Before you can join in the fun, I need to ask you a few questions. If you have any trouble, please email team@kentcdodds.com with your discord username (\`fredjoe#1234\`), an explanation of the trouble, and a screenshot of the conversation. And we'll get things fixed up for you.
@@ -211,36 +202,6 @@ test('the typical flow', async () => {
     BOT: **Based on what you read in the Code of Conduct**, what's the email address you send Code of Conduct concerns and violations to? (If you're not sure, open the code of conduct to find out).
     fredjoe: team@kentcdodds.com
     BOT: That's right!
-    BOT: Here are your answers:
-      First Name: Fred
-      Email: fred@example.com
-      Accepted Code of Conduct: Yes
-
-    If you'd like to change any, then edit your responses above.
-
-    **If everything's correct, simply reply \\"yes\\"**.
-    fredjoe: yes
-    BOT: Awesome, welcome to the KCD Community on Discord!
-    BOT: 🎉 You should be good to go now. Don't forget to check fred@example.com for a confirmation email. 📬
-
-    🎊 You now have access to the whole server. Welcome!
-    BOT: https://media.giphy.com/media/MDxjbPCg6DGf8JclbR/giphy.gif
-    BOT: 
-
-    👆 that's Kent!
-
-    I'm a pretty neat bot. Learn more about what commands you can give me by sending \`?help\`.
-
-    ━━━━━━━━━━━━━━━━━━━━
-
-    **If you wanna hang out here for a bit longer, I have a few questions that will help you get set up in this server a bit more.**
-    BOT: Click the icon of the tech you are most interested in right now (or want to learn about). Kent will use this to give you more relevant content in the future.
-    BOT: Would you like to be notified when Kent starts live streaming in channel_💻-kent-live-id?
-    fredjoe: yes
-    BOT: Cool, when Kent starts live streaming, you'll get notified.
-    BOT: Would you like to be notified when Kent starts <https://kcd.im/office-hours> in channel_🏫-office-hours-id?
-    fredjoe: yes
-    BOT: Great, you'll be notified when Kent's Office Hours start.
     BOT: It's more fun here when folks have an avatar. You can go ahead and set yours now 😄
 
     I got this image using your email address with gravatar.com. You can use it for your avatar if you like.
@@ -252,7 +213,25 @@ test('the typical flow', async () => {
     **When you're finished (or if you'd like to just move on), just say \\"done\\"**
     fredjoe: done
     BOT: Ok, please do set your avatar later though. It helps keep everything human (and I'll bug you about it every now and then until you do 😈 😅).
-    BOT: Looks like we're all done! Go explore!
+    BOT: Here are your answers:
+      First Name: Fred
+      Email: fred@example.com
+      Accepted Code of Conduct: Yes
+      Avatar: Skipped
+
+    If you'd like to change any, then edit your responses above.
+
+    **If everything's correct, simply reply \\"yes\\"**.
+    fredjoe: yes
+    BOT: Awesome, welcome to the KCD Community on Discord!
+    BOT: 🎉 You should be good to go now. Don't forget to check fred@example.com for a confirmation email. 📬
+
+    🎊 You now have access to the whole server. Welcome!
+    BOT: https://media.giphy.com/media/MDxjbPCg6DGf8JclbR/giphy.gif
+
+    👆 that's Kent!
+    BOT: One last thing here if you want, click the icon of the tech you are most interested in right now (or want to learn about). Kent will use this to give you more relevant content in the future.
+    BOT: The first thing I'd suggest you do is go to channel_💁-tips-id to read up on some of the things you can do here.
 
     We'd love to get to know you a bit. Tell us about you in channel_👶-introductions-id. Here's a template you can use:
 
@@ -275,9 +254,7 @@ test('the typical flow', async () => {
     Array.from(member.roles.cache.values())
       .map(role => role.name)
       .join(', '),
-  ).toMatchInlineSnapshot(
-    `"Notify: Office Hours, Notify: Kent Live, Member, @everyone"`,
-  )
+  ).toMatchInlineSnapshot(`"Member, @everyone"`)
 })
 
 // eslint-disable-next-line max-lines-per-function
@@ -316,14 +293,29 @@ test('typing and editing to an invalid value', async () => {
   `)
   await send('team@kentcdodds.com')
 
+  expect(getBotResponses()).toMatchInlineSnapshot(`
+    "BOT: That's right!
+    BOT: It's more fun here when folks have an avatar. You can go ahead and set yours now 😄
+
+    I got this image using your email address with gravatar.com. You can use it for your avatar if you like.
+
+    https://www.gravatar.com/avatar/6255165076a5e31273cbda50bb9f9636?s=128&d=404
+
+    Here's how you set your avatar: <https://support.discord.com/hc/en-us/articles/204156688-How-do-I-change-my-avatar->
+
+    **When you're finished (or if you'd like to just move on), just say \\"done\\"**"
+  `)
+  await send('done')
+
   // edit something to invalid
   emailMessage = await update(emailMessage, 'not an email')
   expect(getBotResponses()).toMatchInlineSnapshot(`
-    "BOT: That's right!
+    "BOT: Ok, please do set your avatar later though. It helps keep everything human (and I'll bug you about it every now and then until you do 😈 😅).
     BOT: Here are your answers:
       First Name: Fred
       Email: fred@example.com
       Accepted Code of Conduct: Yes
+      Avatar: Skipped
 
     If you'd like to change any, then edit your responses above.
 
@@ -333,11 +325,12 @@ test('typing and editing to an invalid value', async () => {
 
   cocMessage = await update(cocMessage, 'No')
   expect(getBotResponses()).toMatchInlineSnapshot(`
-    "BOT: That's right!
+    "BOT: Ok, please do set your avatar later though. It helps keep everything human (and I'll bug you about it every now and then until you do 😈 😅).
     BOT: Here are your answers:
       First Name: Fred
       Email: fred@example.com
       Accepted Code of Conduct: Yes
+      Avatar: Skipped
 
     If you'd like to change any, then edit your responses above.
 
@@ -347,11 +340,12 @@ test('typing and editing to an invalid value', async () => {
   `)
   await update(emailMessage, 'fred@acme.com')
   expect(getBotResponses()).toMatchInlineSnapshot(`
-    "BOT: That's right!
+    "BOT: Ok, please do set your avatar later though. It helps keep everything human (and I'll bug you about it every now and then until you do 😈 😅).
     BOT: Here are your answers:
       First Name: Fred
       Email: fred@acme.com
       Accepted Code of Conduct: Yes
+      Avatar: Skipped
 
     If you'd like to change any, then edit your responses above.
 
@@ -376,7 +370,7 @@ test('typing and editing to an invalid value', async () => {
 
   expect(getMessageThread()).toMatchInlineSnapshot(`
     "Messages in 🌊-welcome-fredjoe_1234
-    
+
     BOT: Hello <@mock-user> 👋
 
     I'm a bot and I'm here to welcome you to the KCD Community on Discord! Before you can join in the fun, I need to ask you a few questions. If you have any trouble, please email team@kentcdodds.com with your discord username (\`fredjoe#1234\`), an explanation of the trouble, and a screenshot of the conversation. And we'll get things fixed up for you.
@@ -403,10 +397,22 @@ test('typing and editing to an invalid value', async () => {
     BOT: **Based on what you read in the Code of Conduct**, what's the email address you send Code of Conduct concerns and violations to? (If you're not sure, open the code of conduct to find out).
     fredjoe: team@kentcdodds.com
     BOT: That's right!
+    BOT: It's more fun here when folks have an avatar. You can go ahead and set yours now 😄
+
+    I got this image using your email address with gravatar.com. You can use it for your avatar if you like.
+
+    https://www.gravatar.com/avatar/6255165076a5e31273cbda50bb9f9636?s=128&d=404
+
+    Here's how you set your avatar: <https://support.discord.com/hc/en-us/articles/204156688-How-do-I-change-my-avatar->
+
+    **When you're finished (or if you'd like to just move on), just say \\"done\\"**
+    fredjoe: done
+    BOT: Ok, please do set your avatar later though. It helps keep everything human (and I'll bug you about it every now and then until you do 😈 😅).
     BOT: Here are your answers:
       First Name: Fred
       Email: fred@acme.com
       Accepted Code of Conduct: Yes
+      Avatar: Skipped
 
     If you'd like to change any, then edit your responses above.
 
@@ -418,6 +424,7 @@ test('typing and editing to an invalid value', async () => {
       First Name: Freddy
       Email: fred@acme.com
       Accepted Code of Conduct: Yes
+      Avatar: Skipped
 
     If you'd like to change any, then edit your responses above.
 
@@ -428,20 +435,33 @@ test('typing and editing to an invalid value', async () => {
 
     🎊 You now have access to the whole server. Welcome!
     BOT: https://media.giphy.com/media/MDxjbPCg6DGf8JclbR/giphy.gif
-    BOT: 
 
     👆 that's Kent!
+    BOT: One last thing here if you want, click the icon of the tech you are most interested in right now (or want to learn about). Kent will use this to give you more relevant content in the future.
+    BOT: The first thing I'd suggest you do is go to channel_💁-tips-id to read up on some of the things you can do here.
 
-    I'm a pretty neat bot. Learn more about what commands you can give me by sending \`?help\`.
+    We'd love to get to know you a bit. Tell us about you in channel_👶-introductions-id. Here's a template you can use:
 
-    ━━━━━━━━━━━━━━━━━━━━
+    🌐 I'm from:
+    🏢 I work at:
+    💻 I work with this tech:
+    🍎 I snack on:
+    🤪 I really enjoy:
 
-    **If you wanna hang out here for a bit longer, I have a few questions that will help you get set up in this server a bit more.**
-    BOT: Click the icon of the tech you are most interested in right now (or want to learn about). Kent will use this to give you more relevant content in the future.
-    BOT: Would you like to be notified when Kent starts live streaming in channel_💻-kent-live-id?
+    Enjoy the community!
     BOT: _I've changed your nickname on this server to Freddy. If you'd like to change it back then type: \`/nick fredjoe\`_
     BOT: Thanks for fixing things up, now we can continue.
-    BOT: Would you like to be notified when Kent starts live streaming in channel_💻-kent-live-id?
+    BOT: The first thing I'd suggest you do is go to channel_💁-tips-id to read up on some of the things you can do here.
+
+    We'd love to get to know you a bit. Tell us about you in channel_👶-introductions-id. Here's a template you can use:
+
+    🌐 I'm from:
+    🏢 I work at:
+    💻 I work with this tech:
+    🍎 I snack on:
+    🤪 I really enjoy:
+
+    Enjoy the community!
     fredjoe: delete
     BOT: This channel is getting deleted for the following reason: Requested by the member
 
@@ -488,13 +508,11 @@ test('a new member with some info already', async () => {
   await send('yes') // coc
   await send('team@kentcdodds.com') // coc verify
   await send('yes') // confirm
-  await send('yes') // live stream
-  await send('yes') // office hours
   await send('anything else?')
 
   expect(getMessageThread()).toMatchInlineSnapshot(`
     "Messages in 🌊-welcome-fredjoe_1234
-    
+
     BOT: Hello <@mock-user> 👋
 
     I'm a bot and I'm here to welcome you to the KCD Community on Discord! Before you can join in the fun, I need to ask you a few questions. If you have any trouble, please email team@kentcdodds.com with your discord username (\`fredjoe#1234\`), an explanation of the trouble, and a screenshot of the conversation. And we'll get things fixed up for you.
@@ -533,23 +551,10 @@ test('a new member with some info already', async () => {
 
     🎊 You now have access to the whole server. Welcome!
     BOT: https://media.giphy.com/media/MDxjbPCg6DGf8JclbR/giphy.gif
-    BOT: 
 
     👆 that's Kent!
-
-    I'm a pretty neat bot. Learn more about what commands you can give me by sending \`?help\`.
-
-    ━━━━━━━━━━━━━━━━━━━━
-
-    **If you wanna hang out here for a bit longer, I have a few questions that will help you get set up in this server a bit more.**
-    BOT: Click the icon of the tech you are most interested in right now (or want to learn about). Kent will use this to give you more relevant content in the future.
-    BOT: Would you like to be notified when Kent starts live streaming in channel_💻-kent-live-id?
-    fredjoe: yes
-    BOT: Cool, when Kent starts live streaming, you'll get notified.
-    BOT: Would you like to be notified when Kent starts <https://kcd.im/office-hours> in channel_🏫-office-hours-id?
-    fredjoe: yes
-    BOT: Great, you'll be notified when Kent's Office Hours start.
-    BOT: Looks like we're all done! Go explore!
+    BOT: One last thing here if you want, click the icon of the tech you are most interested in right now (or want to learn about). Kent will use this to give you more relevant content in the future.
+    BOT: The first thing I'd suggest you do is go to channel_💁-tips-id to read up on some of the things you can do here.
 
     We'd love to get to know you a bit. Tell us about you in channel_👶-introductions-id. Here's a template you can use:
 
@@ -568,7 +573,5 @@ test('a new member with some info already', async () => {
     Array.from(member.roles.cache.values())
       .map(role => role.name)
       .join(', '),
-  ).toMatchInlineSnapshot(
-    `"Notify: Office Hours, Notify: Kent Live, Member, @everyone"`,
-  )
+  ).toMatchInlineSnapshot(`"Member, @everyone"`)
 })

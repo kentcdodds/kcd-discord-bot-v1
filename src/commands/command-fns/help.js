@@ -19,7 +19,7 @@ async function help(message) {
     const result = sendBotMessageReply(
       message,
       `
-Here are the available commands:
+Here are the available commands (for more details on a command, type \`?help <name-of-command>\`):
 
 - ${Object.entries(commands)
         .filter(([, fn]) => fn.authorize?.(message) ?? true)

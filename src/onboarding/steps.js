@@ -7,6 +7,7 @@ const {
   CONVERT_KIT_API_KEY,
   CONVERT_KIT_API_SECRET,
   sleep,
+  getChannel,
 } = require('./utils')
 
 const memGot = pMemoize(got, {
@@ -152,13 +153,64 @@ Do you agree to abide by and uphold the code of conduct? **The only correct answ
     },
   },
   {
+    name: 'avatar',
+    question: async answers => {
+      let message = `It's more fun here when folks have an avatar. You can go ahead and set yours now 😄`
+      try {
+        const emailHash = md5(answers.email)
+        const image = `https://www.gravatar.com/avatar/${emailHash}?s=128&d=404`
+        await memGot(image)
+        message = `
+${message}
+
+I got this image using your email address with gravatar.com. You can use it for your avatar if you like.
+
+${image}
+        `.trim()
+      } catch (error) {
+        // ignore the error
+      }
+      return `
+${message}
+
+Here's how you set your avatar: <https://support.discord.com/hc/en-us/articles/204156688-How-do-I-change-my-avatar->
+
+**When you're finished (or if you'd like to just move on), just say "done"**
+      `.trim()
+    },
+    isQuestionMessage: messageContents =>
+      /^Here's how you set your avatar/.test(messageContents),
+    feedback: (answers, member) => {
+      return member.user.avatar
+        ? `Great, thanks for adding your avatar.`
+        : `Ok, please do set your avatar later though. It helps keep everything human (and I'll bug you about it every now and then until you do 😈 😅).`
+    },
+    shouldSkip: member => Boolean(member?.user.avatar),
+    getAnswer: messageContents => {
+      if (/adding your avatar/i.test(messageContents)) return 'added'
+      if (/set your avatar later/i.test(messageContents)) return 'skipped'
+
+      return null
+    },
+    validate({message}) {
+      const response = message.content
+      if (response.toLowerCase() !== 'done') {
+        return `Reply "done" when you're ready to continue.`
+      }
+    },
+  },
+  {
     name: 'confirm',
-    question: answers =>
+    question: (answers, member) =>
       `
 Here are your answers:
   First Name: ${answers.name}
   Email: ${answers.email}
-  Accepted Code of Conduct: ${answers.coc ? 'Yes' : 'No'}
+  Accepted Code of Conduct: ${answers.coc ? 'Yes' : 'No'}${
+        answers.avatar
+          ? `\n  Avatar: ${member.user.avatar ? 'Added' : 'Skipped'}`
+          : ''
+      }
 
 If you'd like to change any, then edit your responses above.
 
@@ -236,19 +288,13 @@ ${isEdit ? '' : `🎊 You now have access to the whole server. Welcome!`}
 
       if (!isEdit) {
         // this is a gif of Kent doing a flip with the sub-text "SWEEEET!"
-        await send('https://media.giphy.com/media/MDxjbPCg6DGf8JclbR/giphy.gif')
+        await send(
+          `
+https://media.giphy.com/media/MDxjbPCg6DGf8JclbR/giphy.gif
 
-        const moreStuffMessage = `
 👆 that's Kent!
-
-I'm a pretty neat bot. Learn more about what commands you can give me by sending \`?help\`.
-
-━━━━━━━━━━━━━━━━━━━━
-
-**If you wanna hang out here for a bit longer, I have a few questions that will help you get set up in this server a bit more.**
-        `.trim()
-
-        await send(`\n\n${moreStuffMessage}`)
+          `.trim(),
+        )
       }
     },
     validate({message}) {
@@ -263,7 +309,7 @@ I'm a pretty neat bot. Learn more about what commands you can give me by sending
     action: async ({channel}) => {
       const send = getSend(channel)
       const message = await send(
-        `Click the icon of the tech you are most interested in right now (or want to learn about). Kent will use this to give you more relevant content in the future.`,
+        `One last thing here if you want, click the icon of the tech you are most interested in right now (or want to learn about). Kent will use this to give you more relevant content in the future.`,
       )
       const emojis = [
         'react',
@@ -307,151 +353,13 @@ I'm a pretty neat bot. Learn more about what commands you can give me by sending
     },
   },
   {
-    name: 'liveStream',
-    question: (answers, member) => {
-      const kentLiveChannel = member.guild.channels.cache.find(
-        ({name, type}) =>
-          name.toLowerCase().includes('kent-live') && type === 'text',
-      )
-
-      return `Would you like to be notified when Kent starts live streaming in ${kentLiveChannel}?`
-    },
-    isQuestionMessage: messageContents =>
-      /Would you like to be notified when Kent starts live streaming/.test(
-        messageContents,
-      ),
-    feedback: answers => {
-      return answers.liveStream?.toLowerCase() === 'yes'
-        ? `Cool, when Kent starts live streaming, you'll get notified.`
-        : `Ok, you won't be notified when Kent starts live streaming.`
-    },
-    action: async ({answers, member}) => {
-      if (answers.liveStream !== 'yes') return
-
-      await member.roles.add(
-        member.guild.roles.cache.find(
-          ({name}) => name.toLowerCase() === 'notify: kent live',
-        ),
-        'Requested by user during onboarding',
-      )
-    },
-    getAnswer: messageContents => {
-      return /^Cool, when Kent starts live streaming/i.test(messageContents)
-        ? 'yes'
-        : /^Ok, you won't be notified when Kent starts live streaming/.test(
-            messageContents,
-          )
-        ? 'no'
-        : null
-    },
-    validate({message}) {
-      const response = message.content
-      if (!['yes', 'no'].includes(response.toLowerCase())) {
-        return `You must answer "yes" or "no": Would you like to be notified when Kent starts live streaming?`
-      }
-    },
-  },
-  {
-    name: 'officeHours',
-    question: (answers, member) => {
-      const officeHoursChannel = member.guild.channels.cache.find(
-        ({name, type}) =>
-          name.toLowerCase().includes('office-hours') && type === 'text',
-      )
-
-      return `Would you like to be notified when Kent starts <https://kcd.im/office-hours> in ${officeHoursChannel}?`
-    },
-    isQuestionMessage: messageContents =>
-      /kcd.im\/office-hours/.test(messageContents),
-    feedback: answers => {
-      return answers.officeHours?.toLowerCase() === 'yes'
-        ? `Great, you'll be notified when Kent's Office Hours start.`
-        : `No worries, you won't be notified about Kent's Office Hours.`
-    },
-    action: async ({answers, member}) => {
-      if (answers.officeHours !== 'yes') return
-
-      await member.roles.add(
-        member.guild.roles.cache.find(
-          ({name}) => name.toLowerCase() === 'notify: office hours',
-        ),
-        'Requested by user during onboarding',
-      )
-    },
-    getAnswer: messageContents => {
-      return /^Great, you'll be notified when Kent's Office Hours start./i.test(
-        messageContents,
-      )
-        ? 'yes'
-        : /^No worries, you won't be notified about Kent's Office Hours./.test(
-            messageContents,
-          )
-        ? 'no'
-        : null
-    },
-    validate({message}) {
-      const response = message.content
-      if (!['yes', 'no'].includes(response.toLowerCase())) {
-        return `You must answer "yes" or "no": Would you like to be notified when Kent starts office hours?`
-      }
-    },
-  },
-  {
-    name: 'avatar',
-    question: async answers => {
-      let message = `It's more fun here when folks have an avatar. You can go ahead and set yours now 😄`
-      try {
-        const emailHash = md5(answers.email)
-        const image = `https://www.gravatar.com/avatar/${emailHash}?s=128&d=404`
-        await memGot(image)
-        message = `
-${message}
-
-I got this image using your email address with gravatar.com. You can use it for your avatar if you like.
-
-${image}
-        `.trim()
-      } catch (error) {
-        // ignore the error
-      }
-      return `
-${message}
-
-Here's how you set your avatar: <https://support.discord.com/hc/en-us/articles/204156688-How-do-I-change-my-avatar->
-
-**When you're finished (or if you'd like to just move on), just say "done"**
-      `.trim()
-    },
-    isQuestionMessage: messageContents =>
-      /^Here's how you set your avatar/.test(messageContents),
-    feedback: (answers, member) => {
-      return member.user.avatar
-        ? `Great, thanks for adding your avatar.`
-        : `Ok, please do set your avatar later though. It helps keep everything human (and I'll bug you about it every now and then until you do 😈 😅).`
-    },
-    shouldSkip: member => Boolean(member?.user.avatar),
-    getAnswer: messageContents => {
-      if (/adding your avatar/i.test(messageContents)) return 'ADDED'
-      if (/set your avatar later/i.test(messageContents)) return 'SKIPPED'
-
-      return null
-    },
-    validate({message}) {
-      const response = message.content
-      if (response.toLowerCase() !== 'done') {
-        return `Reply "done" when you're ready to continue.`
-      }
-    },
-  },
-  {
     name: 'finished',
     question: (answers, member) => {
-      const introChannel = member.guild.channels.cache.find(
-        ({name, type}) =>
-          name.toLowerCase().includes('introduction') && type === 'text',
-      )
+      const tipsChannel = getChannel(member.guild, {name: 'tips'})
+      const introChannel = getChannel(member.guild, {name: 'introductions'})
+
       return `
-Looks like we're all done! Go explore!
+The first thing I'd suggest you do is go to ${tipsChannel} to read up on some of the things you can do here.
 
 We'd love to get to know you a bit. Tell us about you in ${introChannel}. Here's a template you can use:
 

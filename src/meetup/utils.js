@@ -32,8 +32,13 @@ async function getFollowers(member) {
     .map(user => member.guild.members.cache.get(user.id))
 }
 
-async function startMeetup({host, subject, notificationUsers = []}) {
-  if (!subject.includes('zoom.us')) {
+async function startMeetup({
+  host,
+  subject,
+  createVoiceChannel,
+  notificationUsers = [],
+}) {
+  if (createVoiceChannel) {
     const meetupCategory = getChannel(host.guild, {
       name: 'meetups',
       type: 'category',

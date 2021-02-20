@@ -42,6 +42,7 @@ async function handleHostReactions(message) {
     await startMeetup({
       host,
       subject,
+      createVoiceChannel: !message.content.toLowerCase().includes('zoom.us'),
       notificationUsers: await getNotificationUsers(message),
     })
 

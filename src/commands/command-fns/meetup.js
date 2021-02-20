@@ -27,7 +27,11 @@ async function meetup(message) {
     }
     case 'start': {
       if (!args) return sendBotMessageReply(message, invalidCommandMessage)
-      return startMeetup({host: message.member, subject: args})
+      return startMeetup({
+        host: message.member,
+        subject: args,
+        createVoiceChannel: !args.toLowerCase().includes('zoom.us'),
+      })
     }
     case 'follow-me': {
       if (!args) return sendBotMessageReply(message, invalidCommandMessage)

@@ -33,15 +33,21 @@ async function getNotificationUsers(message) {
     .map(user => message.guild.members.cache.get(user.id))
 }
 
+function getMeetupDetailsFromScheduledMessage(content) {
+  const match = content.match(
+    /is hosting a (recurring )?meetup:(?<meetupDetails>(.|\n)+)React with ✋ to be notified/,
+  )
+  return match?.groups?.meetupDetails?.trim()
+}
+
 async function handleHostReactions(message) {
   const host = getMentionedUser(message)
   if (!host) return
   const hasReaction = hasHostReaction.bind(null, message, host)
-  const subject = getMeetupSubject(message)
   if (await hasReaction('🏁')) {
     await startMeetup({
       host,
-      subject,
+      meetupDetails: getMeetupDetailsFromScheduledMessage(message.content),
       createVoiceChannel: !message.content.toLowerCase().includes('zoom.us'),
       notificationUsers: await getNotificationUsers(message),
     })
@@ -64,7 +70,9 @@ async function handleHostReactions(message) {
     ).map(notifee => (testing ? notifee.displayName : notifee.toString()))
     const cc = usersToNotify.length ? `CC: ${listify(usersToNotify)}` : ''
     await meetupNotifications.send(
-      `${host} has canceled the meetup: ${subject}. ${cc}`.trim(),
+      `${host} has canceled the meetup: ${getMeetupSubject(
+        message.content,
+      )}. ${cc}`.trim(),
     )
   } else if (await hasReaction('🛑')) {
     await message.delete()
@@ -98,11 +106,11 @@ async function cleanup(guild) {
 
   const handleReactions = scheduledMeetupsChannel.messages.cache.map(
     async message => {
-      const subject = getMeetupSubject(message)
+      const subject = getMeetupDetailsFromScheduledMessage(message.content)
 
       if (!subject) {
         console.error(
-          `Cannot find subject from ${message.content}. This should never happen... Deleting message so it never happens again.`,
+          `Cannot find meetup details from ${message.content}. This should never happen... Deleting message so it never happens again.`,
         )
         return message.delete()
       }

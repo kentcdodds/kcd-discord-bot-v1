@@ -29,7 +29,7 @@ async function meetup(message) {
       if (!args) return sendBotMessageReply(message, invalidCommandMessage)
       return startMeetup({
         host: message.member,
-        subject: args,
+        meetupDetails: `"${args}"`,
         createVoiceChannel: !args.toLowerCase().includes('zoom.us'),
       })
     }
@@ -84,7 +84,9 @@ You can update it by re-running \`${commandPrefix}meetup follow-me New bio here.
 
 function getScheduleMessage({host, recurringPart, meetupDetails}) {
   return `
-📣 ${host} is hosting a ${recurringPart}meetup: ${meetupDetails}.
+📣 ${host} is hosting a ${recurringPart}meetup:
+
+${meetupDetails}
 
 React with ✋ to be notified when it starts.
   `.trim()
@@ -138,7 +140,9 @@ If you want to reschedule, then cancel the old one and schedule a new meetup.
     const followersList = listify(followers)
     await meetupNotifications.send(
       `
-${host} has scheduled a ${recurringPart}meetup: ${meetupDetails}!
+${host} has scheduled a ${recurringPart}meetup:
+
+${meetupDetails}
 
 CC: ${followersList}
 

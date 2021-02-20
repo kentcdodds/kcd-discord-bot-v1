@@ -61,16 +61,18 @@ test('users should be able to schedule and start meetups', async () => {
   } = await setup()
 
   const meetupSubject = 'Migrating to Tailwind'
-  const meetupTitle = `"${meetupSubject}" on January 20th from 3:00 PM - 8:00 PM UTC`
+  const meetupDetails = `"${meetupSubject}" on January 20th from 3:00 PM - 8:00 PM UTC`
 
-  await meetup(createMessage(`?meetup schedule ${meetupTitle}`, kody.user))
+  await meetup(createMessage(`?meetup schedule ${meetupDetails}`, kody.user))
 
   const scheduledMeetupMessage = scheduledMeetupsChannel.lastMessage
 
   expect(scheduledMeetupsChannel.messages.cache.size).toBe(1)
   expect(scheduledMeetupMessage.content).toBe(
     `
-📣 <@!${kody.id}> is hosting a meetup: ${meetupTitle}.
+📣 <@!${kody.id}> is hosting a meetup:
+
+${meetupDetails}
 
 React with ✋ to be notified when it starts.
     `.trim(),
@@ -126,7 +128,9 @@ If you want to reschedule, then cancel the old one and schedule a new meetup.
   expect(scheduledMeetupsChannel.messages.cache.size).toBe(0)
   expect(meetupNotificationsChannel.lastMessage.content).toBe(
     `
-🏁 ${kody} has started the meetup: ${meetupSubject}.
+🏁 ${kody} has started the meetup:
+
+${meetupDetails}
 
 CC: ${hannah}
     `.trim(),
@@ -146,10 +150,10 @@ test('users can schedule recurring meetups', async () => {
   } = await setup()
 
   const meetupSubject = 'Migrating to Tailwind'
-  const meetupTitle = `"${meetupSubject}" on January 20th from 3:00 PM - 8:00 PM UTC`
+  const meetupDetails = `"${meetupSubject}" on January 20th from 3:00 PM - 8:00 PM UTC`
 
   await meetup(
-    createMessage(`?meetup schedule recurring ${meetupTitle}`, kody.user),
+    createMessage(`?meetup schedule recurring ${meetupDetails}`, kody.user),
   )
 
   const scheduledMeetupMessage = scheduledMeetupsChannel.lastMessage
@@ -157,7 +161,9 @@ test('users can schedule recurring meetups', async () => {
   expect(scheduledMeetupsChannel.messages.cache.size).toBe(1)
   expect(scheduledMeetupMessage.content).toBe(
     `
-📣 <@!${kody.id}> is hosting a recurring meetup: ${meetupTitle}.
+📣 <@!${kody.id}> is hosting a recurring meetup:
+
+${meetupDetails}
 
 React with ✋ to be notified when it starts.
     `.trim(),
@@ -219,7 +225,9 @@ If you want to reschedule, then cancel the old one and schedule a new meetup.
   // ).toBeNull()
   expect(meetupNotificationsChannel.lastMessage.content).toBe(
     `
-🏁 ${kody} has started the meetup: ${meetupSubject}.
+🏁 ${kody} has started the meetup:
+
+${meetupDetails}
 
 CC: ${hannah}
     `.trim(),
@@ -475,7 +483,10 @@ test('followers are notified when you schedule and start a meetup', async () => 
   )
 
   await meetup(
-    createMessage(`?meetup schedule "Migrating to Tailwind"`, kody.user),
+    createMessage(
+      `?meetup schedule "Migrating to Tailwind" https://example.com/url`,
+      kody.user,
+    ),
   )
 
   scheduledMeetupMessage = getScheduledMeetupMessages()[0]
@@ -488,7 +499,9 @@ test('followers are notified when you schedule and start a meetup', async () => 
 
   expect(meetupNotificationsChannel.lastMessage.content).toBe(
     `
-${kody} has scheduled a meetup: "Migrating to Tailwind"!
+${kody} has scheduled a meetup:
+
+"Migrating to Tailwind" https://example.com/url
 
 CC: ${hannah}
 
@@ -506,7 +519,9 @@ I will notify you when ${kody} starts the meetup.
   await cleanup(guild)
   expect(meetupNotificationsChannel.lastMessage.content).toBe(
     `
-🏁 ${kody} has started the meetup: Migrating to Tailwind.
+🏁 ${kody} has started the meetup:
+
+"Migrating to Tailwind" https://example.com/url
 
 CC: ${hannah} and ${marty}
     `.trim(),
@@ -576,7 +591,7 @@ test('can use "TESTING" in the subject to test things out and not notify anyone'
 
   await meetup(
     createMessage(
-      `?meetup schedule "Migrating to Tailwind TESTING"`,
+      `?meetup schedule "Migrating to Tailwind TESTING" https://example.com/url`,
       kody.user,
     ),
   )
@@ -591,7 +606,9 @@ test('can use "TESTING" in the subject to test things out and not notify anyone'
 
   expect(meetupNotificationsChannel.lastMessage.content).toBe(
     `
-${kody} has scheduled a meetup: "Migrating to Tailwind TESTING"!
+${kody} has scheduled a meetup:
+
+"Migrating to Tailwind TESTING" https://example.com/url
 
 CC: ${hannah.displayName}
 
@@ -609,7 +626,9 @@ I will notify you when ${kody} starts the meetup.
   await cleanup(guild)
   expect(meetupNotificationsChannel.lastMessage.content).toBe(
     `
-🏁 ${kody} has started the meetup: Migrating to Tailwind TESTING.
+🏁 ${kody} has started the meetup:
+
+"Migrating to Tailwind TESTING" https://example.com/url
 
 CC: ${hannah.displayName} and ${marty.displayName}
     `.trim(),
@@ -637,7 +656,9 @@ test('users can update scheduled meetups', async () => {
   expect(scheduledMessage).toBe(scheduledMeetupsChannel.lastMessage)
   expect(scheduledMessage.content).toBe(
     `
-📣 ${kody} is hosting a meetup: "Migrating to Tailwind" more useful info.
+📣 ${kody} is hosting a meetup:
+
+"Migrating to Tailwind" more useful info
 
 React with ✋ to be notified when it starts.
     `.trim(),

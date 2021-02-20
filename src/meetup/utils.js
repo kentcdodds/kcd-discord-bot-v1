@@ -16,8 +16,8 @@ async function getFollowMeMessages(guild) {
   return followMeChannel.messages.fetch()
 }
 
-const getMeetupSubject = message =>
-  message.content.match(/"(?<subject>.+)"/i)?.groups?.subject ?? null
+const getMeetupSubject = content =>
+  content.match(/"(?<subject>.+)"/i)?.groups?.subject ?? null
 
 async function getFollowers(member) {
   const followMeMessage = (await getFollowMeMessages(member.guild)).find(msg =>
@@ -34,10 +34,14 @@ async function getFollowers(member) {
 
 async function startMeetup({
   host,
-  subject,
+  meetupDetails,
   createVoiceChannel,
   notificationUsers = [],
 }) {
+  const subject = getMeetupSubject(meetupDetails) ?? 'Unknown'
+  if (subject === 'Unknown') {
+    console.error(`Could not get a subject from ${meetupDetails}`)
+  }
   if (createVoiceChannel) {
     const meetupCategory = getChannel(host.guild, {
       name: 'meetups',
@@ -65,7 +69,7 @@ async function startMeetup({
     name: 'meetup-notifications',
   })
 
-  const testing = subject.includes('TESTING')
+  const testing = meetupDetails.includes('TESTING')
   const followers = await getFollowers(host)
   const usersToNotify = Array.from(
     new Set([...followers, ...notificationUsers]),
@@ -75,7 +79,9 @@ async function startMeetup({
 
   await meetupNotifications.send(
     `
-🏁 ${host} has started the meetup: ${subject}.
+🏁 ${host} has started the meetup:
+
+${meetupDetails}
 
 ${cc}
     `.trim(),

@@ -27,7 +27,7 @@ client.on('ready', async () => {
   const kcd = getKcdGuild()
   const upcomingMeetups = getChannel(kcd, {name: 'upcoming-meetups'})
   await upcomingMeetups.messages.fetch()
-  console.log(upcomingMeetups.messages.cache)
+  console.log(upcomingMeetups.messages.cache.first().content)
   // clubApplication.setup(client)
   // admin.setup(client)
   // onboarding.setup(client)

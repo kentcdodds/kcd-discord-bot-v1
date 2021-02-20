@@ -288,13 +288,9 @@ ${isEdit ? '' : `🎊 You now have access to the whole server. Welcome!`}
 
       if (!isEdit) {
         // this is a gif of Kent doing a flip with the sub-text "SWEEEET!"
-        await send(
-          `
-https://media.giphy.com/media/MDxjbPCg6DGf8JclbR/giphy.gif
-
-👆 that's Kent!
-          `.trim(),
-        )
+        await send(`https://media.giphy.com/media/MDxjbPCg6DGf8JclbR/giphy.gif`)
+        // sending "👆 that's Kent!" afterword otherwise it appears above the gif somehow
+        await send(`👆 that's Kent!`)
       }
     },
     validate({message}) {

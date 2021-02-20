@@ -228,8 +228,7 @@ test('the typical flow', async () => {
 
     🎊 You now have access to the whole server. Welcome!
     BOT: https://media.giphy.com/media/MDxjbPCg6DGf8JclbR/giphy.gif
-
-    👆 that's Kent!
+    BOT: 👆 that's Kent!
     BOT: One last thing here if you want, click the icon of the tech you are most interested in right now (or want to learn about). Kent will use this to give you more relevant content in the future.
     BOT: The first thing I'd suggest you do is go to channel_💁-tips-id to read up on some of the things you can do here.
 
@@ -435,8 +434,7 @@ test('typing and editing to an invalid value', async () => {
 
     🎊 You now have access to the whole server. Welcome!
     BOT: https://media.giphy.com/media/MDxjbPCg6DGf8JclbR/giphy.gif
-
-    👆 that's Kent!
+    BOT: 👆 that's Kent!
     BOT: One last thing here if you want, click the icon of the tech you are most interested in right now (or want to learn about). Kent will use this to give you more relevant content in the future.
     BOT: The first thing I'd suggest you do is go to channel_💁-tips-id to read up on some of the things you can do here.
 
@@ -551,8 +549,7 @@ test('a new member with some info already', async () => {
 
     🎊 You now have access to the whole server. Welcome!
     BOT: https://media.giphy.com/media/MDxjbPCg6DGf8JclbR/giphy.gif
-
-    👆 that's Kent!
+    BOT: 👆 that's Kent!
     BOT: One last thing here if you want, click the icon of the tech you are most interested in right now (or want to learn about). Kent will use this to give you more relevant content in the future.
     BOT: The first thing I'd suggest you do is go to channel_💁-tips-id to read up on some of the things you can do here.
 

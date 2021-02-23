@@ -156,7 +156,7 @@ async function updateScheduledMeetup(message, args) {
   const [link, ...rest] = args.split(' ')
   // Some folks use the angle brackets (`<link>` syntax) to avoid discord expanding the link
   const bracketlessLink = link.replace(/<|>/g, '')
-  const updatedDetails = rest.join(' ')
+  const updatedDetails = rest.join(' ').trim()
   const messageId = bracketlessLink.split('/').slice(-1)[0]
   const scheduledMeetupsChannel = getScheduledMeetupsChannel(message.guild)
   const originalMessage = await scheduledMeetupsChannel.messages.fetch(

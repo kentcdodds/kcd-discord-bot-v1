@@ -1,16 +1,31 @@
-const {
+import type * as TDiscord from 'discord.js'
+import {
   getScheduledMeetupsChannel,
   startMeetup,
   getMeetupChannels,
   getFollowMeMessages,
   getMentionedUser,
-  getChannel,
   getMeetupSubject,
   getFollowers,
   listify,
-} = require('./utils')
+  typedBoolean,
+  getTextChannel,
+  rollbar,
+  getMessageLink,
+} from './utils'
 
-async function maybeDeleteMessage(message, member) {
+async function maybeDeleteMessage(
+  message: TDiscord.Message,
+  member: TDiscord.GuildMember | null,
+) {
+  if (!member) {
+    rollbar.warn(
+      `We want to delete a message that has no member who can delete it: ${getMessageLink(
+        message,
+      )}`,
+    )
+    return
+  }
   const deleteMessageReaction = message.reactions.cache.get('❌')
   if (!deleteMessageReaction) return
   const deleteReactions = await deleteMessageReaction.users.fetch()
@@ -19,28 +34,37 @@ async function maybeDeleteMessage(message, member) {
   }
 }
 
-async function hasHostReaction(message, host, emoji) {
+async function hasHostReaction(
+  message: TDiscord.Message,
+  host: TDiscord.GuildMember,
+  emoji: string,
+) {
   const reaction = message.reactions.cache.get(emoji)
   if (!reaction) return false
   const usersWhoReacted = await reaction.users.fetch()
   return usersWhoReacted.some(user => user.id === host.id)
 }
 
-async function getNotificationUsers(message) {
+async function getNotificationUsers(message: TDiscord.Message) {
   const notificationMessageReaction = message.reactions.cache.get('✋')
+  const guild = message.guild
+  if (!notificationMessageReaction || !guild) return []
   return Array.from((await notificationMessageReaction.users.fetch()).values())
     .filter(user => !user.bot)
-    .map(user => message.guild.members.cache.get(user.id))
+    .map(user => guild.members.cache.get(user.id))
+    .filter(typedBoolean)
 }
 
-function getMeetupDetailsFromScheduledMessage(content) {
+function getMeetupDetailsFromScheduledMessage(content: string): string {
   const match = content.match(
     /is hosting a (recurring )?meetup:(?<meetupDetails>(.|\n)+)React with ✋ to be notified/,
   )
-  return match?.groups?.meetupDetails?.trim()
+  // match.groups is incorrectly typed 😱
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  return match?.groups?.meetupDetails?.trim() ?? ''
 }
 
-async function handleHostReactions(message) {
+async function handleHostReactions(message: TDiscord.Message) {
   const host = getMentionedUser(message)
   if (!host) return
   const hasReaction = hasHostReaction.bind(null, message, host)
@@ -53,15 +77,18 @@ async function handleHostReactions(message) {
     })
 
     if (message.content.includes('recurring')) {
-      await message.reactions.cache.get('🏁').remove()
+      await message.reactions.cache.get('🏁')?.remove()
     } else {
       await message.delete()
     }
   } else if (await hasReaction('❌')) {
     await message.delete()
-    const meetupNotifications = getChannel(message.guild, {
-      name: 'meetup-notifications',
-    })
+    const meetupNotifications = getTextChannel(
+      message.guild,
+      'meetup-notifications',
+    )
+
+    if (!meetupNotifications) return
 
     const testing = message.content.includes('TESTING')
     const followers = await getFollowers(host)
@@ -79,12 +106,12 @@ async function handleHostReactions(message) {
   }
 }
 
-async function cleanup(guild) {
+async function cleanup(guild: TDiscord.Guild) {
   const meetupChannels = getMeetupChannels(guild)
 
   const now = Date.now()
 
-  const deletingMeetups = []
+  const deletingMeetups: Array<Promise<unknown>> = []
   const cutoffAge = now - 1000 * 60 * 15
   for (const meetupChannel of meetupChannels.values()) {
     if (
@@ -100,24 +127,29 @@ async function cleanup(guild) {
   ).map(msg => maybeDeleteMessage(msg, getMentionedUser(msg)))
 
   const scheduledMeetupsChannel = getScheduledMeetupsChannel(guild)
-  const deletingScheduledMeetupMessages = Array.from(
-    (await scheduledMeetupsChannel.messages.fetch()).values(),
-  ).map(msg => maybeDeleteMessage(msg, getMentionedUser(msg)))
+  let deletingScheduledMeetupMessages: Array<Promise<unknown>> = []
+  let handleReactions: Array<Promise<unknown>> = []
 
-  const handleReactions = scheduledMeetupsChannel.messages.cache.map(
-    async message => {
-      const subject = getMeetupDetailsFromScheduledMessage(message.content)
+  if (scheduledMeetupsChannel) {
+    deletingScheduledMeetupMessages = Array.from(
+      (await scheduledMeetupsChannel.messages.fetch()).values(),
+    ).map(msg => maybeDeleteMessage(msg, getMentionedUser(msg)))
 
-      if (!subject) {
-        console.error(
-          `Cannot find meetup details from ${message.content}. This should never happen... Deleting message so it never happens again.`,
-        )
-        return message.delete()
-      }
+    handleReactions = scheduledMeetupsChannel.messages.cache.map(
+      async message => {
+        const subject = getMeetupDetailsFromScheduledMessage(message.content)
 
-      return handleHostReactions(message)
-    },
-  )
+        if (!subject) {
+          console.error(
+            `Cannot find meetup details from ${message.content}. This should never happen... Deleting message so it never happens again.`,
+          )
+          return message.delete()
+        }
+
+        return handleHostReactions(message)
+      },
+    )
+  }
 
   await Promise.all([
     ...handleReactions,
@@ -127,6 +159,4 @@ async function cleanup(guild) {
   ])
 }
 
-module.exports = {
-  cleanup,
-}
+export {cleanup}

@@ -71,7 +71,7 @@ function getChannel(
       ch.name.toLowerCase().includes(name.toLowerCase()) && type === ch.type,
   )
   if (!channel) {
-    console.warn(
+    rollbar.warn(
       `Tried to find a channel "${name}" of type ${type} but could not find it`,
     )
     return null
@@ -155,7 +155,7 @@ function listify<ItemType>(
   try {
     return formatter.format(stringified)
   } catch (error: unknown) {
-    console.error('Trouble formatting this:', stringified)
+    rollbar.error('Trouble formatting this:', stringified)
     throw error
   }
 }
@@ -167,17 +167,19 @@ const getMessageLink = (msg: TDiscord.Message) =>
 
 // we'd just use the message.mentions here, but sometimes the mentions aren't there for some reason 🤷‍♂️
 // so we parse it out ourselves
-function getMentionedUser(message: TDiscord.Message) {
+function getMentionedUser(
+  message: TDiscord.Message,
+): TDiscord.GuildMember | null {
   const mentionId = message.content.match(/<@!?(\d+)>/)?.[1]
   if (!mentionId) {
-    console.error(
+    rollbar.error(
       `This message (${getMessageLink(message)}) has no mentions: ${
         message.content
       }`,
     )
     return null
   }
-  return message.guild?.members.cache.get(mentionId)
+  return message.guild?.members.cache.get(mentionId) ?? null
 }
 
 const timeToMs = {
@@ -251,6 +253,12 @@ function cleanupGuildOnInterval(
   }, interval)
 }
 
+function typedBoolean<T>(
+  value: T,
+): value is Exclude<T, false | null | undefined | '' | 0> {
+  return Boolean(value)
+}
+
 export {
   cleanupGuildOnInterval,
   rollbar,
@@ -270,6 +278,7 @@ export {
   isCommand,
   getMember,
   listify,
+  typedBoolean,
   getMessageLink,
   isWelcomeChannel,
   sendBotMessageReply,

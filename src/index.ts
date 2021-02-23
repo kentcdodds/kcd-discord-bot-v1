@@ -1,11 +1,11 @@
 import type {Client} from 'discord.js'
-import onboarding from './onboarding'
-import commands from './commands'
-import admin from './admin'
-import clubApplication from './club-application'
-import privateChat from './private-chat'
-import rollbar from './rollbar'
-import meetup from './meetup'
+import * as onboarding from './onboarding'
+import * as commands from './commands'
+import * as admin from './admin'
+import * as clubApplication from './club-application'
+import * as privateChat from './private-chat'
+import * as rollbar from './rollbar'
+import * as meetup from './meetup'
 
 function setup(client: Client) {
   onboarding.setup(client)

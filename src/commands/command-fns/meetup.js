@@ -15,6 +15,13 @@ const {
 
 const invalidCommandMessage = `The command is not valid. use \`${commandPrefix}meetup help\` to know more about the command.`
 
+const meetupDetailsLengthLimit = 800
+const sendMeetupDetailsTooLongError = (message, meetupDetails) =>
+  sendBotMessageReply(
+    message,
+    `Meetup details are limited to ${meetupDetailsLengthLimit} characters and your details are ${meetupDetails.length} characters. If you need to, put extra details somewhere online and link to it.`,
+  )
+
 async function meetup(message) {
   const [command, ...rest] = getCommandArgs(message.content).split(' ')
   const args = rest.join(' ').trim()
@@ -104,6 +111,9 @@ async function scheduleMeetup(message, meetupDetails) {
       'Make sure to include the subject of your meetup in quotes. Send `?meetup help` for more info.',
     )
   }
+  if (meetupDetails.length > meetupDetailsLengthLimit) {
+    return sendMeetupDetailsTooLongError(message, meetupDetails)
+  }
 
   const scheduledMeetupsChannel = getScheduledMeetupsChannel(message.guild)
 
@@ -184,6 +194,10 @@ async function updateScheduledMeetup(message, args) {
       message,
       'Make sure to include the subject of your meetup in quotes. Send `?meetup help` for more info.',
     )
+  }
+
+  if (meetupDetails.length > meetupDetailsLengthLimit) {
+    return sendMeetupDetailsTooLongError(message, meetupDetails)
   }
 
   const recurringPart = recurring ? 'recurring ' : ''

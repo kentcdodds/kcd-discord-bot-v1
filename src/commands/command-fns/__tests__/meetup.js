@@ -116,6 +116,24 @@ CC: ${hannah}
   )
 })
 
+test('there is a limit on the length of the meetup details', async () => {
+  const {
+    kody,
+    createMessage,
+    scheduledMeetupsChannel,
+    botChannel,
+  } = await setup()
+
+  const meetupDetails = `"Migrating to Tailwind" ${'-'.repeat(850)}`
+
+  await meetup(createMessage(`?meetup schedule ${meetupDetails}`, kody.user))
+
+  expect(scheduledMeetupsChannel.messages.cache.size).toBe(0)
+  expect(botChannel.lastMessage.content).toMatchInlineSnapshot(
+    `"Meetup details are limited to 800 characters and your details are 874 characters. If you need to, put extra details somewhere online and link to it."`,
+  )
+})
+
 test('users can schedule recurring meetups', async () => {
   const {
     guild,

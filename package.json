@@ -2,7 +2,7 @@
   "name": "kcd-discord-bot",
   "version": "0.0.0-semantically-released",
   "description": "The bot for the KCD discord community (https://kcd.im/discord)",
-  "main": "dist/index.js",
+  "main": "index.js",
   "keywords": [],
   "author": "Kent C. Dodds <me@kentcdodds.com> (https://kentcdodds.com)",
   "license": "MIT",
@@ -18,36 +18,38 @@
     "url": "https://github.com/kentcdodds/kcd-discord-bot/issues"
   },
   "homepage": "https://github.com/kentcdodds/kcd-discord-bot#readme",
-  "files": [
-    "dist"
-  ],
   "scripts": {
     "start": "node .",
-    "build": "node ./other/generate-build-info.js",
+    "prebuild": "node ./other/generate-build-info.js",
+    "build": "kcd-scripts build --no-ts-defs",
     "lint": "kcd-scripts lint",
-    "dev": "node ./src/example",
+    "dev": "ts-node ./src/example",
     "setup": "npm install && npm run validate -s",
+    "typecheck": "kcd-scripts typecheck",
     "test": "kcd-scripts test",
     "test:update": "npm test -- --updateSnapshot --coverage",
     "test:debug": "node --inspect-brk ./node_modules/kcd-scripts/dist/scripts/test.js --runInBand",
     "validate": "kcd-scripts validate"
   },
   "dependencies": {
-    "discord.js": "12.3.1",
+    "@babel/runtime": "^7.13.6",
+    "discord.js": "12.5.1",
     "dotenv": "^8.2.0",
-    "got": "^11.7.0",
+    "got": "^11.8.1",
     "leven": "^3.1.0",
-    "match-sorter": "^5.0.0",
+    "match-sorter": "^6.3.0",
     "md5-hash": "^1.0.1",
-    "open-graph-scraper": "^4.6.0",
+    "open-graph-scraper": "^4.7.1",
     "p-memoize": "^4.0.1",
     "redent": "^3.0.0",
-    "rollbar": "^2.19.4",
-    "set-interval-async": "^1.0.33"
+    "rollbar": "^2.21.0",
+    "set-interval-async": "^1.0.34"
   },
   "devDependencies": {
-    "kcd-scripts": "^6.6.0",
-    "msw": "^0.21.3"
+    "kcd-scripts": "^7.7.0",
+    "msw": "^0.26.2",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.1.5"
   },
   "eslintConfig": {
     "extends": "./node_modules/kcd-scripts/eslint.js",

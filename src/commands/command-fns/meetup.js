@@ -214,6 +214,9 @@ Schedule a recurring meetup:
 Update a scheduled meetup:
   \`${commandPrefix}meetup update <link-to-upcoming-meetup-message> "Updated Subject" and any additional details\`
 
+Update a recurring meetup:
+  \`${commandPrefix}meetup update <link-to-upcoming-meetup-message> recurring "Updated Subject" and any additional details\`
+
 Start a new meetup right now:
   \`${commandPrefix}meetup start Remix and Progressive Enhancement\`
 

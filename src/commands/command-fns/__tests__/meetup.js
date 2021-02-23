@@ -6,7 +6,7 @@ const {
   getMeetupChannels,
   getFollowMeChannel,
 } = require('../../../meetup/utils')
-const meetup = require('../meetup')
+const {meetup} = require('../meetup')
 const {cleanup} = require('../../../meetup/cleanup')
 
 async function setup(date) {

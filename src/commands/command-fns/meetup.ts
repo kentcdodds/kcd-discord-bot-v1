@@ -1,5 +1,5 @@
-const {
-  getChannel,
+import type * as TDiscord from 'discord.js'
+import {
   getCommandArgs,
   getMember,
   commandPrefix,
@@ -11,18 +11,23 @@ const {
   getFollowMeChannel,
   startMeetup,
   getFollowers,
-} = require('../../meetup/utils')
+  rollbar,
+  getTextChannel,
+} from '../../meetup/utils'
 
 const invalidCommandMessage = `The command is not valid. Use \`${commandPrefix}meetup help\` to know more about the command.`
 
 const meetupDetailsLengthLimit = 800
-const sendMeetupDetailsTooLongError = (message, meetupDetails) =>
+const sendMeetupDetailsTooLongError = (
+  message: TDiscord.Message,
+  meetupDetails: string,
+) =>
   sendBotMessageReply(
     message,
     `Meetup details are limited to ${meetupDetailsLengthLimit} characters and your details are ${meetupDetails.length} characters. If you need to, put extra details somewhere online and link to it.`,
   )
 
-async function meetup(message) {
+async function meetup(message: TDiscord.Message) {
   const [command, ...rest] = getCommandArgs(message.content).split(' ')
   const args = rest.join(' ').trim()
   switch (command) {
@@ -53,8 +58,10 @@ async function meetup(message) {
   }
 }
 
-async function followMe(message, args) {
+async function followMe(message: TDiscord.Message, args: string) {
   const followMeChannel = getFollowMeChannel(message.guild)
+  if (!followMeChannel) return
+
   const existingFollowMeMessage = followMeChannel.messages.cache.find(msg =>
     msg.content.includes(message.author.id),
   )
@@ -92,7 +99,15 @@ You can update it by re-running \`${commandPrefix}meetup follow-me New bio here.
   }
 }
 
-function getScheduleMessage({host, recurringPart, meetupDetails}) {
+function getScheduleMessage({
+  host,
+  recurringPart,
+  meetupDetails,
+}: {
+  host: TDiscord.GuildMember
+  recurringPart: '' | 'recurring '
+  meetupDetails: string
+}) {
   return `
 📣 ${host} is hosting a ${recurringPart}meetup:
 
@@ -102,8 +117,17 @@ React with ✋ to be notified when it starts.
   `.trim()
 }
 
-async function scheduleMeetup(message, meetupDetails) {
+async function scheduleMeetup(
+  message: TDiscord.Message,
+  meetupDetails: string,
+) {
   const host = getMember(message.guild, message.author.id)
+  if (!host) {
+    rollbar.warn(`Trying to schedule a meetup without a host!`, {meetupDetails})
+    return
+  }
+  const scheduledMeetupsChannel = getScheduledMeetupsChannel(message.guild)
+  if (!scheduledMeetupsChannel) return
 
   const recurring = meetupDetails.startsWith('recurring')
   meetupDetails = meetupDetails.replace(/^recurring /, '')
@@ -117,8 +141,6 @@ async function scheduleMeetup(message, meetupDetails) {
   if (meetupDetails.length > meetupDetailsLengthLimit) {
     return sendMeetupDetailsTooLongError(message, meetupDetails)
   }
-
-  const scheduledMeetupsChannel = getScheduledMeetupsChannel(message.guild)
 
   const recurringPart = recurring ? 'recurring ' : ''
   const scheduledMeetupMessage = await scheduledMeetupsChannel.send(
@@ -143,9 +165,12 @@ If you want to reschedule, then cancel the old one and schedule a new meetup.
   await scheduledMeetupMessage.react('✋')
 
   const testing = meetupDetails.includes('TESTING')
-  const meetupNotifications = getChannel(message.guild, {
-    name: 'meetup-notifications',
-  })
+  const meetupNotifications = getTextChannel(
+    message.guild,
+    'meetup-notifications',
+  )
+  if (!meetupNotifications) return
+
   const followers = (await getFollowers(host)).map(follower =>
     testing ? follower.displayName : follower.toString(),
   )
@@ -165,16 +190,23 @@ I will notify you when ${host} starts the meetup.
   }
 }
 
-async function updateScheduledMeetup(message, args, {force = false} = {}) {
+async function updateScheduledMeetup(
+  message: TDiscord.Message,
+  args: string,
+  {force = false}: {force?: boolean} = {},
+) {
+  const scheduledMeetupsChannel = getScheduledMeetupsChannel(message.guild)
+  if (!scheduledMeetupsChannel) return
+
   const [link, ...rest] = args.split(' ')
   // Some folks use the angle brackets (`<link>` syntax) to avoid discord expanding the link
   const bracketlessLink = link.replace(/<|>/g, '')
   const updatedDetails = rest.join(' ').trim()
   const messageId = bracketlessLink.split('/').slice(-1)[0]
-  const scheduledMeetupsChannel = getScheduledMeetupsChannel(message.guild)
-  const originalMessage = await scheduledMeetupsChannel.messages.fetch(
+  const originalMessage = (await scheduledMeetupsChannel.messages.fetch(
     messageId,
-  )
+    // fetch is incorrectly typed, it can return `null` potentially
+  )) as TDiscord.Message | null
   if (!originalMessage) {
     return sendBotMessageReply(
       message,
@@ -182,7 +214,7 @@ async function updateScheduledMeetup(message, args, {force = false} = {}) {
     )
   }
   const host = getMentionedUser(originalMessage)
-  if (host.id !== message.author.id) {
+  if (!host || host.id !== message.author.id) {
     return sendBotMessageReply(
       message,
       `You cannot update a scheduled meetup you are not hosting. ${host} is the host for <${bracketlessLink}>.`,
@@ -191,8 +223,8 @@ async function updateScheduledMeetup(message, args, {force = false} = {}) {
 
   const recurring = updatedDetails.startsWith('recurring')
   const meetupDetails = updatedDetails.replace(/^recurring /, '')
-  const wasRecurring = /is hosting a recurring meetup/.test(
-    originalMessage.content,
+  const wasRecurring = originalMessage.content.includes(
+    'is hosting a recurring meetup',
   )
 
   if (!force) {
@@ -229,7 +261,7 @@ async function updateScheduledMeetup(message, args, {force = false} = {}) {
 }
 
 meetup.description = 'Enable users to start and schedule meetups'
-meetup.help = message =>
+meetup.help = (message: TDiscord.Message) =>
   sendBotMessageReply(
     message,
     `
@@ -262,4 +294,4 @@ NOTE: If you just want to test things out and not notify people, include the tex
     `.trim(),
   )
 
-module.exports = meetup
+export {meetup}

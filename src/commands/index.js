@@ -1,5 +1,5 @@
 const {commandRegex, getRole, getMember} = require('./utils')
-const commands = require('./commands')
+const {default: commands} = require('./commands')
 
 function handleNewMessage(message) {
   const {command, args} = message.content.match(commandRegex)?.groups ?? {}

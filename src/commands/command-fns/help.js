@@ -4,7 +4,7 @@ const {getCommandArgs, sendBotMessageReply} = require('../utils')
 
 async function help(message) {
   const args = getCommandArgs(message.content)
-  const commands = require('../commands')
+  const {default: commands} = require('../commands')
   const [arg1] = args.split(' ')
   const commandFn = commands[arg1]
   if (commandFn) {

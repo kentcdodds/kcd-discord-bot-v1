@@ -183,11 +183,11 @@ function getMentionedUser(
 }
 
 const timeToMs = {
-  seconds: t => t * 1000,
-  minutes: t => t * 1000 * 60,
-  hours: t => t * 1000 * 60 * 60,
-  days: t => t * 1000 * 60 * 60 * 24,
-  weeks: t => t * 1000 * 60 * 60 * 24 * 7,
+  seconds: (t: number) => t * 1000,
+  minutes: (t: number) => t * 1000 * 60,
+  hours: (t: number) => t * 1000 * 60 * 60,
+  days: (t: number) => t * 1000 * 60 * 60 * 24,
+  weeks: (t: number) => t * 1000 * 60 * 60 * 24 * 7,
 }
 
 async function sendSelfDestructMessage(
@@ -208,12 +208,18 @@ _This message will self-destruct in about ${time} ${units}_
 }
 
 function getSelfDestructTime(messageContent: string) {
-  const match = messageContent.match(
-    /self-destruct in about (?<time>\d+) (?<units>seconds|minutes|hours|days|weeks)/i,
+  const supportedUnits = Object.keys(timeToMs).join('|')
+  const regex = new RegExp(
+    `self-destruct in about (?<time>\\d+) (?<units>${supportedUnits})`,
+    'i',
   )
+  const match = messageContent.match(regex)
   if (!match) return null
-  const {units, time} = match.groups as {time: string; units: string}
-  return timeToMs[units]?.(time) ?? 0
+  const {units, time} = match.groups as {
+    time: string
+    units: keyof typeof timeToMs
+  }
+  return timeToMs[units](Number(time))
 }
 
 async function sendBotMessageReply(msg: TDiscord.Message, reply: string) {

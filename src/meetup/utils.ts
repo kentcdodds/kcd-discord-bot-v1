@@ -1,11 +1,12 @@
 import type * as TDiscord from 'discord.js'
 import * as Discord from 'discord.js'
 import {
-  getChannel,
   getTextChannel,
   meetupChannelPrefix,
   listify,
   typedBoolean,
+  rollbar,
+  getCategoryChannel,
 } from '../utils'
 
 function getScheduledMeetupsChannel(guild: TDiscord.Guild | null) {
@@ -51,10 +52,10 @@ async function getFollowers(
 }
 
 type StartMeetupOptions = {
-  host: TDiscord.GuildMember
+  host: TDiscord.GuildMember | null
   meetupDetails: string
   createVoiceChannel: boolean
-  notificationUsers: Array<TDiscord.GuildMember>
+  notificationUsers?: Array<TDiscord.GuildMember>
 }
 
 async function startMeetup({
@@ -63,15 +64,16 @@ async function startMeetup({
   createVoiceChannel,
   notificationUsers = [],
 }: StartMeetupOptions) {
+  if (!host) {
+    rollbar.warn('Trying to start a meetup without a host')
+    return
+  }
   const subject = getMeetupSubject(meetupDetails) ?? 'Unknown'
   if (subject === 'Unknown') {
     console.error(`Could not get a subject from ${meetupDetails}`)
   }
   if (createVoiceChannel) {
-    const meetupCategory = getChannel(host.guild, {
-      name: 'meetups',
-      type: 'category',
-    })
+    const meetupCategory = getCategoryChannel(host.guild, 'meetups')
 
     await host.guild.channels.create(
       `${meetupChannelPrefix}${host.nickname} "${subject}"`.slice(0, 100),
@@ -90,9 +92,7 @@ async function startMeetup({
       },
     )
   }
-  const meetupNotifications = getChannel(host.guild, {
-    name: 'meetup-notifications',
-  })
+  const meetupNotifications = getTextChannel(host.guild, 'meetup-notifications')
   if (!meetupNotifications) return
 
   const testing = meetupDetails.includes('TESTING')

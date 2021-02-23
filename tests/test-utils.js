@@ -42,6 +42,11 @@ async function createChannels(client, guild) {
   })
   guild.channels.cache.set(onBoardingCategory.id, onBoardingCategory)
 
+  const meetupsCategory = await guild.channels.create('Meetups', {
+    type: 'CATEGORY',
+  })
+  guild.channels.cache.set(meetupsCategory.id, meetupsCategory)
+
   const introductionChannel = await guild.channels.create('👶-introductions')
   guild.channels.cache.set(introductionChannel.id, introductionChannel)
 

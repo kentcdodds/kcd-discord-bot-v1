@@ -80,8 +80,8 @@ function getCategory(guild, {name}) {
   )
 }
 
-const prodRegex = /^\?(?<command>\S+?)($| )(?<args>(.|\n)*)/
-const devRegex = /^~(?<command>\S+?)($| )(?<args>(.|\n)*)/
+const prodRegex = /^\?(?<command>\S+?)($| +)(?<args>(.|\n)*)/
+const devRegex = /^~(?<command>\S+?)($| +)(?<args>(.|\n)*)/
 const commandPrefix =
   process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'test'
     ? '?'

@@ -13,7 +13,7 @@ const {
   getFollowers,
 } = require('../../meetup/utils')
 
-const invalidCommandMessage = `The command is not valid. use \`${commandPrefix}meetup help\` to know more about the command.`
+const invalidCommandMessage = `The command is not valid. Use \`${commandPrefix}meetup help\` to know more about the command.`
 
 const meetupDetailsLengthLimit = 800
 const sendMeetupDetailsTooLongError = (message, meetupDetails) =>
@@ -28,6 +28,9 @@ async function meetup(message) {
   switch (command) {
     case 'schedule': {
       return scheduleMeetup(message, args)
+    }
+    case 'force-update': {
+      return updateScheduledMeetup(message, args, {force: true})
     }
     case 'update': {
       return updateScheduledMeetup(message, args)
@@ -162,7 +165,7 @@ I will notify you when ${host} starts the meetup.
   }
 }
 
-async function updateScheduledMeetup(message, args) {
+async function updateScheduledMeetup(message, args, {force = false} = {}) {
   const [link, ...rest] = args.split(' ')
   // Some folks use the angle brackets (`<link>` syntax) to avoid discord expanding the link
   const bracketlessLink = link.replace(/<|>/g, '')
@@ -188,6 +191,23 @@ async function updateScheduledMeetup(message, args) {
 
   const recurring = updatedDetails.startsWith('recurring')
   const meetupDetails = updatedDetails.replace(/^recurring /, '')
+  const wasRecurring = /is hosting a recurring meetup/.test(
+    originalMessage.content,
+  )
+
+  if (!force) {
+    if (!recurring && wasRecurring) {
+      return sendBotMessageReply(
+        message,
+        `The original meetup was recurring, but you're updating it to not be recurring. This is a common mistake. If you're sure this is the change you want, use \`?meetup force-update\` rather than \`?meetup update\``,
+      )
+    } else if (recurring && !wasRecurring) {
+      return sendBotMessageReply(
+        message,
+        `The original meetup was not recurring, but you're updating it to be recurring. This is a common mistake. If you're sure this is the change you want, use \`?meetup force-update\` rather than \`?meetup update\``,
+      )
+    }
+  }
 
   if (!/^"(.+)"/i.test(meetupDetails)) {
     return sendBotMessageReply(

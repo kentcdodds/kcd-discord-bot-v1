@@ -591,3 +591,84 @@ React with ✋ to be notified when it starts.
     `.trim(),
   )
 })
+
+test(`users can't update a recurring meetup to a one-time meetup without force-update`, async () => {
+  const {
+    scheduledMeetupsChannel,
+    kody,
+    createMessage,
+    botChannel,
+  } = await setup()
+
+  const isRecurring = msg => msg.includes('recurring')
+
+  await meetup(
+    createMessage(
+      `?meetup schedule recurring "Migrating to Tailwind"`,
+      kody.user,
+    ),
+  )
+  const scheduledMessage = scheduledMeetupsChannel.lastMessage
+  let lastContent = scheduledMessage.content
+  expect(isRecurring(lastContent)).toBe(true)
+
+  await meetup(
+    createMessage(
+      `?meetup update <${getMessageLink(
+        scheduledMessage,
+      )}> "Migrating to Tailwind"`,
+      kody.user,
+    ),
+  )
+
+  expect(botChannel.lastMessage.content).toMatchInlineSnapshot(
+    `"The original meetup was recurring, but you're updating it to not be recurring. This is a common mistake. If you're sure this is the change you want, use \`?meetup force-update\` rather than \`?meetup update\`"`,
+  )
+  // no change to the scheduled meetup message
+  expect(scheduledMeetupsChannel.lastMessage.content).toBe(lastContent)
+  expect(isRecurring(lastContent)).toBe(true)
+
+  // force the update
+  await meetup(
+    createMessage(
+      `?meetup force-update <${getMessageLink(
+        scheduledMessage,
+      )}> "Migrating to Tailwind"`,
+      kody.user,
+    ),
+  )
+  // update happened
+  expect(scheduledMeetupsChannel.lastMessage.content).not.toBe(lastContent)
+  lastContent = scheduledMeetupsChannel.lastMessage.content
+  expect(isRecurring(lastContent)).toBe(false)
+
+  // try to change to recurring without force
+  await meetup(
+    createMessage(
+      `?meetup update <${getMessageLink(
+        scheduledMessage,
+      )}> recurring "Migrating to Tailwind"`,
+      kody.user,
+    ),
+  )
+  // no change to the scheduled meetup message
+  expect(scheduledMeetupsChannel.lastMessage.content).toBe(lastContent)
+  expect(isRecurring(lastContent)).toBe(false)
+
+  expect(botChannel.lastMessage.content).toMatchInlineSnapshot(
+    `"The original meetup was not recurring, but you're updating it to be recurring. This is a common mistake. If you're sure this is the change you want, use \`?meetup force-update\` rather than \`?meetup update\`"`,
+  )
+  // try to change to recurring with force
+  await meetup(
+    createMessage(
+      `?meetup force-update <${getMessageLink(
+        scheduledMessage,
+      )}> recurring "Migrating to Tailwind"`,
+      kody.user,
+    ),
+  )
+  // update happened
+  expect(scheduledMeetupsChannel.lastMessage.content).not.toBe(lastContent)
+  lastContent = scheduledMeetupsChannel.lastMessage.content
+  expect(isRecurring(lastContent)).toBe(true)
+})

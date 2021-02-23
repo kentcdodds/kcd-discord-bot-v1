@@ -541,12 +541,7 @@ React with ✋ to be notified when it starts.
 })
 
 test('users can update scheduled recurring meetups', async () => {
-  const {
-    scheduledMeetupsChannel,
-    kody,
-    botChannel,
-    createMessage,
-  } = await setup()
+  const {scheduledMeetupsChannel, kody, createMessage} = await setup()
 
   await meetup(
     createMessage(
@@ -565,7 +560,6 @@ test('users can update scheduled recurring meetups', async () => {
     ),
   )
 
-  console.log(botChannel.lastMessage.content)
   // did not create a new message, just updated the old one
   expect(scheduledMeetupsChannel.messages.cache.size).toBe(1)
   expect(scheduledMessage).toBe(scheduledMeetupsChannel.lastMessage)

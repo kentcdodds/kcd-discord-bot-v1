@@ -98,6 +98,8 @@ const handlers = [
       if (!message) return res(ctx.json([]))
 
       const messageReaction = DiscordManager.reactions[message.id]?.[emoji.name]
+      if (!messageReaction) return res(ctx.json([]))
+
       const reactingUsers = Array.from(messageReaction.users.cache.values())
       return res(ctx.json(reactingUsers))
     },

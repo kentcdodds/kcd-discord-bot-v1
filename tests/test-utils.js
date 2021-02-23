@@ -201,18 +201,21 @@ async function makeFakeClient() {
     reactionName,
     emoji = guild.emojis.cache.find(({name}) => reactionName === name),
   } = {}) {
-    const result = client.actions.MessageReactionAdd.handle({
+    const handleData = {
       channel_id: message.channel.id,
       message_id: message.id,
       user_id: user.id,
       emoji: {name: emoji.name, id: emoji.id},
-    })
+    }
+    const result = client.actions.MessageReactionAdd.handle(handleData)
     if (result.message) {
       if (!DiscordManager.reactions[result.message.id]) {
         DiscordManager.reactions[result.message.id] = {}
       }
       const msgReactions = DiscordManager.reactions[result.message.id]
       msgReactions[result.reaction.emoji.name] = result.reaction
+    } else {
+      console.warn('reactFromUser did not work', handleData)
     }
     return result
   }

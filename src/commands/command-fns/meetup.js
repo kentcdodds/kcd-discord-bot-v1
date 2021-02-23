@@ -179,7 +179,7 @@ async function updateScheduledMeetup(message, args) {
   const recurring = updatedDetails.startsWith('recurring')
   const meetupDetails = updatedDetails.replace(/^recurring /, '')
 
-  if (!/^"(.+)"/i.test(updatedDetails)) {
+  if (!/^"(.+)"/i.test(meetupDetails)) {
     return sendBotMessageReply(
       message,
       'Make sure to include the subject of your meetup in quotes. Send `?meetup help` for more info.',

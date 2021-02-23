@@ -539,3 +539,43 @@ React with ✋ to be notified when it starts.
     `.trim(),
   )
 })
+
+test('users can update scheduled recurring meetups', async () => {
+  const {
+    scheduledMeetupsChannel,
+    kody,
+    botChannel,
+    createMessage,
+  } = await setup()
+
+  await meetup(
+    createMessage(
+      `?meetup schedule recurring "Migrating to Tailwind"`,
+      kody.user,
+    ),
+  )
+  const scheduledMessage = scheduledMeetupsChannel.lastMessage
+
+  await meetup(
+    createMessage(
+      `?meetup update <${getMessageLink(
+        scheduledMessage,
+      )}> recurring "Migrating to Tailwind" more useful info`,
+      kody.user,
+    ),
+  )
+
+  console.log(botChannel.lastMessage.content)
+  // did not create a new message, just updated the old one
+  expect(scheduledMeetupsChannel.messages.cache.size).toBe(1)
+  expect(scheduledMessage).toBe(scheduledMeetupsChannel.lastMessage)
+  expect(scheduledMessage.content).toBe(
+    `
+📣 ${kody} is hosting a recurring meetup:
+
+"Migrating to Tailwind" more useful info
+
+React with ✋ to be notified when it starts.
+    `.trim(),
+  )
+})

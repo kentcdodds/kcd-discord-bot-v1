@@ -1,5 +1,5 @@
 const {rest} = require('msw')
-const {SnowflakeUtil, Constants} = require('discord.js')
+const {SnowflakeUtil, Constants, Util} = require('discord.js')
 const {DiscordManager} = require('test-utils')
 
 const handlers = [
@@ -89,12 +89,30 @@ const handlers = [
   rest.get(
     '*/api/:apiVersion/channels/:channelId/messages/:messageId/reactions/:reaction',
     (req, res, ctx) => {
-      return res(ctx.json([]))
+      const {channelId, messageId, reaction} = req.params
+      const emoji = Util.parseEmoji(reaction)
+      const {guild_id} = DiscordManager.channels[channelId]
+      const guild = DiscordManager.guilds[guild_id]
+      const channel = guild.channels.cache.get(channelId)
+      const message = channel.messages.cache.get(messageId)
+      if (!message) return res(ctx.json([]))
+
+      const messageReaction = DiscordManager.reactions[message.id]?.[emoji.name]
+      const reactingUsers = Array.from(messageReaction.users.cache.values())
+      return res(ctx.json(reactingUsers))
     },
   ),
   rest.delete(
     '*/api/:apiVersion/channels/:channelId/messages/:messageId/reactions/:reaction',
     (req, res, ctx) => {
+      const {channelId, messageId, reaction} = req.params
+      const emoji = Util.parseEmoji(reaction)
+      const {guild_id} = DiscordManager.channels[channelId]
+      const guild = DiscordManager.guilds[guild_id]
+      const channel = guild.channels.cache.get(channelId)
+      const message = channel.messages.cache.get(messageId)
+      delete DiscordManager.reactions[message.id]?.[emoji.name]
+      message.reactions.cache.delete(emoji.name)
       return res(ctx.json([]))
     },
   ),

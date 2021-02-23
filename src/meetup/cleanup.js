@@ -27,8 +27,8 @@ async function hasHostReaction(message, host, emoji) {
 }
 
 async function getNotificationUsers(message) {
-  const notificationReactionMessage = message.reactions.cache.get('✋')
-  return Array.from((await notificationReactionMessage.users.fetch()).values())
+  const notificationMessageReaction = message.reactions.cache.get('✋')
+  return Array.from((await notificationMessageReaction.users.fetch()).values())
     .filter(user => !user.bot)
     .map(user => message.guild.members.cache.get(user.id))
 }

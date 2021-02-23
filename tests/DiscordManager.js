@@ -7,9 +7,12 @@ const DiscordManager = {
   channels: {},
   guilds: {},
   clients: [],
+  // map of message IDs to a map of reaction emoji names to the MessageReaction
+  reactions: {},
   cleanup: () => {
     DiscordManager.channels = {}
     DiscordManager.guilds = {}
+    DiscordManager.reactions = {}
     DiscordManager.clients.forEach(client => client.destroy())
   },
 }

@@ -160,16 +160,17 @@ async function makeFakeClient() {
   await createEmojis(guild)
 
   async function createUser(username, options = {}) {
-    const newUser = new Discord.GuildMember(client, {nick: username}, guild)
-    newUser.user = new Discord.User(client, {
+    const newMember = new Discord.GuildMember(client, {nick: username}, guild)
+    newMember.user = new Discord.User(client, {
       id: SnowflakeUtil.generate(),
       username,
       discriminator: client.users.cache.size,
       ...options,
     })
-    guild.members.cache.set(newUser.id, newUser)
-    await newUser.roles.add(memberRole)
-    return newUser
+    guild.members.cache.set(newMember.id, newMember)
+    client.users.cache.set(newMember.id, newMember.user)
+    await newMember.roles.add(memberRole)
+    return newMember
   }
 
   const kody = await createUser('kody')
@@ -200,23 +201,27 @@ async function makeFakeClient() {
     reactionName,
     emoji = guild.emojis.cache.find(({name}) => reactionName === name),
   } = {}) {
-    let re = message.reactions.cache.get(emoji.name)
-    if (!re) {
-      re = {
-        message,
-        emoji: {name: emoji.name},
-        users: {cache: new Discord.Collection()},
+    const result = client.actions.MessageReactionAdd.handle({
+      channel_id: message.channel.id,
+      message_id: message.id,
+      user_id: user.id,
+      emoji: {name: emoji.name, id: emoji.id},
+    })
+    if (result.message) {
+      if (!DiscordManager.reactions[result.message.id]) {
+        DiscordManager.reactions[result.message.id] = {}
       }
-      message.reactions.cache.set(emoji.name, re)
+      const msgReactions = DiscordManager.reactions[result.message.id]
+      msgReactions[result.reaction.emoji.name] = result.reaction
     }
-    re.users.cache.set(user.id, user)
-    return message
+    return result
   }
 
   function cleanup() {
     DiscordManager.cleanup()
   }
   DiscordManager.clients.push(client)
+
   return {
     client,
     guild,

@@ -92,19 +92,9 @@ const getCategoryChannel = (guild: TDiscord.Guild | null, name: string) =>
  * The name will be lowercased and the first role with a lowercased name that
  * equals it will be returned.
  */
-function getRole(guild: TDiscord.Guild, {name}: {name: string}) {
+function getRole(guild: TDiscord.Guild, name: string) {
   return guild.roles.cache.find(
     r => r.name.toLowerCase() === name.toLowerCase(),
-  )
-}
-
-/**
- * The name will be lowercased and the first category with a lowercased name that
- * equals it will be returned.
- */
-function getCategory(guild: TDiscord.Guild, {name}: {name: string}) {
-  return guild.channels.cache.find(
-    c => c.type === 'category' && c.name.toLowerCase() === name.toLowerCase(),
   )
 }
 
@@ -276,7 +266,6 @@ export {
   getTextChannel,
   getVoiceChannel,
   getCategoryChannel,
-  getCategory,
   getRole,
   commandPrefix,
   commandRegex,

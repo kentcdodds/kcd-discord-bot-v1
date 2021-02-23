@@ -1,7 +1,11 @@
-const {commandRegex, getRole, getMember} = require('./utils')
-const {default: commands} = require('./commands')
+import type * as TDiscord from 'discord.js'
+import {commandRegex, getRole, getMember} from './utils'
+import commands from './commands'
 
-function handleNewMessage(message) {
+function handleNewMessage(message: TDiscord.Message) {
+  const guild = message.guild
+  if (!guild) return
+
   const {command, args} = message.content.match(commandRegex)?.groups ?? {}
 
   if (!command) return
@@ -19,10 +23,12 @@ function handleNewMessage(message) {
     }
   }
 
-  const member = getMember(message.guild, message.author.id)
+  const member = getMember(guild, message.author.id)
   if (!member) return
 
-  const memberRole = getRole(message.guild, {name: 'Member'})
+  const memberRole = getRole(guild, 'Member')
+  if (!memberRole) return
+
   if (!member.roles.cache.has(memberRole.id)) {
     return message.channel.send(
       `
@@ -34,8 +40,11 @@ Sorry, only members can issue commands. Please, finish the onboarding process, t
   return commandFn(message)
 }
 
-function setup(client) {
-  client.on('message', handleNewMessage)
+function setup(client: TDiscord.Client) {
+  client.on('message', msg => {
+    // eslint-disable-next-line no-void
+    void handleNewMessage(msg)
+  })
 }
 
-module.exports = {handleNewMessage, setup}
+export {handleNewMessage, setup}

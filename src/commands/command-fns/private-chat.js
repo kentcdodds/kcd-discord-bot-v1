@@ -4,7 +4,7 @@ const {
   privateChannelPrefix,
   listify,
   sendBotMessageReply,
-  getCategory,
+  getCategoryChannel,
   getMember,
   getCommandArgs,
   timeToMs,
@@ -60,7 +60,7 @@ async function createChat(message) {
     ({name}) => name === '@everyone',
   )
 
-  const categoryPrivateChat = getCategory(message.guild, {name: 'private chat'})
+  const categoryPrivateChat = getCategoryChannel(message.guild, 'private chat')
 
   const allActivePrivateChannels = message.guild.channels.cache.filter(
     channel =>
@@ -193,9 +193,10 @@ function privateChat(message) {
   const [command, ...rest] = privateChatArg.split(' ')
   if (command) {
     if (command in privateChatSubcommand) {
-      const categoryPrivateChat = getCategory(message.guild, {
-        name: 'private chat',
-      })
+      const categoryPrivateChat = getCategoryChannel(
+        message.guild,
+        'private chat',
+      )
       if (message.channel.parent?.id === categoryPrivateChat.id) {
         return privateChatSubcommand[command](message, ...rest)
       } else {

@@ -1,6 +1,8 @@
 const Discord = require('discord.js')
 const {makeFakeClient} = require('test-utils')
-const help = require('../help')
+const {
+  default: {help},
+} = require('../../commands')
 
 test('prints help for all commands', async () => {
   const {client, defaultChannels, kody} = await makeFakeClient()

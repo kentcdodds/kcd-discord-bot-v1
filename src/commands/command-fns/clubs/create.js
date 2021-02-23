@@ -145,7 +145,7 @@ Please fix the ${problems} above and try again. Please be sure to follow the tem
 
   // we're good! Let's make this thing!
   const openClubsChannel = getChannel(member.guild, {name: 'open-clubs'})
-  const captainsRole = getRole(member.guild, {name: 'Club Captains'})
+  const captainsRole = getRole(member.guild, 'Club Captains')
 
   const isAlreadyACaptain = member.roles.cache.has(captainsRole.id)
   if (!isAlreadyACaptain) {

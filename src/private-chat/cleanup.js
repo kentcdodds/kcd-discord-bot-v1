@@ -1,5 +1,5 @@
 /* eslint-disable no-await-in-loop */
-const {getSend, sleep, getCategory, timeToMs} = require('../utils')
+const {getSend, sleep, getCategoryChannel, timeToMs} = require('../utils')
 
 const warningStepMinute = 5
 const defaultLifeTimeMinute = 60
@@ -9,7 +9,7 @@ const eolReason = 'deleted for end of life 👻'
 const inactivityReason = 'deleted for inactivity 🚶‍♀️'
 
 async function cleanup(guild) {
-  const categoryPrivateChat = getCategory(guild, {name: 'private chat'})
+  const categoryPrivateChat = getCategoryChannel(guild, 'private chat')
 
   const allActivePrivateChannels = Array.from(
     guild.channels.cache

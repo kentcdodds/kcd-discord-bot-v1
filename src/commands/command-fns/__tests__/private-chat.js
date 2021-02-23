@@ -2,7 +2,7 @@ const Discord = require('discord.js')
 const {SnowflakeUtil} = require('discord.js')
 const {makeFakeClient} = require('test-utils')
 const privateChat = require('../private-chat')
-const {getCategory, timeToMs} = require('../../utils')
+const {getCategoryChannel, timeToMs} = require('../../utils')
 const {cleanup} = require('../../../private-chat/cleanup')
 
 async function createPrivateChat(mentionedUsernames = []) {
@@ -13,7 +13,7 @@ async function createPrivateChat(mentionedUsernames = []) {
     sendFromUser,
     createUser,
   } = await makeFakeClient()
-  const categoryPrivateChat = getCategory(guild, {name: 'private chat'})
+  const categoryPrivateChat = getCategoryChannel(guild, 'private chat')
   const sentMessageUser = await createUser('sentMessageUser')
 
   const mentionedUsers = (

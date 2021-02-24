@@ -2,9 +2,10 @@
 const path = require('path')
 const Discord = require('discord.js')
 const {cleanupGuildOnInterval, getChannel} = require('./utils')
+const {default: rollbar} = require('./rollbar')
 
 require('dotenv').config({
-  path: path.join(__dirname, '..', `/.env.${process.env.NODE_ENV || 'local'}`),
+  path: path.join(__dirname, '..', `/.env.local`),
 })
 
 const {onboarding, commands, clubApplication, admin} = require('.')
@@ -12,6 +13,7 @@ const {onboarding, commands, clubApplication, admin} = require('.')
 const client = new Discord.Client()
 
 console.log('logging in')
+rollbar.log('hello world')
 client.login(process.env.DISCORD_BOT_TOKEN)
 
 const getKcdGuild = () => client.guilds.cache.find(({name}) => name === 'KCD')

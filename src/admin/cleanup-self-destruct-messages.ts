@@ -1,13 +1,22 @@
-const {cleanupGuildOnInterval, getSelfDestructTime} = require('../utils')
+import type * as TDiscord from 'discord.js'
+import {
+  cleanupGuildOnInterval,
+  getSelfDestructTime,
+  isTextChannel,
+} from '../utils'
 
-async function cleanup(guild) {
-  const channels = guild.channels.cache.filter(ch => ch.type === 'text')
+async function cleanup(guild: TDiscord.Guild) {
+  const channels = Array.from(guild.channels.cache.values()).filter(
+    isTextChannel,
+  )
+  if (!guild.client.user) return
+
   const botId = guild.client.user.id
   const promises = []
 
-  for (const channel of Array.from(channels.values())) {
+  for (const channel of channels) {
     for (const message of Array.from(channel.messages.cache.values())) {
-      if (message?.author?.id === botId) {
+      if (message.author.id === botId) {
         const timeToSelfDestruct = getSelfDestructTime(message.content)
         if (
           typeof timeToSelfDestruct === 'number' &&
@@ -26,13 +35,15 @@ async function cleanup(guild) {
   return Promise.all(promises)
 }
 
-async function setup(client) {
+async function setup(client: TDiscord.Client) {
   // prime the message cache for all channels
   // this is important for situations when the bot gets restarted after
   // it had just sent a self-destruct chat
   await Promise.all(
     Array.from(client.guilds.cache.values()).map(async guild => {
-      const channels = guild.channels.cache.filter(ch => ch.type === 'text')
+      const channels = Array.from(guild.channels.cache.values()).filter(
+        isTextChannel,
+      )
       return Promise.all(
         Array.from(channels.values()).map(channel => {
           return channel.messages.fetch({limit: 30})
@@ -44,4 +55,4 @@ async function setup(client) {
   cleanupGuildOnInterval(client, guild => cleanup(guild), 5000)
 }
 
-module.exports = {setup}
+export {setup}

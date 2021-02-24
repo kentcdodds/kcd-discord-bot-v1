@@ -1,13 +1,15 @@
-const isMEE6Bot = member =>
-  member && member.user.bot && member.user.username.includes('MEE6')
+import type * as TDiscord from 'discord.js'
 
-async function pingAboutMissingAvatar(message) {
+const isMEE6Bot = (member: TDiscord.GuildMember | null | undefined) =>
+  member?.user.bot && member.user.username.includes('MEE6')
+
+async function pingAboutMissingAvatar(message: TDiscord.Message) {
   const mee6Bot = message.member
   if (!isMEE6Bot(mee6Bot)) return // only process the MEE6 bot
   if (!message.content.includes('you just advanced to')) return // only bug them when they get a rank upgrade
 
-  const member = message.mentions.members.first()
-  if (member.user.avatar) return // if they have an avatar then they're good
+  const member = message.mentions.members?.first()
+  if (!member || member.user.avatar) return // if they have an avatar then they're good
 
   await message.channel.send(
     `
@@ -20,4 +22,4 @@ If you don't, I'll bug you about it every time you level-up 😈 So you may as w
   )
 }
 
-module.exports = {pingAboutMissingAvatar}
+export {pingAboutMissingAvatar}

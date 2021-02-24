@@ -2,7 +2,7 @@ const Discord = require('discord.js')
 const {rest} = require('msw')
 const {server} = require('server')
 const {makeFakeClient} = require('test-utils')
-const blog = require('../blog')
+const {blog} = require('../blog')
 
 const setup = async command => {
   const {client, defaultChannels, kody, cleanup} = await makeFakeClient()

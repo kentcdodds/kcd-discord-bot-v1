@@ -1,12 +1,24 @@
 // Command purpose:
 // provide information about the bot itself
-
-const redent = require('redent')
-const {sendBotMessageReply} = require('../utils')
+import type * as TDiscord from 'discord.js'
+import redent from 'redent'
+import {sendBotMessageReply} from '../utils'
 
 const startDate = new Date()
 
-let buildInfo = {}
+type BuildInfo = {
+  buildTime?: number
+  commit?: {
+    isDeployCommit: 'Unknown' | true
+    sha: string
+    author: string
+    date: string
+    message: string
+    link: string
+  }
+}
+
+let buildInfo: BuildInfo = {}
 try {
   buildInfo = require('../../../build-info.json')
 } catch {
@@ -24,8 +36,8 @@ const month = day * 30
 const quarter = month * 3
 const year = day * 365.25
 
-function getAppropriateTimeframe(ms) {
-  const fix = (n, precision = 0) => Number(n.toFixed(precision))
+function getAppropriateTimeframe(ms: number) {
+  const fix = (n: number, precision = 0) => Number(n.toFixed(precision))
   const abs = Math.abs(ms)
 
   if (abs > year) return rtf.format(fix(ms / year, 2), 'year')
@@ -52,7 +64,9 @@ function getBuildTimeLine() {
 }
 
 function getStartTimeLine() {
-  const relativeStartTime = getAppropriateTimeframe(startDate - Date.now())
+  const relativeStartTime = getAppropriateTimeframe(
+    startDate.getTime() - Date.now(),
+  )
   return `Started at: ${startDate.toUTCString()} (${relativeStartTime})`
 }
 
@@ -61,7 +75,9 @@ function getCommitLine() {
   if (!commit) return `Commit: info unavailable`
 
   const commitDate = new Date(commit.date)
-  const relativeCommitDate = getAppropriateTimeframe(commitDate - Date.now())
+  const relativeCommitDate = getAppropriateTimeframe(
+    commitDate.getTime() - Date.now(),
+  )
 
   return `
 Commit:
@@ -72,7 +88,7 @@ Commit:
   `.trim()
 }
 
-async function info(message) {
+async function info(message: TDiscord.Message) {
   const result = await sendBotMessageReply(
     message,
     `
@@ -88,4 +104,4 @@ ${redent(
 }
 info.description = 'Gives information about the bot (deploy date etc.)'
 
-module.exports = info
+export {info}

@@ -18,6 +18,17 @@ const meetupChannelPrefix =
 
 const isWelcomeChannel = (ch: TDiscord.TextChannel) =>
   ch.name.startsWith(welcomeChannelPrefix)
+
+const isTextChannel = (ch: TDiscord.Channel): ch is TDiscord.TextChannel =>
+  ch.type === 'text'
+
+const isVoiceChannel = (ch: TDiscord.Channel): ch is TDiscord.VoiceChannel =>
+  ch.type === 'voice'
+
+const isCategoryChannel = (
+  ch: TDiscord.Channel,
+): ch is TDiscord.CategoryChannel => ch.type === 'category'
+
 const getSend = (channel: TDiscord.TextChannel) => async (message: string) => {
   if (!message) {
     throw new Error('Attempting to call send with no message!')
@@ -282,5 +293,9 @@ export {
   privateChannelPrefix,
   meetupChannelPrefix,
   getMentionedUser,
+  sendSelfDestructMessage,
   timeToMs,
+  isTextChannel,
+  isVoiceChannel,
+  isCategoryChannel,
 }

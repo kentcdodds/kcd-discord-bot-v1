@@ -33,7 +33,7 @@ afterEach(() => {
 })
 
 test('prints useful info', async () => {
-  const info = require('../info')
+  const {info} = require('../info')
   const {client, defaultChannels, kody} = await makeFakeClient()
   const message = new Discord.Message(
     client,

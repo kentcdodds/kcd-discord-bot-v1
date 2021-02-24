@@ -1,58 +1,83 @@
 // Command purpose:
 // this command is just to make sure the bot is running
-const {MessageMentions} = require('discord.js')
-const leven = require('leven')
-const got = require('got')
-const {matchSorter} = require('match-sorter')
-const {
+import type * as TDiscord from 'discord.js'
+import {MessageMentions} from 'discord.js'
+import leven from 'leven'
+import got from 'got'
+import {matchSorter} from 'match-sorter'
+import {
   getCommandArgs,
   listify,
   getMember,
   rollbar,
   sendBotMessageReply,
-} = require('../utils')
+  sendSelfDestructMessage,
+} from '../utils'
 
-const kifCache = {
-  kifs: null,
-  kifMap: null,
-  kifKeysWithoutEmoji: null,
+type KifData = {
+  aliases?: Array<string>
+  emojiAliases?: Array<string>
+  gif: string
+}
+const kifCache: {
+  initialized: boolean
+  kifs: Record<string, KifData>
+  kifMap: Record<string, string>
+  kifKeysWithoutEmoji: Array<string>
+} = {
+  initialized: false,
+  kifs: {},
+  kifMap: {},
+  kifKeysWithoutEmoji: [],
 }
 
-async function getKifInfo({force = false} = {}) {
-  if (kifCache.kifs && !force) return kifCache
+type KifsRawData = {content: string; encoding: 'utf8'}
 
-  const kifs = await got(
+async function getKifInfo({force = false} = {}) {
+  if (kifCache.initialized && !force) return kifCache
+
+  const kifs = (await got(
     'https://api.github.com/repos/kentcdodds/kifs/contents/kifs.json',
   )
     .json()
     .then(
-      data => JSON.parse(Buffer.from(data.content, data.encoding).toString()),
-      e =>
+      data => {
+        const kifsData = data as KifsRawData
+        return JSON.parse(
+          Buffer.from(kifsData.content, kifsData.encoding).toString(),
+        )
+      },
+      (e: unknown) =>
         rollbar.error(
           `There was a problem getting kifs info from GitHub:`,
-          e.message,
+          (e as Error).message,
         ),
-    )
+    )) as Record<string, KifData>
   const kifKeysWithoutEmoji = []
-  const kifMap = {}
+  const kifMap: typeof kifCache['kifMap'] = {}
   for (const kifKey of Object.keys(kifs)) {
     const {gif, aliases = [], emojiAliases = []} = kifs[kifKey]
     kifMap[kifKey.toLowerCase()] = gif
     kifKeysWithoutEmoji.push(kifKey, ...aliases)
     for (const alias of [...aliases, ...emojiAliases]) {
       if (kifMap[alias]) {
-        console.error(`Cannot have two kifs with the same alias: ${alias}`)
+        rollbar.error(`Cannot have two kifs with the same alias: ${alias}`)
       }
       kifMap[alias] = gif
     }
   }
   kifKeysWithoutEmoji.sort()
 
-  Object.assign(kifCache, {kifs, kifMap, kifKeysWithoutEmoji})
+  Object.assign(kifCache, {
+    initialized: true,
+    kifs,
+    kifMap,
+    kifKeysWithoutEmoji,
+  })
   return kifCache
 }
 
-async function getCloseMatches(search) {
+async function getCloseMatches(search: string) {
   const {kifKeysWithoutEmoji} = await getKifInfo()
   return Array.from(
     new Set([
@@ -71,12 +96,12 @@ async function getCloseMatches(search) {
   ).slice(0, 6)
 }
 
-function getKifReply(message, kif) {
+function getKifReply(message: TDiscord.Message, kif: string) {
   const mentionedMembersNicknames = Array.from(
-    message.mentions.members.values(),
+    message.mentions.members?.values() ?? {length: 0},
   ).map(m => m.displayName)
   const from = `From: ${
-    getMember(message.guild, message.author.id).displayName
+    getMember(message.guild, message.author.id)?.displayName ?? 'Unknown'
   }`
   const to = mentionedMembersNicknames.length
     ? `To: ${listify(mentionedMembersNicknames)}`
@@ -84,7 +109,7 @@ function getKifReply(message, kif) {
   return [from, to, kif].filter(Boolean).join('\n')
 }
 
-async function handleKifCommand(message) {
+async function handleKifCommand(message: TDiscord.Message) {
   const args = getCommandArgs(message.content)
 
   const kifArg = args
@@ -114,7 +139,8 @@ async function handleKifCommand(message) {
         stringify: JSON.stringify,
       })}?`
     : ''
-  return message.channel.send(
+  return sendSelfDestructMessage(
+    message.channel as TDiscord.TextChannel,
     `
 Couldn't find a kif for: "${kifArg}"
 
@@ -124,7 +150,7 @@ ${didYouMean}
   )
 }
 handleKifCommand.description = `Send a KCD gif (send \`?help kif\` for more info)`
-async function help(message) {
+async function help(message: TDiscord.Message) {
   return sendBotMessageReply(
     message,
     `
@@ -137,4 +163,4 @@ async function help(message) {
 }
 handleKifCommand.help = help
 
-module.exports = handleKifCommand
+export {handleKifCommand as kif}

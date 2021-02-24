@@ -3,6 +3,7 @@ module.exports = {
   rules: {
     'babel/camelcase': 'off',
     'no-console': 'off',
+    'no-void': 'off',
     'consistent-return': 'off',
     'require-await': 'off',
     'max-statements': ['error', 150],
@@ -12,5 +13,6 @@ module.exports = {
     '@typescript-eslint/prefer-regexp-exec': 'off',
     '@typescript-eslint/restrict-template-expressions': 'off',
     '@typescript-eslint/no-base-to-string': 'off',
+    '@typescript-eslint/no-misused-promises': 'off',
   },
 }

@@ -1,20 +1,29 @@
-const got = require('got')
-const {matchSorter} = require('match-sorter')
-const {getCommandArgs, sendBotMessageReply} = require('../utils')
+import type * as TDiscord from 'discord.js'
+import got from 'got'
+import {matchSorter} from 'match-sorter'
+import {getCommandArgs, sendBotMessageReply} from '../utils'
 
-async function fetchArticles() {
+async function fetchArticles(): Promise<Array<Article>> {
   const response = await got('https://kentcdodds.com/blog.json')
 
   return JSON.parse(response.body)
 }
 
-function printArticles(articles) {
+type Article = {
+  title: string
+  categories: string
+  description: string
+  keywords: string
+  productionUrl: string
+}
+
+function printArticles(articles: Array<Article>) {
   return articles
     .map(article => `- ${article.title}\n  <${article.productionUrl}>`)
     .join('\n')
 }
 
-function searchArticles(articles, searchText) {
+function searchArticles(articles: Array<Article>, searchText: string) {
   return matchSorter(articles, searchText, {
     keys: [
       {threshold: matchSorter.rankings.MATCHES, key: 'title'},
@@ -25,13 +34,13 @@ function searchArticles(articles, searchText) {
   })
 }
 
-async function blog(message) {
+async function blog(message: TDiscord.Message) {
   const args = getCommandArgs(message.content).trim()
-  let articles
+  let articles: Array<Article>
 
   try {
     articles = await fetchArticles()
-  } catch (error) {
+  } catch {
     return message.channel.send(
       `Something went wrong retrieving the list of articles 😬. Try searching here: <https://kentcdodds.com/blog>`,
     )
@@ -85,7 +94,7 @@ ${printArticles(filteredArticles)}
   }
 }
 blog.description = `Find articles on Kent's blog: <https://kentcdodds.com/blog>`
-blog.help = message => {
+blog.help = (message: TDiscord.Message) => {
   const commandsList = [
     `- Send \`?blog last\` for the last 10 articles.`,
     `- Send \`?blog latest\` for the latest published article.`,
@@ -100,4 +109,4 @@ ${commandsList.join('\n')}
   )
 }
 
-module.exports = blog
+export {blog}

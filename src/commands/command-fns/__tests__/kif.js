@@ -1,6 +1,6 @@
 const Discord = require('discord.js')
 const {makeFakeClient} = require('test-utils')
-const kif = require('../kif')
+const {kif} = require('../kif')
 
 async function setup(content) {
   const {client, defaultChannels, kody} = await makeFakeClient()
@@ -83,7 +83,9 @@ test('suggests two items', async () => {
   expect(messages[0].content).toMatchInlineSnapshot(`
     "Couldn't find a kif for: \\"peac\\"
 
-    Did you mean \\"peace\\" or \\"peace fall\\"?"
+    Did you mean \\"peace\\" or \\"peace fall\\"?
+
+    _This message will self-destruct in about 10 seconds_"
   `)
 })
 
@@ -94,7 +96,9 @@ test('suggests several items (but no more than 6)', async () => {
   expect(messages[0].content).toMatchInlineSnapshot(`
     "Couldn't find a kif for: \\"a\\"
 
-    Did you mean \\"aw\\", \\"adorable\\", \\"agree\\", \\"agreed\\", \\"aw shucks\\", or \\"peace\\"?"
+    Did you mean \\"aw\\", \\"adorable\\", \\"agree\\", \\"agreed\\", \\"aw shucks\\", or \\"peace\\"?
+
+    _This message will self-destruct in about 10 seconds_"
   `)
 })
 
@@ -102,7 +106,9 @@ test(`says it can't find something if it can't`, async () => {
   const {messages} = await setup('?kif djskfjdlakfjewoifdjd')
 
   expect(messages).toHaveLength(1)
-  expect(messages[0].content).toMatchInlineSnapshot(
-    `"Couldn't find a kif for: \\"djskfjdlakfjewoifdjd\\""`,
-  )
+  expect(messages[0].content).toMatchInlineSnapshot(`
+    "Couldn't find a kif for: \\"djskfjdlakfjewoifdjd\\"
+
+    _This message will self-destruct in about 10 seconds_"
+  `)
 })

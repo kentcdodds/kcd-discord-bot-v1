@@ -1,6 +1,9 @@
 import type * as TDiscord from 'discord.js'
 import {getCommandArgs, sendBotMessageReply} from '../utils'
 import {meetup} from './command-fns/meetup'
+import {blog} from './command-fns/blog'
+import {info} from './command-fns/info'
+import {kif} from './command-fns/kif'
 
 type CommandFn = {
   (message: TDiscord.Message): Promise<unknown>
@@ -13,12 +16,12 @@ type CommandFn = {
 const commands: Record<string, CommandFn | undefined> = {
   // the help command depends on this, so we do not include it here...
   help,
-  kif: require('./command-fns/kif'),
+  kif,
   thanks: require('./command-fns/thanks'),
   clubs: require('./command-fns/clubs'),
-  info: require('./command-fns/info'),
+  info,
   'private-chat': require('./command-fns/private-chat'),
-  blog: require('./command-fns/blog'),
+  blog,
   meetup,
 } as const
 

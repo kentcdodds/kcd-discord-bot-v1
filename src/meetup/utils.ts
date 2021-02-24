@@ -7,6 +7,7 @@ import {
   typedBoolean,
   rollbar,
   getCategoryChannel,
+  isVoiceChannel,
 } from '../utils'
 
 function getScheduledMeetupsChannel(guild: TDiscord.Guild | null) {
@@ -16,9 +17,6 @@ function getScheduledMeetupsChannel(guild: TDiscord.Guild | null) {
 function getFollowMeChannel(guild: TDiscord.Guild | null) {
   return getTextChannel(guild, 'follow-me')
 }
-
-const isVoiceChannel = (ch: TDiscord.Channel): ch is TDiscord.VoiceChannel =>
-  ch.type === 'voice'
 
 const isMeetupChannel = (ch: TDiscord.Channel) =>
   isVoiceChannel(ch) && ch.name.startsWith(meetupChannelPrefix)

@@ -99,17 +99,22 @@ async function startMeetup({
     new Set([...followers, ...notificationUsers]),
   ).map(notifee => (testing ? notifee.displayName : notifee.toString()))
 
-  const cc = usersToNotify.length ? `CC: ${listify(usersToNotify)}` : ''
+  const notifyList = listify(usersToNotify)
+  const cc = usersToNotify.length ? `CC: ` : ''
 
-  await meetupNotifications.send(
-    `
+  const mainMessage = `
 🏁 ${host} has started the meetup:
 
 ${meetupDetails}
 
 ${cc}
-    `.trim(),
-  )
+      `.trim()
+  await meetupNotifications.send(`${mainMessage} ${notifyList}`, {
+    split: {
+      prepend: `${mainMessage} `,
+      char: ', ',
+    },
+  })
 }
 
 const getMeetupChannels = (guild: TDiscord.Guild | null) =>

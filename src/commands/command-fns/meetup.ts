@@ -176,17 +176,21 @@ If you want to reschedule, then cancel the old one and schedule a new meetup.
   )
   if (followers.length) {
     const followersList = listify(followers)
-    await meetupNotifications.send(
-      `
-${host} has scheduled a ${recurringPart}meetup:
+    const mainMessage = `
+📣 ${host} has scheduled a ${recurringPart}meetup:
 
 ${meetupDetails}
 
-CC: ${followersList}
-
 I will notify you when ${host} starts the meetup.
-      `.trim(),
-    )
+
+CC:
+    `.trim()
+    await meetupNotifications.send(`${mainMessage} ${followersList}`, {
+      split: {
+        prepend: `${mainMessage} `,
+        char: ', ',
+      },
+    })
   }
 }
 

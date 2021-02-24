@@ -417,13 +417,13 @@ test('followers are notified when you schedule and start a meetup', async () => 
 
   expect(meetupNotificationsChannel.lastMessage.content).toBe(
     `
-${kody} has scheduled a meetup:
+📣 ${kody} has scheduled a meetup:
 
 "Migrating to Tailwind" https://example.com/url
 
-CC: ${hannah}
-
 I will notify you when ${kody} starts the meetup.
+
+CC: ${hannah}
     `.trim(),
   )
 
@@ -500,13 +500,13 @@ test('can use "TESTING" in the subject to test things out and not notify anyone'
 
   expect(meetupNotificationsChannel.lastMessage.content).toBe(
     `
-${kody} has scheduled a meetup:
+📣 ${kody} has scheduled a meetup:
 
 "Migrating to Tailwind TESTING" https://example.com/url
 
-CC: ${hannah.displayName}
-
 I will notify you when ${kody} starts the meetup.
+
+CC: ${hannah.displayName}
     `.trim(),
   )
 
@@ -671,4 +671,51 @@ test(`users can't update a recurring meetup to a one-time meetup without force-u
   expect(scheduledMeetupsChannel.lastMessage.content).not.toBe(lastContent)
   lastContent = scheduledMeetupsChannel.lastMessage.content
   expect(isRecurring(lastContent)).toBe(true)
+})
+
+test('long messages are split automatically so every user sees the notification', async () => {
+  const {
+    guild,
+    kody,
+    createMessage,
+    createUser,
+    scheduledMeetupsChannel,
+    meetupNotificationsChannel,
+    reactFromUser,
+  } = await setup()
+  await meetup(createMessage(`?meetup follow-me I am Kody`, kody.user))
+  const followMeChannel = getFollowMeChannel(guild)
+  const followMeMessage = followMeChannel.messages.cache.find(msg =>
+    msg.content.includes(kody.id),
+  )
+
+  const users = await Promise.all(
+    Array.from({length: 100}, index => createUser(`test-user-${index}`)),
+  )
+  for (const user of users) {
+    reactFromUser({user, message: followMeMessage, emoji: {name: '✋'}})
+  }
+
+  await meetup(
+    createMessage(
+      `?meetup schedule "Migrating to Tailwind" https://example.com/url\n${'-'.repeat(
+        400,
+      )}`,
+      kody.user,
+    ),
+  )
+
+  const scheduledMeetupMessage = scheduledMeetupsChannel.lastMessage
+
+  expect(scheduledMeetupsChannel.messages.cache.size).toBe(1)
+  expect(meetupNotificationsChannel.messages.cache.size).toBe(2)
+
+  reactFromUser({
+    user: kody,
+    message: scheduledMeetupMessage,
+    emoji: {name: '🏁'},
+  })
+
+  await cleanup(guild)
+  expect(meetupNotificationsChannel.messages.cache.size).toBe(4)
 })

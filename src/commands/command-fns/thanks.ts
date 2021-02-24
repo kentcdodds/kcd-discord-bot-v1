@@ -1,17 +1,20 @@
 // Command purpose:
 // this command is just to make sure the bot is running
-const got = require('got')
-const {MessageMentions} = require('discord.js')
-const {
+import type * as TDiscord from 'discord.js'
+import got from 'got'
+import {MessageMentions} from 'discord.js'
+import {
   getCommandArgs,
   listify,
   getMember,
-  getChannel,
   getMessageLink,
-} = require('../utils')
+  getTextChannel,
+} from '../utils'
 
-async function getThanksHistory() {
-  const response = await got.get(
+type ThanksHistory = Record<string, Array<string> | undefined>
+
+async function getThanksHistory(): Promise<ThanksHistory> {
+  const response = (await got.get(
     `https://api.github.com/gists/${process.env.GIST_REPO_THANKS}`,
     {
       headers: {
@@ -19,14 +22,15 @@ async function getThanksHistory() {
       },
       responseType: 'json',
     },
-  )
-  if (response.body.files['thanks.json'].content === '') {
+  )) as {body: {files: {['thanks.json']?: {content: string}}}}
+  try {
+    return JSON.parse(response.body.files['thanks.json']?.content ?? '{}')
+  } catch {
     return {}
   }
-  return JSON.parse(response.body.files['thanks.json'].content)
 }
 
-async function saveThanksHistory(history) {
+async function saveThanksHistory(history: ThanksHistory) {
   const body = {
     public: 'false',
     files: {
@@ -47,8 +51,16 @@ async function saveThanksHistory(history) {
   )
 }
 
-async function sayThankYou(args, message, thanksHistory) {
+async function sayThankYou(
+  args: string,
+  message: TDiscord.Message,
+  thanksHistory: ThanksHistory,
+) {
   const member = getMember(message.guild, message.author.id)
+  const thanksChannel = getTextChannel(message.guild, 'thank-you')
+
+  if (!member || !message.mentions.members || !thanksChannel) return
+
   const thankedMembers = Array.from(message.mentions.members.values())
   if (!thankedMembers.length) {
     return message.channel.send(
@@ -64,19 +76,19 @@ async function sayThankYou(args, message, thanksHistory) {
   const messageLink = getMessageLink(message)
 
   thankedMembers.forEach(thankedMember => {
-    thanksHistory[thankedMember.id] = thanksHistory[thankedMember.id] ?? []
-    thanksHistory[thankedMember.id].push(messageLink)
+    const history = thanksHistory[thankedMember.id] ?? []
+    history.push(messageLink)
+    thanksHistory[thankedMember.id] = history
   })
 
   try {
     await saveThanksHistory(thanksHistory)
-  } catch (_) {
+  } catch {
     return message.channel.send(
       `There is an issue saving the history. Please try again later`,
     )
   }
 
-  const thanksChannel = getChannel(message.guild, {name: 'thank-you'})
   const thankedMembersList = listify(thankedMembers)
 
   const textOfNewThanksMessage = thanksMessage
@@ -104,11 +116,13 @@ Link: <${messageLink}>`
   )
 }
 
-async function thanks(message) {
+async function thanks(message: TDiscord.Message) {
+  const guild = message.guild
+  if (!guild) return
   const args = getCommandArgs(message.content)
   const rankArgs = args.replace(MessageMentions.USERS_PATTERN, '').trim()
 
-  let thanksHistory
+  let thanksHistory: ThanksHistory
   try {
     thanksHistory = await getThanksHistory()
   } catch {
@@ -117,7 +131,7 @@ async function thanks(message) {
     )
   }
 
-  function listThanks(users) {
+  function listThanks(users: Array<TDiscord.User>) {
     return users
       .map(usr => {
         return {
@@ -144,12 +158,13 @@ async function thanks(message) {
     rankArgumentList[1] === 'top'
   ) {
     const sortedUsers = Object.keys(thanksHistory).sort((a, b) => {
-      return thanksHistory[b].length - thanksHistory[a].length
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      return thanksHistory[b]!.length - thanksHistory[a]!.length
     })
-    const topUsers = []
-    await sortedUsers.forEach(user => {
+    const topUsers: Array<TDiscord.User> = []
+    sortedUsers.forEach(user => {
       if (topUsers.length > 10) return
-      const member = getMember(message.channel.guild, user)
+      const member = getMember(guild, user)
       if (member) {
         topUsers.push(member.user)
       }
@@ -161,7 +176,9 @@ ${listThanks(topUsers)}
       `.trim(),
     )
   } else if (rankArgumentList.length === 1 && rankArgumentList[0] === 'rank') {
-    const mentionedMembers = Array.from(message.mentions.members.values())
+    const mentionedMembers = Array.from(
+      message.mentions.members?.values() ?? {length: 0},
+    )
     let searchedMembers = [message.author]
     if (mentionedMembers.length > 0) {
       searchedMembers = mentionedMembers.map(member => member.user)
@@ -180,8 +197,9 @@ ${listThanks(searchedMembers)}
 }
 
 thanks.description = `A special way to show your appreciation for someone who's helped you out a bit`
-thanks.help = async message => {
-  const thanksChannel = getChannel(message.guild, {name: 'thank-you'})
+thanks.help = async (message: TDiscord.Message) => {
+  if (!message.guild) return
+  const thanksChannel = getTextChannel(message.guild, 'thank-you')
 
   const commandsList = [
     `- Send \`?thanks @UserName for answering my question about which socks I should wear and being so polite.\` (for example), and your thanks will appear in the ${thanksChannel}.`,
@@ -197,4 +215,4 @@ ${commandsList.join('\n')}
   )
 }
 
-module.exports = thanks
+export {thanks}

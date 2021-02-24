@@ -3,7 +3,7 @@ const {SnowflakeUtil} = require('discord.js')
 const {rest} = require('msw')
 const {makeFakeClient} = require('test-utils')
 const {server} = require('server')
-const thanks = require('../thanks')
+const {thanks} = require('../thanks')
 
 async function setup(content, mentionedUsernames = []) {
   const {client, defaultChannels, kody, createUser} = await makeFakeClient()

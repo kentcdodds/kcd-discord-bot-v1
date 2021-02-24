@@ -4,6 +4,7 @@ import {meetup} from './command-fns/meetup'
 import {blog} from './command-fns/blog'
 import {info} from './command-fns/info'
 import {kif} from './command-fns/kif'
+import {thanks} from './command-fns/thanks'
 
 type CommandFn = {
   (message: TDiscord.Message): Promise<unknown>
@@ -17,7 +18,7 @@ const commands: Record<string, CommandFn | undefined> = {
   // the help command depends on this, so we do not include it here...
   help,
   kif,
-  thanks: require('./command-fns/thanks'),
+  thanks,
   clubs: require('./command-fns/clubs'),
   info,
   'private-chat': require('./command-fns/private-chat'),

@@ -3,7 +3,6 @@ import type {Client} from 'discord.js'
 import * as onboarding from './onboarding'
 import * as commands from './commands'
 import * as admin from './admin'
-// @ts-expect-error not converted yet
 import * as clubApplication from './club-application'
 // @ts-expect-error not converted yet
 import * as privateChat from './private-chat'

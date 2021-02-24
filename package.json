@@ -46,6 +46,7 @@
     "set-interval-async": "^1.0.34"
   },
   "devDependencies": {
+    "@types/open-graph-scraper": "^4.7.0",
     "@types/set-interval-async": "^1.0.0",
     "kcd-scripts": "^7.7.0",
     "msw": "^0.26.2",

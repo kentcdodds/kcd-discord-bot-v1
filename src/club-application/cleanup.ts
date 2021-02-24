@@ -1,19 +1,29 @@
-async function cleanup(guild) {
-  const channel = guild.channels.cache.find(
-    ({name, type}) =>
-      name.toLowerCase().includes('open-clubs') && type === 'text',
-  )
+import type * as TDiscord from 'discord.js'
+import {getTextChannel, rollbar} from '../utils'
+
+async function cleanup(guild: TDiscord.Guild) {
+  const channel = getTextChannel(guild, 'open-clubs')
+  if (!channel) return
 
   const messages = Array.from((await channel.messages.fetch()).values())
 
   const oneWeek = 1000 * 60 * 60 * 24 * 7
 
-  async function cleanupMessage(message) {
+  async function cleanupMessage(message: TDiscord.Message) {
     // we only want messages we sent
-    if (message.author.id !== guild.client.user.id) return
+    if (!guild.client.user || message.author.id !== guild.client.user.id) return
+
+    const clubCaptain = message.mentions.users.first()
+    if (!clubCaptain) {
+      rollbar.warn(
+        `An open club message is missing a club captain. Deleting the message.`,
+      )
+      await message.delete()
+      return
+    }
 
     // messages older than a week are deleted automatically
-    const timeSinceMessage = new Date() - message.createdAt
+    const timeSinceMessage = new Date().getTime() - message.createdAt.getTime()
     if (timeSinceMessage > oneWeek) return message.delete()
 
     // when the club captain gives a 🏁 reaction, then delete the message
@@ -30,7 +40,6 @@ async function cleanup(guild) {
     if (!flagReaction) return
 
     await flagReaction.users.fetch()
-    const clubCaptain = message.mentions.users.first()
     const captainWantsToDelete = flagReaction.users.cache.some(
       user => clubCaptain.id === user.id,
     )
@@ -40,4 +49,4 @@ async function cleanup(guild) {
   return Promise.all(messages.map(cleanupMessage))
 }
 
-module.exports = {cleanup}
+export {cleanup}

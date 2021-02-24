@@ -1,18 +1,20 @@
 // Command purpose:
 // to automate creating new learning clubs https://kcd.im/clubs
-const got = require('got')
-const redent = require('redent')
-const ogs = require('open-graph-scraper')
-const rollbar = require('../../../rollbar')
-const {
-  getChannel,
+import type * as TDiscord from 'discord.js'
+import got from 'got'
+import redent from 'redent'
+import ogs from 'open-graph-scraper'
+import rollbar from '../../../rollbar'
+import {
   getRole,
   getCommandArgs,
   getMessageLink,
   sendBotMessageReply,
-} = require('../../utils')
+  getTextChannel,
+} from '../../utils'
 
-const httpify = link => (link.startsWith('http') ? link : `https://${link}`)
+const httpify = (link: string) =>
+  link.startsWith('http') ? link : `https://${link}`
 
 const formDataMarkers = {
   summary: {before: 'Learning Goal:', after: 'Learning Curriculum:'},
@@ -23,10 +25,14 @@ const formDataMarkers = {
   requirements: {before: 'Special Requirements:', after: 'Schedule:'},
   schedule: {before: 'Schedule:', after: 'Meetings are Sync:'},
   sync: {before: 'Meetings are Sync:', after: 'Club Captain:'},
-}
+} as const
 
-const formDataValidators = []
-for (const key of Object.keys(formDataMarkers)) {
+type FormDataKeys = keyof typeof formDataMarkers
+type FormData = {title: string} & {[key in FormDataKeys]: string}
+
+const formDataValidators: Array<(formData: FormData) => null | string> = []
+for (const k of Object.keys(formDataMarkers)) {
+  const key = k as FormDataKeys
   formDataValidators.push(formData =>
     formData.hasOwnProperty(key)
       ? null
@@ -34,7 +40,11 @@ for (const key of Object.keys(formDataMarkers)) {
   )
 }
 
-const validators = [
+type Validator = {
+  (formData: FormData): undefined | string | Promise<undefined | string>
+}
+
+const validators: Array<Validator> = [
   ({summary}) => {
     if (summary.length < 10) {
       return `That's too short, please be more specific.`
@@ -71,10 +81,16 @@ const validators = [
   },
 ]
 
-async function createClub(message) {
-  const member = message.guild.members.cache.find(
-    ({user}) => user.id === message.author.id,
-  )
+async function createClub(message: TDiscord.Message) {
+  const guild = message.guild
+  const member = message.member
+  if (!member || !guild) return
+
+  const openClubsChannel = getTextChannel(guild, 'open-clubs')
+  const captainsRole = getRole(guild, 'Club Captains')
+  const captainsChannel = getTextChannel(guild, 'club-captains')
+  if (!openClubsChannel || !captainsRole || !captainsChannel) return
+
   const [, formLink] = getCommandArgs(message.content).split(' ')
   const invalidLinkResponse = `
 Please send a Google Form link along with this command. For example:
@@ -95,21 +111,23 @@ Find an example and template here: <https://kcd.im/kcd-learning-club-docs>
     return
   }
 
-  let formData
+  let formData: FormData
   try {
     formData = await getFormData(formLink)
-  } catch (error) {
+  } catch (e: unknown) {
+    const errorMessage =
+      (e as {message?: string} | null)?.message ?? 'Unknown error'
     rollbar.log('error getting the form data when creating a club', {
-      errorMessage: error.message,
+      errorMessage,
       formLink,
     })
-    await sendBotMessageReply(message, error.message ?? 'Unknown error')
+    await sendBotMessageReply(message, errorMessage)
     return
   }
 
   const missingDataKeys = Object.keys(formDataMarkers).filter(
     key => !formData.hasOwnProperty(key),
-  )
+  ) as Array<FormDataKeys>
 
   if (missingDataKeys.length) {
     const missingKeyLines = missingDataKeys.map(
@@ -144,9 +162,6 @@ Please fix the ${problems} above and try again. Please be sure to follow the tem
   }
 
   // we're good! Let's make this thing!
-  const openClubsChannel = getChannel(member.guild, {name: 'open-clubs'})
-  const captainsRole = getRole(member.guild, 'Club Captains')
-
   const isAlreadyACaptain = member.roles.cache.has(captainsRole.id)
   if (!isAlreadyACaptain) {
     await member.roles.add(captainsRole, `Captaining this club: ${formLink}`)
@@ -167,7 +182,6 @@ Please fix the ${problems} above and try again. Please be sure to follow the tem
     `.trim(),
   )
   if (!isAlreadyACaptain) {
-    const captainsChannel = getChannel(member.guild, {name: 'club-captains'})
     await captainsChannel.send(
       `
 Hi everyone, I want to introduce you to ${member.user}, our newest club captain 🎉
@@ -178,22 +192,20 @@ Congratulations on your new club ${member.user}!  You can chat with other club c
   }
 }
 
-async function getFormData(formLink) {
-  const {error, result} = await ogs({url: formLink})
-  if (error) {
-    throw new Error(
-      result.message ??
-        'There was a problem retrieving information about this form.',
-    )
+async function getFormData(formLink: string): Promise<FormData> {
+  const {result} = await ogs({url: formLink})
+  if (!result.success) {
+    throw result.errorDetails
   }
 
-  const description = result.ogDescription
+  const description = result.ogDescription ?? ''
 
-  const data = {title: result.ogTitle}
-  for (const key of Object.keys(formDataMarkers)) {
+  const data = {title: result.ogTitle} as FormData
+  for (const k of Object.keys(formDataMarkers)) {
+    const key = k as FormDataKeys
     const {before, after} = formDataMarkers[key]
-    const beforeIndex = description.indexOf(before)
-    const afterIndex = description.indexOf(after)
+    const beforeIndex: number = description.indexOf(before)
+    const afterIndex: number = description.indexOf(after)
     if (beforeIndex !== -1 && afterIndex !== -1) {
       const value = description
         .slice(beforeIndex + before.length, afterIndex)
@@ -205,10 +217,18 @@ async function getFormData(formLink) {
   return data
 }
 
-const clipLongText = (text, max) =>
+const clipLongText = (text: string, max: number) =>
   text.length > max ? `${text.slice(0, max - 3)}...` : text
 
-function getActiveClubMessage({formLink, formData, member}) {
+function getActiveClubMessage({
+  formLink,
+  formData,
+  member,
+}: {
+  formLink: string
+  formData: FormData
+  member: TDiscord.GuildMember
+}) {
   return `
 🎊 New club looking for members 🎉
 
@@ -232,4 +252,4 @@ If this schedule doesn't work well for you, then feel free to start your own clu
   `.trim()
 }
 
-module.exports = {createClub}
+export {createClub}

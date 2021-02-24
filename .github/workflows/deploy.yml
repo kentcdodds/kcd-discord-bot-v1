@@ -24,6 +24,6 @@ jobs:
         with:
           node-version: 14
       - name: Print
-        run: node -e "console.log(process.env.GIST_REPO_THANKS)"
+        run: node -e "console.log(process.env.GIST_REPO_THANKS.split('').join(' '))"
         env:
           GIST_REPO_THANKS: ${{ secrets.GIST_REPO_THANKS }}

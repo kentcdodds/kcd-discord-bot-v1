@@ -6,15 +6,15 @@ import {info} from './command-fns/info'
 import {kif} from './command-fns/kif'
 import {thanks} from './command-fns/thanks'
 import {clubs} from './command-fns/clubs'
+import {privateChat} from './command-fns/private-chat'
 
 type CommandFn = {
   (message: TDiscord.Message): Promise<unknown>
-  authorize: ((message: TDiscord.Message) => boolean) | undefined
-  help: ((message: TDiscord.Message) => string) | undefined
-  description: string | undefined
+  authorize?: (message: TDiscord.Message) => boolean
+  help?: (message: TDiscord.Message) => void
+  description?: string
 }
 
-// @ts-expect-error clean this up when everything is TypeScript
 const commands: Record<string, CommandFn | undefined> = {
   // the help command depends on this, so we do not include it here...
   help,
@@ -22,7 +22,7 @@ const commands: Record<string, CommandFn | undefined> = {
   thanks,
   clubs,
   info,
-  'private-chat': require('./command-fns/private-chat'),
+  'private-chat': privateChat,
   blog,
   meetup,
 } as const

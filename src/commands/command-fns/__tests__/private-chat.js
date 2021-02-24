@@ -1,7 +1,7 @@
 const Discord = require('discord.js')
 const {SnowflakeUtil} = require('discord.js')
 const {makeFakeClient} = require('test-utils')
-const privateChat = require('../private-chat')
+const {privateChat} = require('../private-chat')
 const {getCategoryChannel, timeToMs} = require('../../utils')
 const {cleanup} = require('../../../private-chat/cleanup')
 
@@ -84,7 +84,7 @@ test('should create a private chat for two users', async () => {
   expect(privateChannel.lastMessage).toBeDefined()
   expect(privateChannel.lastMessage.content).toEqual(
     `
-Hello <@!${channelMembers[1].id}> and <@${channelMembers[0].id}> 👋
+Hello <@!${channelMembers[1].id}> and <@!${channelMembers[0].id}> 👋
 
 I'm the bot that created this channel for you. The channel will be deleted after 1 hour or after 10 minutes for inactivity. Enjoy 🗣
 

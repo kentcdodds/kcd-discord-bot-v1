@@ -1,41 +1,49 @@
-const Discord = require('discord.js')
-const {MessageMentions} = require('discord.js')
-const {
+import type * as TDiscord from 'discord.js'
+import Discord, {MessageMentions} from 'discord.js'
+import {
   privateChannelPrefix,
   listify,
   sendBotMessageReply,
   getCategoryChannel,
-  getMember,
   getCommandArgs,
   timeToMs,
-} = require('../utils')
-const {
+  getRole,
+} from '../utils'
+import {
   defaultLifeTimeMinute,
   warningStepMinute,
   maxInactiveTimeMinute,
   eolReason,
-} = require('../../private-chat')
+} from '../../private-chat'
 
-async function createChat(message) {
+async function createChat(message: TDiscord.Message) {
+  const {member, guild} = message
+
+  if (!guild || !member || !message.mentions.members) return
+
+  const everyoneRole = getRole(guild, '@everyone')
+  const categoryPrivateChat = getCategoryChannel(guild, 'private chat')
+  if (!categoryPrivateChat || !everyoneRole) return
+
   const mentionedMembers = Array.from(message.mentions.members.values()).filter(
-    user => user.user.id !== message.member.id,
+    user => user.user.id !== member.id,
   )
   const mentionedMembersNicknames = Array.from(
     message.mentions.members.values(),
   ).map(user => user.displayName)
-  mentionedMembers.push(message.author)
-  mentionedMembersNicknames.push(
-    getMember(message.guild, message.author.id).displayName,
-  )
+  mentionedMembers.push(member)
+  mentionedMembersNicknames.push(member.displayName)
   if (mentionedMembers.length < 2) {
     return message.channel.send(`You should mention at least one other member.`)
   }
 
-  const allPermissions = Object.keys(Discord.Permissions.FLAGS)
-  const membersPermissions = mentionedMembers.map(member => {
+  const allPermissions = Object.keys(Discord.Permissions.FLAGS) as Array<
+    keyof typeof Discord.Permissions.FLAGS
+  >
+  const membersPermissions = mentionedMembers.map(mentionedMember => {
     return {
       type: 'member',
-      id: member.id,
+      id: mentionedMember.id,
       allow: [
         'ADD_REACTIONS',
         'VIEW_CHANNEL',
@@ -44,7 +52,7 @@ async function createChat(message) {
         'READ_MESSAGE_HISTORY',
         'CHANGE_NICKNAME',
       ],
-    }
+    } as const
   })
 
   let channelSuffix
@@ -56,13 +64,7 @@ async function createChat(message) {
       .join('-')}-and-others`
   }
 
-  const everyoneRole = message.guild.roles.cache.find(
-    ({name}) => name === '@everyone',
-  )
-
-  const categoryPrivateChat = getCategoryChannel(message.guild, 'private chat')
-
-  const allActivePrivateChannels = message.guild.channels.cache.filter(
+  const allActivePrivateChannels = guild.channels.cache.filter(
     channel =>
       channel.type === 'text' &&
       channel.parentID === categoryPrivateChat.id &&
@@ -72,12 +74,12 @@ async function createChat(message) {
 
   const existingChat = allActivePrivateChannels.find(channel => {
     const chatMembers = channel.members
-      .filter(member => !member.user.bot)
-      .map(member => member.id)
+      .filter(channelMember => !channelMember.user.bot)
+      .map(({id}) => id)
 
     return (
       chatMembers.length === mentionedMembers.length &&
-      mentionedMembers.every(member => chatMembers.indexOf(member.id) !== -1)
+      mentionedMembers.every(mem => chatMembers.includes(mem.id))
     )
   })
 
@@ -91,7 +93,7 @@ async function createChat(message) {
     Date.now() + timeToMs.minutes(defaultLifeTimeMinute),
   )
 
-  const channel = await message.guild.channels.create(
+  const channel = await guild.channels.create(
     `${privateChannelPrefix}${channelSuffix}`,
     {
       topic: `Private chat for ${listify(
@@ -124,23 +126,28 @@ I'm the bot that created this channel for you. The channel will be deleted after
   ])
 }
 
-async function extendTime(message, extendedTime) {
+async function extendTime(message: TDiscord.Message, extendedTime: string) {
   const parsedTime = parseInt(extendedTime, 10)
   if (parsedTime > 0) {
-    const privateChannel = message.channel
+    const privateChannel = message.channel as TDiscord.TextChannel
     const topicRegex = /self-destruct at (?<utcDate>.*)$/i
-    const match = privateChannel.topic.match(topicRegex)
+    const match = (privateChannel.topic ?? '').match(topicRegex)
     let currentExpirationDate = new Date(
-      message.channel.createdAt + timeToMs.minutes(defaultLifeTimeMinute),
+      privateChannel.createdAt.getTime() +
+        timeToMs.minutes(defaultLifeTimeMinute),
     )
-    if (match && new Date(match.groups.utcDate))
-      currentExpirationDate = new Date(match.groups.utcDate)
+    if (match) {
+      const specifiedDate = new Date(match.groups?.utcDate ?? 'invalid')
+      if (!Number.isNaN(specifiedDate.getTime())) {
+        currentExpirationDate = specifiedDate
+      }
+    }
 
     const newExpirationDate = new Date(
       currentExpirationDate.getTime() + timeToMs.minutes(parsedTime),
     )
 
-    const membersNicknames = message.channel.members.map(
+    const membersNicknames = privateChannel.members.map(
       guildMember => guildMember.displayName,
     )
 
@@ -150,8 +157,9 @@ async function extendTime(message, extendedTime) {
       )} self-destruct at ${newExpirationDate.toUTCString()}`,
     )
     const channelCreateDate = privateChannel.createdAt
-    const timeSinceChannelCreation = Date.now() - channelCreateDate
-    const newLifetime = newExpirationDate - channelCreateDate
+    const timeSinceChannelCreation = Date.now() - channelCreateDate.getTime()
+    const newLifetime =
+      newExpirationDate.getTime() - channelCreateDate.getTime()
 
     if (
       timeSinceChannelCreation <
@@ -161,7 +169,7 @@ async function extendTime(message, extendedTime) {
         (await message.channel.messages.fetch()).values(),
       )
       const botMessages = allMessages.filter(
-        channelMessage => channelMessage.author?.bot,
+        channelMessage => channelMessage.author.bot,
       )
 
       const eolWarningMessage = botMessages.find(
@@ -183,31 +191,36 @@ async function extendTime(message, extendedTime) {
   )
 }
 
-function privateChat(message) {
-  const privateChatSubcommand = {extend: extendTime}
+async function privateChat(message: TDiscord.Message) {
+  const channel = message.channel as TDiscord.TextChannel
+  const guild = message.guild
+  if (!guild) return
+  const categoryPrivateChat = getCategoryChannel(guild, 'private chat')
+  if (!categoryPrivateChat) return
+
   const args = getCommandArgs(message.content).trim()
   const privateChatArg = args
     .replace(MessageMentions.USERS_PATTERN, '')
     .trim()
     .toLowerCase()
-  const [command, ...rest] = privateChatArg.split(' ')
-  if (command) {
-    if (command in privateChatSubcommand) {
-      const categoryPrivateChat = getCategoryChannel(
-        message.guild,
-        'private chat',
+
+  const [subcommand, ...rest] = privateChatArg.split(' ')
+
+  if (subcommand) {
+    if (channel.parent?.id !== categoryPrivateChat.id) {
+      return channel.send(
+        `The command ${subcommand} can be used only in private chat`,
       )
-      if (message.channel.parent?.id === categoryPrivateChat.id) {
-        return privateChatSubcommand[command](message, ...rest)
-      } else {
-        return message.channel.send(
-          `The command ${command} can be used only in private chat`,
+    }
+    switch (subcommand) {
+      case 'extend': {
+        return extendTime(message, rest[0])
+      }
+      default: {
+        return channel.send(
+          'The command is not available. use `?private-chat help` to know more about the available commands',
         )
       }
-    } else {
-      return message.channel.send(
-        'The command is not available. use `?private-chat help` to know more about the available commands',
-      )
     }
   } else {
     return createChat(message)
@@ -216,7 +229,7 @@ function privateChat(message) {
 
 privateChat.description =
   'Create a private channel with who you want. This channel is temporary.'
-privateChat.help = message =>
+privateChat.help = (message: TDiscord.Message) =>
   sendBotMessageReply(
     message,
     `
@@ -228,4 +241,4 @@ The following commands are available:
     `.trim(),
   )
 
-module.exports = privateChat
+export {privateChat}

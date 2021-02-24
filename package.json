@@ -57,6 +57,7 @@
     "node_modules",
     "coverage",
     "dist",
-    "*.ignored.*"
+    "*.ignored.*",
+    "*.d.ts"
   ]
 }

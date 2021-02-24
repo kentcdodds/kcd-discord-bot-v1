@@ -1,9 +1,5 @@
-const {
-  sleep,
-  getSend,
-  getMemberIdFromChannel,
-  isWelcomeChannel,
-} = require('../utils')
+import type * as TDiscord from 'discord.js'
+import {getMemberIdFromChannel, isWelcomeChannel, isTextChannel} from '../utils'
 
 const editErrorMessagePrefix = `There's a problem with an edit that was just made. Please edit the answer again to fix it.`
 
@@ -16,14 +12,22 @@ if (!CONVERT_KIT_API_KEY) {
   throw new Error('CONVERT_KIT_API_KEY env variable is required')
 }
 
-function getSubscriberEndpoint(email) {
+function getSubscriberEndpoint(email: string) {
   const url = new URL('https://api.convertkit.com/v3/subscribers')
-  url.searchParams.set('api_secret', CONVERT_KIT_API_SECRET)
+  url.searchParams.set('api_secret', CONVERT_KIT_API_SECRET as string)
   url.searchParams.set('email_address', email)
   return url.toString()
 }
 
-async function getMessageContents(msg, answers, member) {
+type Answers = {}
+
+async function getMessageContents(
+  msg:
+    | string
+    | ((answers: Answers, member: TDiscord.GuildMember) => Promise<string>),
+  answers: Answers,
+  member: TDiscord.GuildMember,
+) {
   if (typeof msg === 'function') {
     const result = await msg(answers, member)
     return result
@@ -32,13 +36,15 @@ async function getMessageContents(msg, answers, member) {
   }
 }
 
-const getWelcomeChannels = guild =>
-  guild.channels.cache.filter(isWelcomeChannel)
+const getWelcomeChannels = (guild: TDiscord.Guild) =>
+  guild.channels.cache.filter(
+    ch => isTextChannel(ch) && isWelcomeChannel(ch),
+  ) as TDiscord.Collection<string, TDiscord.TextChannel>
 
-const hasRole = (member, roleName) =>
+const hasRole = (member: TDiscord.GuildMember, roleName: string) =>
   member.roles.cache.some(({name}) => name === roleName)
 
-function isMemberUnconfirmed(member) {
+function isMemberUnconfirmed(member: TDiscord.GuildMember) {
   const memberRoles = [
     'Member',
     'Moderator',
@@ -50,13 +56,13 @@ function isMemberUnconfirmed(member) {
   return !memberRoles.some(r => hasRole(member, r))
 }
 
-const getMemberWelcomeChannel = member =>
+const getMemberWelcomeChannel = (member: TDiscord.GuildMember) =>
   getWelcomeChannels(member.guild).find(
     channel => getMemberIdFromChannel(channel) === member.id,
   )
 
-module.exports = {
-  ...require('../utils'),
+export * from '../utils'
+export {
   editErrorMessagePrefix,
   getSubscriberEndpoint,
   CONVERT_KIT_API_SECRET,
@@ -65,7 +71,4 @@ module.exports = {
   isMemberUnconfirmed,
   getMemberWelcomeChannel,
   getMessageContents,
-  getMemberIdFromChannel,
-  getSend,
-  sleep,
 }

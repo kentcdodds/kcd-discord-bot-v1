@@ -1,14 +1,14 @@
-const got = require('got')
-const pMemoize = require('p-memoize')
-const {default: md5} = require('md5-hash')
-const {
+import got from 'got'
+import pMemoize from 'p-memoize'
+import md5 from 'md5-hash'
+import {
   getSubscriberEndpoint,
   getSend,
   CONVERT_KIT_API_KEY,
   CONVERT_KIT_API_SECRET,
   sleep,
   getChannel,
-} = require('./utils')
+} from './utils'
 
 const memGot = pMemoize(got, {
   // five minutes

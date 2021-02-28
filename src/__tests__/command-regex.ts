@@ -1,4 +1,4 @@
-const {commandRegex} = require('../utils')
+import {commandRegex} from '../utils'
 
 test.each([
   ['?ping', {command: 'ping', args: ''}],
@@ -16,7 +16,9 @@ test.each([
     },
   ],
 ])('"%s" matches', (input, parsed) => {
-  expect(input.match(commandRegex).groups).toEqual(parsed)
+  const match = input.match(commandRegex)
+  if (!match) throw new Error(`This input does not match the regex:\n${input}`)
+  expect(match.groups).toEqual(parsed)
 })
 
 test.each([['?'], ['? ping'], ['?\nping']])('"%s" does not match', input => {

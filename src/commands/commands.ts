@@ -32,7 +32,7 @@ const commands: Record<string, CommandFn | undefined> = {
 // lists all available commands
 async function help(message: TDiscord.Message) {
   const args = getCommandArgs(message.content)
-  const [arg1] = args.split(' ')
+  const [arg1 = ''] = args.split(' ')
   const commandFn = commands[arg1]
   if (commandFn) {
     if (commandFn.authorize && !commandFn.authorize(message)) return

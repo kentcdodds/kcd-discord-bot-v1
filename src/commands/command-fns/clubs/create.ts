@@ -100,8 +100,9 @@ Find an example and template here: <https://kcd.im/kcd-learning-club-docs>
   `.trim()
   try {
     if (
-      new URL(formLink).hostname !== 'docs.google.com' &&
-      new URL(formLink).hostname !== 'forms.gle'
+      !formLink ||
+      (new URL(formLink).hostname !== 'docs.google.com' &&
+        new URL(formLink).hostname !== 'forms.gle')
     ) {
       await sendBotMessageReply(message, invalidLinkResponse)
       return

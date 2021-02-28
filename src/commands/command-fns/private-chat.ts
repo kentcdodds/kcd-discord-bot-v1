@@ -214,7 +214,7 @@ async function privateChat(message: TDiscord.Message) {
     }
     switch (subcommand) {
       case 'extend': {
-        return extendTime(message, rest[0])
+        return extendTime(message, rest[0] ?? '')
       }
       default: {
         return channel.send(

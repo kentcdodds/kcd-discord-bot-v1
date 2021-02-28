@@ -2,6 +2,7 @@ module.exports = {
   extends: './node_modules/kcd-scripts/eslint.js',
   rules: {
     'babel/camelcase': 'off',
+    'no-continue': 'off',
     'no-console': 'off',
     'no-void': 'off',
     'consistent-return': 'off',

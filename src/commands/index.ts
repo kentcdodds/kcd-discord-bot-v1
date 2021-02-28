@@ -6,7 +6,7 @@ function handleNewMessage(message: TDiscord.Message) {
   const guild = message.guild
   if (!guild) return
 
-  const {command, args} = message.content.match(commandRegex)?.groups ?? {}
+  const {command, args = ''} = message.content.match(commandRegex)?.groups ?? {}
 
   if (!command) return
 

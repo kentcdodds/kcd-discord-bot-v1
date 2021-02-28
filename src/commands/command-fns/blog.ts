@@ -46,7 +46,7 @@ async function blog(message: TDiscord.Message) {
     )
   }
 
-  if (args === 'latest') {
+  if (args === 'latest' && articles[0]) {
     // The articles are already sorted by published date
     return message.channel.send(`${articles[0].productionUrl}`)
   } else if (args === 'last') {
@@ -60,7 +60,12 @@ ${printArticles(lastArticles)}
     )
   } else if (args === 'random') {
     const randomIndex = Math.floor(Math.random() * (articles.length - 0) + 0)
-    return message.channel.send(`${articles[randomIndex].productionUrl}`)
+    const randomArticle = articles[randomIndex]
+    if (!randomArticle) {
+      return message.channel.send(`Something went wrong, sorry`)
+    }
+
+    return message.channel.send(randomArticle.productionUrl)
   } else if (args) {
     const filteredArticles = searchArticles(articles, args)
     if (filteredArticles.length === 0) {
@@ -68,7 +73,10 @@ ${printArticles(lastArticles)}
         `Unfortunately there is no article matching "${args}" 😟. Try searching here: <https://kentcdodds.com/blog>`,
       )
     } else if (filteredArticles.length === 1) {
-      return message.channel.send(`${filteredArticles[0].productionUrl}`)
+      if (!filteredArticles[0]) {
+        return message.channel.send(`Something went wrong, sorry`)
+      }
+      return message.channel.send(filteredArticles[0].productionUrl)
     } else {
       if (filteredArticles.length > 10) {
         return sendBotMessageReply(

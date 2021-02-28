@@ -52,7 +52,7 @@ async function cleanup(guild: TDiscord.Guild) {
       .sort((a, b) => b.createdTimestamp - a.createdTimestamp)
     let timeSinceLastMessage = timeSinceChannelCreation
 
-    if (messages.length > 0) {
+    if (messages[0]) {
       timeSinceLastMessage = Date.now() - messages[0].createdTimestamp
     }
 

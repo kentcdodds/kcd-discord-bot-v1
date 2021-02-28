@@ -1,11 +1,12 @@
 import type * as TDiscord from 'discord.js'
 import Discord from 'discord.js'
 import {firstStep} from './steps'
-import {getSend, welcomeChannelPrefix} from './utils'
-
-const isCategory = (
-  ch: TDiscord.GuildChannel,
-): ch is TDiscord.CategoryChannel => ch.type === 'category'
+import {
+  getMessageContents,
+  getSend,
+  isCategoryChannel,
+  welcomeChannelPrefix,
+} from './utils'
 
 async function handleNewMember(member: TDiscord.GuildMember) {
   const {
@@ -31,10 +32,8 @@ async function handleNewMember(member: TDiscord.GuildMember) {
   >
 
   const onboardingCategories = Array.from(member.guild.channels.cache.values())
-    .filter(isCategory)
-    .filter(
-      ch => isCategory(ch) && ch.name.toLowerCase().includes('onboarding'),
-    )
+    .filter(isCategoryChannel)
+    .filter(ch => ch.name.toLowerCase().includes('onboarding'))
   const [categoryWithFewest] = onboardingCategories.sort((cat1, cat2) =>
     cat1.children.size > cat2.children.size ? 1 : -1,
   )
@@ -85,7 +84,8 @@ In less than 5 minutes, you'll have full access to this server. So, let's get st
     `.trim(),
   )
 
-  await send(firstStep.question)
+  const answers = {}
+  await send(await getMessageContents(firstStep.question, answers, member))
 }
 
 export {handleNewMember}

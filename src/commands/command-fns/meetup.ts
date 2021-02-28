@@ -203,10 +203,22 @@ async function updateScheduledMeetup(
   if (!scheduledMeetupsChannel) return
 
   const [link, ...rest] = args.split(' ')
+  if (!link) {
+    return sendBotMessageReply(
+      message,
+      `Must supply a link to an upcoming stream message to update.`,
+    )
+  }
   // Some folks use the angle brackets (`<link>` syntax) to avoid discord expanding the link
   const bracketlessLink = link.replace(/<|>/g, '')
   const updatedDetails = rest.join(' ').trim()
   const messageId = bracketlessLink.split('/').slice(-1)[0]
+  if (!messageId) {
+    return sendBotMessageReply(
+      message,
+      `Could not find a message ID from <${bracketlessLink}>`,
+    )
+  }
   const originalMessage = (await scheduledMeetupsChannel.messages.fetch(
     messageId,
     // fetch is incorrectly typed, it can return `null` potentially

@@ -56,7 +56,9 @@ async function getKifInfo({force = false} = {}) {
   const kifKeysWithoutEmoji = []
   const kifMap: typeof kifCache['kifMap'] = {}
   for (const kifKey of Object.keys(kifs)) {
-    const {gif, aliases = [], emojiAliases = []} = kifs[kifKey]
+    const {gif, aliases = [], emojiAliases = []} = kifs[kifKey] ?? {}
+    if (!gif) continue
+
     kifMap[kifKey.toLowerCase()] = gif
     kifKeysWithoutEmoji.push(kifKey, ...aliases)
     for (const alias of [...aliases, ...emojiAliases]) {
@@ -121,17 +123,20 @@ async function handleKifCommand(message: TDiscord.Message) {
     cache = await getKifInfo({force: true})
   }
 
-  if (cache.kifMap[kifArg]) {
-    return message.channel.send(getKifReply(message, cache.kifMap[kifArg]))
+  const kif = cache.kifMap[kifArg]
+  if (kif) {
+    return message.channel.send(getKifReply(message, kif))
   }
 
   const closeMatches = await getCloseMatches(kifArg)
-  if (closeMatches.length === 1) {
+  if (closeMatches.length === 1 && closeMatches[0]) {
     const closestMatch = closeMatches[0]
     const matchingKif = cache.kifMap[closestMatch]
-    return message.channel.send(
-      `Did you mean "${closestMatch}"?\n${getKifReply(message, matchingKif)}`,
-    )
+    if (matchingKif) {
+      return message.channel.send(
+        `Did you mean "${closestMatch}"?\n${getKifReply(message, matchingKif)}`,
+      )
+    }
   }
   const didYouMean = closeMatches.length
     ? `Did you mean ${listify(closeMatches, {

@@ -8,6 +8,13 @@ test.each([
     '?ping this is \n multiple lines',
     {command: 'ping', args: 'this is \n multiple lines'},
   ],
+  [
+    'This is multiple lines\n?ping arguments are everything after the command\n not an argument',
+    {
+      command: 'ping',
+      args: 'arguments are everything after the command\n not an argument',
+    },
+  ],
 ])('"%s" matches', (input, parsed) => {
   expect(input.match(commandRegex).groups).toEqual(parsed)
 })

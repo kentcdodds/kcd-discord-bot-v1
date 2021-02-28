@@ -109,8 +109,8 @@ function getRole(guild: TDiscord.Guild, name: string) {
   )
 }
 
-const prodRegex = /^\?(?<command>\S+?)($| +)(?<args>(.|\n)*)/
-const devRegex = /^~(?<command>\S+?)($| +)(?<args>(.|\n)*)/
+const prodRegex = /(^|\n)\?(?<command>\S+?)($| +)(?<args>(.|\n)*)/
+const devRegex = /(^|\n)~(?<command>\S+?)($| +)(?<args>(.|\n)*)/
 const commandPrefix =
   process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'test'
     ? '?'

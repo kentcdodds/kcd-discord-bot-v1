@@ -1,5 +1,6 @@
-const got = require('got')
-const {
+import type * as TDiscord from 'discord.js'
+import got from 'got'
+import {
   getSubscriberEndpoint,
   CONVERT_KIT_API_SECRET,
   CONVERT_KIT_API_KEY,
@@ -7,10 +8,13 @@ const {
   getMemberIdFromChannel,
   getSend,
   sleep,
-} = require('./utils')
-const {getAnswers} = require('./steps')
+} from './utils'
+import {getAnswers} from './steps'
 
-async function deleteWelcomeChannel(channel, reason) {
+async function deleteWelcomeChannel(
+  channel: TDiscord.TextChannel,
+  reason: string,
+) {
   const send = getSend(channel)
   const memberId = getMemberIdFromChannel(channel)
   const member = channel.guild.members.cache.find(
@@ -27,7 +31,7 @@ This channel is getting deleted for the following reason: ${reason}
 Goodbye 👋
     `.trim(),
   )
-  const promises = []
+  const promises: Array<Promise<unknown>> = []
   if (memberIsUnconfirmed && member) {
     await send(
       `You're still an unconfirmed member so you'll be kicked from the server. But don't worry, you can try again later.`,
@@ -37,12 +41,12 @@ Goodbye 👋
         `Unconfirmed member with welcome channel deleted because: ${reason}`,
       ),
     )
-  } else {
+  } else if (member) {
     // if they reacted with their preferred tech, update their info in convertkit
     // to reflect those preferences
     const messages = Array.from((await channel.messages.fetch()).values())
     const reactionMessage = getBotMessages(messages).find(({content}) =>
-      /Click the icon of the tech/.test(content),
+      content.includes('Click the icon of the tech'),
     )
     if (reactionMessage) {
       const interests = reactionMessage.reactions.cache
@@ -51,7 +55,7 @@ Goodbye 👋
         // listed it as an option AND the member selected it.
         // doing things this way helps us avoid having to call
         // `await reaction.users.fetch()` for every reaction
-        .filter(({count}) => count > 1)
+        .filter(({count}) => count !== null && count > 1)
         .map(({emoji}) => emoji.name)
         // sort alphabetically
         .sort((a, z) => (a < z ? -1 : a > z ? 1 : 0))
@@ -63,12 +67,15 @@ Goodbye 👋
 
         promises.push(
           (async () => {
-            const {body: {subscribers: [subscriber] = []} = {}} = await got(
+            if (!answers.email) return
+
+            const {body: {subscribers: [subscriber] = []} = {}} = (await got(
               getSubscriberEndpoint(answers.email),
               {
                 responseType: 'json',
               },
-            )
+            )) as {body: {subscribers?: Array<{id: string} | undefined>}}
+
             if (!subscriber) {
               // they got deleted quickly or something
               return
@@ -86,16 +93,16 @@ Goodbye 👋
                   },
                 },
               )
-            } catch (error) {
+            } catch (error: unknown) {
               // possibly a 404 because the subscriber was deleted
               console.error(
                 `Error setting the subscriber's interests: `,
                 {
                   interests,
                   subscriberId: subscriber.id,
-                  memberId: member?.id,
+                  memberId: member.id,
                 },
-                error.message,
+                (error as Error).message,
               )
             }
           })(),
@@ -112,4 +119,4 @@ Goodbye 👋
   await channel.delete(reason)
 }
 
-module.exports = {deleteWelcomeChannel}
+export {deleteWelcomeChannel}

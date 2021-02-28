@@ -1,8 +1,13 @@
-const Discord = require('discord.js')
-const {getSend, welcomeChannelPrefix} = require('./utils')
-const {getSteps} = require('./steps')
+import type * as TDiscord from 'discord.js'
+import Discord from 'discord.js'
+import {firstStep} from './steps'
+import {getSend, welcomeChannelPrefix} from './utils'
 
-async function handleNewMember(member) {
+const isCategory = (
+  ch: TDiscord.GuildChannel,
+): ch is TDiscord.CategoryChannel => ch.type === 'category'
+
+async function handleNewMember(member: TDiscord.GuildMember) {
   const {
     user,
     user: {username, discriminator},
@@ -15,17 +20,24 @@ async function handleNewMember(member) {
     ({name}) => name === 'Unconfirmed Member',
   )
 
+  const clientUser = member.client.user
+
+  if (!unconfirmedMemberRole || !everyoneRole || !clientUser) return
+
   await member.roles.add(unconfirmedMemberRole, 'New member')
 
-  const allPermissions = Object.keys(Discord.Permissions.FLAGS)
+  const allPermissions = Object.keys(Discord.Permissions.FLAGS) as Array<
+    keyof typeof Discord.Permissions.FLAGS
+  >
 
-  const categoryWithFewest = member.guild.channels.cache
+  const onboardingCategories = Array.from(member.guild.channels.cache.values())
+    .filter(isCategory)
     .filter(
-      ({name, type}) =>
-        type === 'category' && name.toLowerCase().includes('onboarding'),
+      ch => isCategory(ch) && ch.name.toLowerCase().includes('onboarding'),
     )
-    .sort((cat1, cat2) => (cat1.children?.size > cat2.children?.size ? 1 : -1))
-    .first()
+  const [categoryWithFewest] = onboardingCategories.sort((cat1, cat2) =>
+    cat1.children.size > cat2.children.size ? 1 : -1,
+  )
 
   const channel = await member.guild.channels.create(
     `${welcomeChannelPrefix}${username}_${discriminator}`,
@@ -53,7 +65,7 @@ async function handleNewMember(member) {
         },
         {
           type: 'member',
-          id: member.client.user.id,
+          id: clientUser.id,
           allow: allPermissions,
         },
       ],
@@ -73,7 +85,7 @@ In less than 5 minutes, you'll have full access to this server. So, let's get st
     `.trim(),
   )
 
-  await send(getSteps(member)[0].question)
+  await send(firstStep.question)
 }
 
-module.exports = {handleNewMember}
+export {handleNewMember}

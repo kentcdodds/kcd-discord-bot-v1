@@ -1,4 +1,5 @@
-const {
+import type * as TDiscord from 'discord.js'
+import {
   getSend,
   getBotMessages,
   welcomeChannelPrefix,
@@ -7,21 +8,42 @@ const {
   editErrorMessagePrefix,
   isCommand,
   getMemberIdFromChannel,
-} = require('./utils')
-const {getSteps, getAnswers} = require('./steps')
+  isTextChannel,
+  isRegularStep,
+  Answers,
+  rollbar,
+} from './utils'
+import {getSteps, getAnswers} from './steps'
 
-async function handleUpdatedMessage(oldMessage, newMessage) {
+// eslint-disable-next-line complexity
+async function handleUpdatedMessage(
+  oldMessage: TDiscord.Message | TDiscord.PartialMessage,
+  newMessage: TDiscord.Message | TDiscord.PartialMessage,
+) {
   const {channel} = newMessage
+  if (
+    !isTextChannel(channel) ||
+    newMessage.partial ||
+    oldMessage.partial ||
+    !newMessage.content
+  ) {
+    rollbar.error(
+      `Onboarding channel had an updated message and it was a partial message. This shouldn't happen.`,
+      isTextChannel(channel) ? channel.name : 'Unknown channel',
+    )
+    return
+  }
+
   const send = getSend(channel)
 
   // must be a welcome channel
-  if (!channel.name?.startsWith(welcomeChannelPrefix)) return
+  if (!channel.name.startsWith(welcomeChannelPrefix)) return
 
   // allow commands to be handled somewhere else
   if (isCommand(newMessage.content)) return
 
   // message must have been sent from the new member
-  const memberId = getMemberIdFromChannel(newMessage.channel)
+  const memberId = getMemberIdFromChannel(channel)
   if (newMessage.author.id !== memberId) return null
 
   const member = getMember(newMessage.guild, memberId)
@@ -29,17 +51,15 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
 
   const steps = getSteps(member)
 
-  const messages = Array.from(
-    (await newMessage.channel.messages.fetch()).values(),
-  )
+  const messages = Array.from((await channel.messages.fetch()).values())
   const botMessages = getBotMessages(messages)
   const previousAnswers = getAnswers(botMessages, member)
   const messageAfterEditedMessage = messages[messages.indexOf(newMessage) - 1]
   if (!messageAfterEditedMessage) return
 
-  const editedStep = steps.find(s =>
-    s.getAnswer?.(messageAfterEditedMessage.content, member),
-  )
+  const editedStep = steps
+    .filter(isRegularStep)
+    .find(s => s.getAnswer(messageAfterEditedMessage.content, member))
   if (!editedStep) return
 
   const error = await editedStep.validate({
@@ -51,7 +71,7 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
     return
   }
 
-  const promises = []
+  const promises: Array<Promise<unknown>> = []
 
   // get the error message we printed previously due to any bad edits
   const stepErrorMessage = await editedStep.validate({
@@ -61,20 +81,23 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
   const editErrorMessages = botMessages.filter(({content}) =>
     content.startsWith(editErrorMessagePrefix),
   )
-  const editErrorMessagesToDelete = editErrorMessages.filter(({content}) =>
-    content.includes(stepErrorMessage),
-  )
+  const editErrorMessagesToDelete = stepErrorMessage
+    ? editErrorMessages.filter(({content}) =>
+        content.includes(stepErrorMessage),
+      )
+    : []
   promises.push(
     ...editErrorMessagesToDelete.map(m =>
       m.delete({reason: 'Edit error resolved.'}),
     ),
   )
 
-  const answers = {...previousAnswers}
+  const answers: Answers = {...previousAnswers}
+  // @ts-expect-error TODO: make validate return the answer value
   answers[editedStep.name] = newMessage.content
 
   const contentAndMessages = []
-  for (const step of steps.filter(s => !s.actionOnlyStep)) {
+  for (const step of steps.filter(isRegularStep)) {
     contentAndMessages.push(
       [
         // eslint-disable-next-line no-await-in-loop
@@ -86,13 +109,13 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
             return step.question === msg.content
           }
         }),
-      ],
+      ] as const,
       [
         // eslint-disable-next-line no-await-in-loop
         await getMessageContents(step.feedback, answers, member),
         messages.find(msg => step.getAnswer(msg.content, member)),
         step,
-      ],
+      ] as const,
     )
   }
   for (const [newContent, msg, step] of contentAndMessages) {
@@ -104,7 +127,6 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
             answers,
             member,
             channel,
-            previousAnswers,
             isEdit: true,
           })
         })(),
@@ -116,7 +138,7 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
 
   if (editErrorMessages.length === editErrorMessagesToDelete.length) {
     const currentStep = steps
-      .filter(s => !s.actionOnlyStep)
+      .filter(isRegularStep)
       .find(step => !answers.hasOwnProperty(step.name))
     if (currentStep) {
       await send(`Thanks for fixing things up, now we can continue.`)
@@ -127,4 +149,4 @@ async function handleUpdatedMessage(oldMessage, newMessage) {
   }
 }
 
-module.exports = {handleUpdatedMessage}
+export {handleUpdatedMessage}

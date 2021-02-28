@@ -1,5 +1,6 @@
+import type * as TDiscord from 'discord.js'
 import got from 'got'
-import pMemoize from 'p-memoize'
+import mem from 'mem'
 import md5 from 'md5-hash'
 import {
   getSubscriberEndpoint,
@@ -8,70 +9,77 @@ import {
   CONVERT_KIT_API_SECRET,
   sleep,
   getChannel,
+  typedBoolean,
+  isRegularStep,
+  RegularStep,
+  rollbar,
 } from './utils'
+import type {Answers, Step} from './utils'
 
-const memGot = pMemoize(got, {
+const memGot = mem(got, {
   // five minutes
   maxAge: 1000 * 60 * 5,
 })
 
-async function getConvertKitSubscriber(email) {
+async function getConvertKitSubscriber(email: string) {
   const url = getSubscriberEndpoint(email)
 
   const {
-    body: {subscribers: [subscriber] = []} = {},
+    body: {subscribers: [subscriber = {state: 'inactive'}] = []} = {},
   } = await memGot(url.toString(), {responseType: 'json'})
 
-  return subscriber?.state === 'active' ? subscriber : null
+  return subscriber.state === 'active' ? subscriber : null
 }
 
-const allSteps = [
-  {
-    name: 'name',
-    question: `What's your first name?`,
-    feedback: answers => `Great, hi ${answers.name} 👋`,
-    getAnswer: messageContents =>
-      messageContents.match(/^Great, hi (.*?) 👋/)?.[1] ?? null,
-    validate({message}) {
-      const response = message.content
-      const base = `That does not look like a first name.{qualifier} I need to know what to call you. What's your real first name?`
-      if (response.length < 0) {
-        return base.replace('{qualifier}', ` It's too short.`)
-      }
-      if (response.length > 25) {
-        return base.replace('{qualifier}', ` It's too long.`)
-      }
-    },
-    action: async ({answers, member, channel}) => {
-      try {
-        const send = getSend(channel)
-        const previousNickname = member.nickname ?? member.user.username
-        if (previousNickname === answers.name) {
-          return
-        }
-        const newNickname = previousNickname.includes('🚀')
-          ? `${answers.name} 🚀`
-          : answers.name
-        await member.setNickname(newNickname, 'Set during onboarding')
-        await send(
-          `_I've changed your nickname on this server to ${answers.name}. If you'd like to change it back then type: \`/nick ${previousNickname}\`_`,
-        )
-      } catch (error) {
-        // not sure when this would fail, but if it does, it's not a huge deal.
-        // So let's just keep going.
-        // it failed on me locally so... 🤷‍♂️
-        console.error(
-          `Failed setting a nickname for ${member.id}:`,
-          error.message,
-        )
-      }
-    },
+const firstStep: RegularStep = {
+  name: 'name',
+  question: `What's your first name?`,
+  feedback: answers => `Great, hi ${answers.name} 👋`,
+  getAnswer: messageContents =>
+    messageContents.match(/^Great, hi (.*?) 👋/)?.[1] ?? null,
+  validate({message}) {
+    const response = message.content
+    const base = `That does not look like a first name.{qualifier} I need to know what to call you. What's your real first name?`
+    if (response.length < 0) {
+      return base.replace('{qualifier}', ` It's too short.`)
+    }
+    if (response.length > 25) {
+      return base.replace('{qualifier}', ` It's too long.`)
+    }
   },
+  action: async ({answers, member, channel}) => {
+    try {
+      const send = getSend(channel)
+      const previousNickname = member.nickname ?? member.user.username
+      if (previousNickname === answers.name) {
+        return
+      }
+      const newNickname = previousNickname.includes('🚀')
+        ? `${answers.name} 🚀`
+        : answers.name ?? ''
+      await member.setNickname(newNickname, 'Set during onboarding')
+      await send(
+        `_I've changed your nickname on this server to ${answers.name}. If you'd like to change it back then type: \`/nick ${previousNickname}\`_`,
+      )
+    } catch (error: unknown) {
+      // not sure when this would fail, but if it does, it's not a huge deal.
+      // So let's just keep going.
+      // it failed on me locally so... 🤷‍♂️
+      rollbar.error(
+        `Failed setting a nickname for ${member.id}:`,
+        (error as Error).message,
+      )
+    }
+  },
+}
+
+const allSteps: ReadonlyArray<Step> = [
+  firstStep,
   {
     name: 'email',
     question: `What's your email address? (This will look you up on Kent's mailing list. If you're not already on it, you'll be added and will receive a confirmation email.)`,
     feedback: async answers => {
-      if (await getConvertKitSubscriber(answers.email)) {
+      if (answers.email && (await getConvertKitSubscriber(answers.email))) {
         return `Oh, nice, ${answers.email} is already a part of Kent's mailing list (you rock 🤘), so you won't be getting a confirmation email after all.`
       }
       return `Awesome, when we're done here, you'll receive a confirmation email to: ${answers.email}.`
@@ -104,10 +112,10 @@ const allSteps = [
         if (result.isDisposable) {
           return `You must use your actual email address.`
         }
-      } catch (e) {
-        console.error(
+      } catch (error: unknown) {
+        rollbar.error(
           `Trouble checking whether the email was disposable`,
-          e.message,
+          (error as Error).message,
         )
       }
     },
@@ -167,7 +175,7 @@ I got this image using your email address with gravatar.com. You can use it for 
 
 ${image}
         `.trim()
-      } catch (error) {
+      } catch (error: unknown) {
         // ignore the error
       }
       return `
@@ -179,13 +187,13 @@ Here's how you set your avatar: <https://support.discord.com/hc/en-us/articles/2
       `.trim()
     },
     isQuestionMessage: messageContents =>
-      /^Here's how you set your avatar/.test(messageContents),
+      messageContents.startsWith(`Here's how you set your avatar`),
     feedback: (answers, member) => {
       return member.user.avatar
         ? `Great, thanks for adding your avatar.`
         : `Ok, please do set your avatar later though. It helps keep everything human (and I'll bug you about it every now and then until you do 😈 😅).`
     },
-    shouldSkip: member => Boolean(member?.user.avatar),
+    shouldSkip: member => Boolean(member.user.avatar),
     getAnswer: messageContents => {
       if (/adding your avatar/i.test(messageContents)) return 'added'
       if (/set your avatar later/i.test(messageContents)) return 'skipped'
@@ -217,10 +225,10 @@ If you'd like to change any, then edit your responses above.
 **If everything's correct, simply reply "yes"**.
     `.trim(),
     isQuestionMessage: messageContents =>
-      /^Here are your answers/.test(messageContents),
+      messageContents.startsWith('Here are your answers'),
     feedback: `Awesome, welcome to the KCD Community on Discord!`,
     getAnswer: messageContents =>
-      /^Awesome, welcome to the KCD/.test(messageContents) ? true : null,
+      messageContents.startsWith('Awesome, welcome to the KCD') ? true : null,
     action: async ({answers, member, channel, isEdit}) => {
       const {guild} = member
       const send = getSend(channel)
@@ -230,12 +238,20 @@ If you'd like to change any, then edit your responses above.
         const unconfirmedMemberRole = guild.roles.cache.find(
           ({name}) => name === 'Unconfirmed Member',
         )
+        if (!unconfirmedMemberRole || !memberRole) {
+          await send(
+            `Something is wrong. Please email team@kentcdodds.com and let them know I couldn't find the member or unconfirmed member roles.`,
+          )
+          return
+        }
 
         await member.roles.remove(unconfirmedMemberRole)
         await member.roles.add(memberRole, 'New confirmed member')
       }
 
-      const subscriber = await getConvertKitSubscriber(answers.email)
+      const subscriber = answers.email
+        ? await getConvertKitSubscriber(answers.email)
+        : null
       const discordTagId = '1747377'
       const discordForm = '1547100'
       let checkEmail = ''
@@ -325,17 +341,17 @@ ${isEdit ? '' : `🎊 You now have access to the whole server. Welcome!`}
         'remix',
         'graphql',
       ]
+      const guild = message.guild
+      if (!guild) return
 
       const reactionEmoji = emojis
         .map(emojiName =>
-          message.guild.emojis.cache.find(
-            ({name}) => name.toLowerCase() === emojiName,
-          ),
+          guild.emojis.cache.find(({name}) => name.toLowerCase() === emojiName),
         )
         // it's possible the emoji title changed or was removed
         // we should fix the list above in that case, but we don't
         // want to crash just because of that... So we'll filter out those.
-        .filter(Boolean)
+        .filter(typedBoolean)
       for (const emoji of reactionEmoji) {
         // we want them in order
         // eslint-disable-next-line no-await-in-loop
@@ -350,6 +366,7 @@ ${isEdit ? '' : `🎊 You now have access to the whole server. Welcome!`}
   },
   {
     name: 'finished',
+    feedback: `We're all done! Thanks!`,
     question: (answers, member) => {
       const tipsChannel = getChannel(member.guild, {name: 'tips'})
       const introChannel = getChannel(member.guild, {name: 'introductions'})
@@ -369,7 +386,7 @@ Enjoy the community!
       `.trim()
     },
     isQuestionMessage: messageContents =>
-      /^Looks like we're all done/.test(messageContents),
+      messageContents.startsWith("Looks like we're all done"),
     validate({message}) {
       // there's no valid answer because this is the last step,
       // so we'll just keep saying this forever.
@@ -389,14 +406,20 @@ ${response}
   },
 ]
 
-const getSteps = member => allSteps.filter(s => !s.shouldSkip?.(member))
+const getSteps = (member: TDiscord.GuildMember) =>
+  allSteps.filter(s => !s.shouldSkip?.(member))
 
-function getAnswers(messages, member) {
-  const answers = {}
+function getAnswers(
+  messages: Array<TDiscord.Message>,
+  member: TDiscord.GuildMember,
+) {
+  const answers: Answers = {}
   for (const message of messages) {
-    for (const step of getSteps(member).filter(s => !s.actionOnlyStep)) {
+    for (const step of getSteps(member).filter(isRegularStep)) {
       const answer = step.getAnswer(message.content, member)
       if (answer !== null) {
+        // @ts-expect-error I'm not sure how to make sure we're assigning
+        // the right type to the right answer without making this overly complicated...
         answers[step.name] = answer
         break
       }
@@ -405,15 +428,10 @@ function getAnswers(messages, member) {
   return answers
 }
 
-function getCurrentStep(steps, answers) {
+function getCurrentStep(steps: Array<Step>, answers: Answers) {
   return steps
-    .filter(s => !s.actionOnlyStep)
+    .filter(isRegularStep)
     .find(step => !answers.hasOwnProperty(step.name))
 }
 
-module.exports = {
-  allSteps,
-  getAnswers,
-  getCurrentStep,
-  getSteps,
-}
+export {allSteps, getAnswers, getCurrentStep, getSteps, firstStep}

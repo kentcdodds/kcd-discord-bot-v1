@@ -1,4 +1,5 @@
-const {
+import type * as TDiscord from 'discord.js'
+import {
   getSend,
   getMember,
   getBotMessages,
@@ -7,12 +8,17 @@ const {
   getMessageContents,
   getMemberIdFromChannel,
   isCommand,
-} = require('./utils')
-const {getSteps, getAnswers, getCurrentStep} = require('./steps')
-const {deleteWelcomeChannel} = require('./delete-welcome-channel')
+  isTextChannel,
+  isActionOnlyStep,
+  isRegularStep,
+} from './utils'
+import {getSteps, getAnswers, getCurrentStep, firstStep} from './steps'
+import {deleteWelcomeChannel} from './delete-welcome-channel'
 
-async function handleNewMessage(message) {
+async function handleNewMessage(message: TDiscord.Message) {
   const {channel} = message
+  if (!isTextChannel(channel)) return
+
   const send = getSend(channel)
 
   // must be a welcome channel
@@ -28,7 +34,7 @@ async function handleNewMessage(message) {
   if (isCommand(message.content)) return
 
   // message must have been sent from the new member
-  const memberId = getMemberIdFromChannel(message.channel)
+  const memberId = getMemberIdFromChannel(channel)
   if (message.author.id !== memberId) return null
 
   const member = getMember(message.guild, memberId)
@@ -55,7 +61,7 @@ async function handleNewMessage(message) {
 
   if (!currentStep) {
     // there aren't any answers yet, so let's send the first feedback
-    await send(await getMessageContents(steps[0].feedback, answers, member))
+    await send(await getMessageContents(firstStep.feedback, answers, member))
     return
   }
 
@@ -78,6 +84,7 @@ async function handleNewMessage(message) {
     return
   }
 
+  // @ts-expect-error TODO: make validate return the answer value
   answers[currentStep.name] = message.content
   if (currentStep.feedback) {
     await send(await getMessageContents(currentStep.feedback, answers, member))
@@ -87,9 +94,10 @@ async function handleNewMessage(message) {
 
   // run action-only steps
   let currentStepIndex = steps.indexOf(currentStep)
-  while (steps[currentStepIndex + 1].actionOnlyStep) {
+  while (currentStepIndex < steps.length) {
+    const actionOnlyStep = steps[currentStepIndex + 1]
+    if (!isActionOnlyStep(actionOnlyStep)) break
     currentStepIndex = currentStepIndex + 1
-    const actionOnlyStep = steps[currentStepIndex]
     // we want these run one at a time, not in parallel
     // eslint-disable-next-line no-await-in-loop
     await actionOnlyStep.action({answers, member, channel, isEdit: false})
@@ -98,10 +106,11 @@ async function handleNewMessage(message) {
   // run next question step without an answer
   const nextStep = steps
     .slice(currentStepIndex + 1)
+    .filter(isRegularStep)
     .find(step => !answers.hasOwnProperty(step.name))
   if (nextStep) {
     await send(await getMessageContents(nextStep.question, answers, member))
   }
 }
 
-module.exports = {handleNewMessage}
+export {handleNewMessage}

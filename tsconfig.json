@@ -2,6 +2,7 @@
   "extends": "./node_modules/kcd-scripts/shared-tsconfig.json",
   "compilerOptions": {
     "target": "ES2020",
-    "typeRoots": ["./types", "./node_modules/@types"]
+    "typeRoots": ["./types", "./node_modules/@types"],
+    "noUncheckedIndexedAccess": true
   }
 }

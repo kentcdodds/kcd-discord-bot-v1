@@ -1,14 +1,15 @@
-const {
+import type * as TDiscord from 'discord.js'
+import {
   isMemberUnconfirmed,
   getMemberWelcomeChannel,
   getWelcomeChannels,
   getMemberIdFromChannel,
   getSend,
-} = require('./utils')
-const {deleteWelcomeChannel} = require('./delete-welcome-channel')
-const {handleNewMessage} = require('./handle-new-message')
+} from './utils'
+import {deleteWelcomeChannel} from './delete-welcome-channel'
+import {handleNewMessage} from './handle-new-message'
 
-async function cleanup(guild) {
+async function cleanup(guild: TDiscord.Guild) {
   const welcomeChannels = getWelcomeChannels(guild)
   // the more channels we have running, the shorter the waiting time should be
   // because we can only have 50 channels in the welcome category
@@ -26,7 +27,10 @@ async function cleanup(guild) {
     // they're not confirmed
     .filter(isMemberUnconfirmed)
     // they joined over 10 minutes ago
-    .filter(({joinedAt}) => joinedAt < Date.now() - 1000 * 60 * 10)
+    .filter(
+      ({joinedAt}) =>
+        !joinedAt || joinedAt.getTime() < Date.now() - 1000 * 60 * 10,
+    )
     // they don't have a welcome channel
     .filter(member => !getMemberWelcomeChannel(member))
     // map them to a promise to kick them
@@ -39,14 +43,18 @@ async function cleanup(guild) {
     .mapValues(channel => cleanupChannel(guild, channel, maxWaitingTime))
     .values()
 
-  const results = await Promise.all([
+  const promises: Array<Promise<unknown>> = [
     ...channelDeletes,
     ...homelessUnconfirmedMembersKicks,
-  ])
-  return results
+  ]
+  await Promise.all(promises)
 }
 
-async function cleanupChannel(guild, channel, maxWaitingTime) {
+async function cleanupChannel(
+  guild: TDiscord.Guild,
+  channel: TDiscord.TextChannel,
+  maxWaitingTime: number,
+) {
   const tooManyMessages = 100
   const timeoutWarningMessageContent = `it's been a while and I haven't heard from you. This channel will get automatically deleted and you'll be removed from the server after a while. Don't worry though, you can always try again later when you have time to finish: https://kcd.im/discord`
   const spamWarningMessageContent = `you're sending a lot of messages, this channel will get deleted automatically if you send too many.`
@@ -67,8 +75,9 @@ async function cleanupChannel(guild, channel, maxWaitingTime) {
     .sort((msgA, msgB) => (msgA.createdAt > msgB.createdAt ? -1 : 1))
     .first()
 
-  const lastMemberInteractionTime =
+  const lastMemberInteractionTime = (
     mostRecentMemberMessage?.createdAt ?? channel.createdAt
+  ).getTime()
 
   // somehow the member is gone (maybe they left the server?)
   // delete the channel
@@ -86,9 +95,7 @@ async function cleanupChannel(guild, channel, maxWaitingTime) {
       content.includes(spamWarningMessageContent),
     )
     if (!hasWarned) {
-      await send(
-        `Whoa ${member?.user ?? 'there'}, ${spamWarningMessageContent}`,
-      )
+      await send(`Whoa ${member.user}, ${spamWarningMessageContent}`)
     }
   }
 
@@ -97,10 +104,12 @@ async function cleanupChannel(guild, channel, maxWaitingTime) {
     return deleteWelcomeChannel(channel, 'Too many messages')
   }
 
+  const now = Date.now()
+
   if (lastMessage.author.id === member.id) {
     // they sent us something and we haven't responded yet
     // this happens if the bot goes down for some reason (normally when we redeploy)
-    const timeSinceLastMessage = new Date() - lastMemberInteractionTime
+    const timeSinceLastMessage = now - lastMemberInteractionTime
     if (timeSinceLastMessage > 2 * 1000) {
       // if it's been a while and we haven't handled the last message
       // then let's handle it now.
@@ -108,7 +117,7 @@ async function cleanupChannel(guild, channel, maxWaitingTime) {
     }
   } else {
     // we haven't heard from them in a while...
-    const timeSinceLastMessage = new Date() - lastMemberInteractionTime
+    const timeSinceLastMessage = now - lastMemberInteractionTime
     const hasBeenWarned = lastMessage.content.includes(
       timeoutWarningMessageContent,
     )
@@ -123,9 +132,7 @@ async function cleanupChannel(guild, channel, maxWaitingTime) {
       !hasBeenWarned &&
       !confirmed
     ) {
-      return send(
-        `Hi ${member?.user ?? 'there'}, ${timeoutWarningMessageContent}`,
-      )
+      return send(`Hi ${member.user}, ${timeoutWarningMessageContent}`)
     } else if (timeSinceLastMessage > maxWaitingTime * 10) {
       // somehow this channel has stuck around for a long time
       // not sure how this should be possible, but we should delete it
@@ -134,4 +141,4 @@ async function cleanupChannel(guild, channel, maxWaitingTime) {
   }
 }
 
-module.exports = {cleanup}
+export {cleanup}

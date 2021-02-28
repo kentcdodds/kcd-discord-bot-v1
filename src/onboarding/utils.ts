@@ -19,12 +19,54 @@ function getSubscriberEndpoint(email: string) {
   return url.toString()
 }
 
-type Answers = {}
+type Answers = {
+  name?: string
+  email?: string
+  coc?: true
+  report?: true
+  avatar?: 'added' | 'skipped'
+  confirm?: true
+  finished?: null
+}
+
+type StepMessageGetter = (
+  answers: Answers,
+  member: TDiscord.GuildMember,
+) => string | Promise<string>
+type ValidateFn = (info: {
+  answers: Answers
+  message: TDiscord.Message
+}) => string | undefined | null | Promise<string | undefined | null>
+type ActionFn = (info: {
+  answers: Answers
+  member: TDiscord.GuildMember
+  channel: TDiscord.TextChannel
+  isEdit: boolean
+}) => unknown | Promise<unknown>
+
+type RegularStep = {
+  name: keyof Answers
+  isQuestionMessage?: (messageContents: string) => boolean
+  question: string | StepMessageGetter
+  feedback: string | StepMessageGetter
+  getAnswer: (
+    messageContents: string,
+    member: TDiscord.GuildMember,
+  ) => string | true | null
+  shouldSkip?: (member: TDiscord.GuildMember) => boolean
+  validate: ValidateFn
+  action?: ActionFn
+  actionOnlyStep?: false
+}
+type ActionOnlyStep = {
+  actionOnlyStep: true
+  shouldSkip?: RegularStep['shouldSkip']
+  action: ActionFn
+}
+type Step = RegularStep | ActionOnlyStep
 
 async function getMessageContents(
-  msg:
-    | string
-    | ((answers: Answers, member: TDiscord.GuildMember) => Promise<string>),
+  msg: string | StepMessageGetter,
   answers: Answers,
   member: TDiscord.GuildMember,
 ) {
@@ -43,6 +85,11 @@ const getWelcomeChannels = (guild: TDiscord.Guild) =>
 
 const hasRole = (member: TDiscord.GuildMember, roleName: string) =>
   member.roles.cache.some(({name}) => name === roleName)
+
+const isRegularStep = (step: Step | undefined): step is RegularStep =>
+  !step?.actionOnlyStep
+const isActionOnlyStep = (step: Step | undefined): step is ActionOnlyStep =>
+  Boolean(step?.actionOnlyStep)
 
 function isMemberUnconfirmed(member: TDiscord.GuildMember) {
   const memberRoles = [
@@ -71,4 +118,7 @@ export {
   isMemberUnconfirmed,
   getMemberWelcomeChannel,
   getMessageContents,
+  isRegularStep,
+  isActionOnlyStep,
 }
+export type {Answers, Step, RegularStep, ActionOnlyStep}

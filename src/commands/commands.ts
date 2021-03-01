@@ -60,3 +60,4 @@ Here are the available commands (for more details on a command, type \`?help <na
 help.description = 'Lists available commands'
 
 export default commands
+export {help}

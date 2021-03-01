@@ -1,23 +1,25 @@
-const Discord = require('discord.js')
-const {makeFakeClient} = require('test-utils')
-const {
-  default: {help},
-} = require('../../commands')
+import Discord from 'discord.js'
+import {makeFakeClient} from 'test-utils'
+import {help} from '../../commands'
 
 test('prints help for all commands', async () => {
-  const {client, defaultChannels, kody} = await makeFakeClient()
+  const {
+    client,
+    defaultChannels: {talkToBotsChannel},
+    kody,
+  } = await makeFakeClient()
   const message = new Discord.Message(
     client,
     {id: 'help_test', content: '?help', author: kody.user},
-    defaultChannels.talkToBotsChannel,
+    talkToBotsChannel,
   )
   await help(message)
 
-  const messages = Array.from(
-    defaultChannels.talkToBotsChannel.messages.cache.values(),
-  )
-  expect(messages).toHaveLength(1)
-  expect(messages[0].content).toMatchInlineSnapshot(`
+  const reply = talkToBotsChannel.lastMessage
+  if (!reply || talkToBotsChannel.messages.cache.size !== 1) {
+    throw new Error(`The bot didn't send exactly one reply`)
+  }
+  expect(reply.content).toMatchInlineSnapshot(`
     "Here are the available commands (for more details on a command, type \`?help <name-of-command>\`):
 
     - help: Lists available commands
@@ -32,19 +34,22 @@ test('prints help for all commands', async () => {
 })
 
 test('help with a specific command', async () => {
-  const {client, defaultChannels} = await makeFakeClient()
+  const {
+    client,
+    defaultChannels: {talkToBotsChannel},
+  } = await makeFakeClient()
   const message = new Discord.Message(
     client,
     {id: 'help_test', content: '?help info'},
-    defaultChannels.talkToBotsChannel,
+    talkToBotsChannel,
   )
   await help(message)
 
-  const messages = Array.from(
-    defaultChannels.talkToBotsChannel.messages.cache.values(),
-  )
-  expect(messages).toHaveLength(1)
-  expect(messages[0].content).toMatchInlineSnapshot(
+  const reply = talkToBotsChannel.lastMessage
+  if (!reply || talkToBotsChannel.messages.cache.size !== 1) {
+    throw new Error(`The bot didn't send exactly one reply`)
+  }
+  expect(reply.content).toMatchInlineSnapshot(
     `"Gives information about the bot (deploy date etc.)"`,
   )
 })

@@ -220,15 +220,15 @@ async function makeFakeClient() {
   }:
     | {
         user?: TDiscord.GuildMember | TDiscord.User
-        message?: TDiscord.Message
+        message?: TDiscord.Message | null
         reactionName: string
-        emoji?: TDiscord.GuildEmoji
+        emoji?: {name: string; id?: string}
       }
     | {
         user?: TDiscord.GuildMember | TDiscord.User
-        message?: TDiscord.Message
+        message?: TDiscord.Message | null
         reactionName?: string
-        emoji: TDiscord.GuildEmoji
+        emoji: {name: string; id?: string}
       }) {
     if (!message) {
       throw new Error(

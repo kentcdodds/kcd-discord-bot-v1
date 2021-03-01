@@ -25,12 +25,10 @@ const setup = async (command: string) => {
   })
   await blog(message)
 
-  if (talkToBotsChannel.messages.cache.size !== 1) {
+  const reply = talkToBotsChannel.lastMessage
+  if (!reply || talkToBotsChannel.messages.cache.size !== 1) {
     throw new Error(`The bot didn't send only a single reply`)
   }
-
-  const reply = talkToBotsChannel.lastMessage
-  if (!reply) throw new Error(`The bot didn't send a reply`)
 
   return {reply, cleanup}
 }

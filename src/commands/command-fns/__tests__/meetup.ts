@@ -1,15 +1,16 @@
-const Discord = require('discord.js')
-const {SnowflakeUtil} = require('discord.js')
-const {makeFakeClient} = require('test-utils')
-const {
+import assert from 'assert'
+import type * as TDiscord from 'discord.js'
+import Discord, {SnowflakeUtil} from 'discord.js'
+import {makeFakeClient} from 'test-utils'
+import {
   getMessageLink,
   getMeetupChannels,
   getFollowMeChannel,
-} = require('../../../meetup/utils')
-const {meetup} = require('../meetup')
-const {cleanup} = require('../../../meetup/cleanup')
+} from '../../../meetup/utils'
+import {meetup} from '../meetup'
+import {cleanup} from '../../../meetup/cleanup'
 
-async function setup(date) {
+async function setup(date?: Date) {
   if (date) {
     jest.useFakeTimers('modern')
     jest.setSystemTime(new Date(date))
@@ -17,14 +18,13 @@ async function setup(date) {
   const utils = await makeFakeClient()
   const {client, defaultChannels} = utils
 
-  const createMessage = (content, user) => {
+  const createMessage = (
+    content: string,
+    user: TDiscord.User | TDiscord.GuildMember,
+  ) => {
     return new Discord.Message(
       client,
-      {
-        id: SnowflakeUtil.generate(),
-        content,
-        author: user,
-      },
+      {id: SnowflakeUtil.generate(), content, author: user},
       defaultChannels.talkToBotsChannel,
     )
   }
@@ -63,6 +63,7 @@ test('users should be able to schedule and start meetups', async () => {
   await meetup(createMessage(`?meetup schedule ${meetupDetails}`, kody.user))
 
   const scheduledMeetupMessage = scheduledMeetupsChannel.lastMessage
+  assert(scheduledMeetupMessage, 'Bot did not post a scheduled meetup message')
 
   expect(scheduledMeetupsChannel.messages.cache.size).toBe(1)
   expect(scheduledMeetupMessage.content).toBe(
@@ -76,6 +77,8 @@ React with ✋ to be notified when it starts.
   )
 
   const scheduledLink = getMessageLink(scheduledMeetupMessage)
+
+  assert(botChannel.lastMessage, 'Bot did not reply')
   expect(botChannel.lastMessage.content).toBe(
     `
 Your meetup has been scheduled: <${scheduledLink}>. You can control the meetup by reacting to that message with the following emoji:
@@ -105,6 +108,8 @@ If you want to reschedule, then cancel the old one and schedule a new meetup.
 
   // the message is deleted
   expect(scheduledMeetupsChannel.messages.cache.size).toBe(0)
+
+  assert(meetupNotificationsChannel.lastMessage, 'Bot did not notify')
   expect(meetupNotificationsChannel.lastMessage.content).toBe(
     `
 🏁 ${kody} has started the meetup:
@@ -129,6 +134,7 @@ test('there is a limit on the length of the meetup details', async () => {
   await meetup(createMessage(`?meetup schedule ${meetupDetails}`, kody.user))
 
   expect(scheduledMeetupsChannel.messages.cache.size).toBe(0)
+  assert(botChannel.lastMessage, 'Bot did not reply')
   expect(botChannel.lastMessage.content).toMatchInlineSnapshot(
     `"Meetup details are limited to 800 characters and your details are 874 characters. If you need to, put extra details somewhere online and link to it."`,
   )
@@ -154,6 +160,7 @@ test('users can schedule recurring meetups', async () => {
   )
 
   const scheduledMeetupMessage = scheduledMeetupsChannel.lastMessage
+  assert(scheduledMeetupMessage, 'Bot did not post a scheduled meetup message')
 
   expect(scheduledMeetupsChannel.messages.cache.size).toBe(1)
   expect(scheduledMeetupMessage.content).toBe(
@@ -166,6 +173,7 @@ React with ✋ to be notified when it starts.
     `.trim(),
   )
 
+  assert(botChannel.lastMessage, 'Bot did not reply')
   expect(botChannel.lastMessage.content).toEqual(
     `
 Your recurring meetup has been scheduled: <${getMessageLink(
@@ -197,10 +205,16 @@ If you want to reschedule, then cancel the old one and schedule a new meetup.
 
   // the message is not deleted
   expect(scheduledMeetupsChannel.messages.cache.size).toBe(1)
+  assert(
+    scheduledMeetupsChannel.lastMessage,
+    'Bot removed the schedule message',
+  )
   // the 🏁 reaction is removed
   expect(
     scheduledMeetupsChannel.lastMessage.reactions.cache.get('🏁'),
   ).toBeFalsy()
+
+  assert(meetupNotificationsChannel.lastMessage, 'Bot did not notify')
   expect(meetupNotificationsChannel.lastMessage.content).toBe(
     `
 🏁 ${kody} has started the meetup:
@@ -218,6 +232,7 @@ test('should give an error if no subject is specified', async () => {
   await meetup(createMessage(`?meetup schedule No quotes here`, kody.user))
 
   expect(botChannel.messages.cache.size).toBe(1)
+  assert(botChannel.lastMessage, 'Bot did not reply')
   expect(botChannel.lastMessage.content).toEqual(
     'Make sure to include the subject of your meetup in quotes. Send `?meetup help` for more info.',
   )
@@ -236,6 +251,7 @@ test('should delete the scheduled meetup if the host react to it with ❌', asyn
   await meetup(createMessage(`?meetup schedule "Test meetup"`, kody.user))
 
   const scheduledMeetupMessage = scheduledMeetupsChannel.lastMessage
+  assert(scheduledMeetupMessage, 'Bot did not post a scheduled meetup message')
 
   reactFromUser({
     user: kody,
@@ -246,6 +262,8 @@ test('should delete the scheduled meetup if the host react to it with ❌', asyn
   await cleanup(guild)
 
   expect(scheduledMeetupsChannel.messages.cache.size).toBe(0)
+
+  assert(meetupNotificationsChannel.lastMessage, 'Bot did not notify')
   expect(meetupNotificationsChannel.lastMessage.content).toBe(
     `${kody} has canceled the meetup: Test meetup.`,
   )
@@ -263,6 +281,7 @@ test('should not delete the scheduled meetup if the some user react with ❌', a
 
   await meetup(createMessage(`?meetup schedule "Test meetup"`, kody.user))
   const scheduledMessage = scheduledMeetupsChannel.lastMessage
+  assert(scheduledMessage, 'No scheduled meetup message was sent')
 
   const josh = await createUser('Josh')
   reactFromUser({user: josh, message: scheduledMessage, emoji: {name: '❌'}})
@@ -278,7 +297,7 @@ test('can start a meetup right away with the start subcommand', async () => {
   await meetup(createMessage(`?meetup start Migrating to Tailwind`, kody.user))
   const meetupChannels = Array.from(getMeetupChannels(guild).values())
   expect(meetupChannels).toHaveLength(1)
-  expect(meetupChannels[0].name).toMatchInlineSnapshot(
+  expect(meetupChannels[0]?.name).toMatchInlineSnapshot(
     `"🤪 Meetup: kody \\"Migrating to Tailwind\\""`,
   )
 })
@@ -299,9 +318,10 @@ test('deletes meetup channels that are over 15 minutes old with nobody in them',
 
   // people join
   const meetupChannel = meetupChannels[0]
+  assert(meetupChannel, 'Meetup channel does not exist')
   // we have to override the members because it's read-only and only a getter
   Object.defineProperty(meetupChannel, 'members', {
-    writeable: false,
+    // writeable: false,
     enumerable: true,
     configurable: true,
     value: new Discord.Collection(),
@@ -330,7 +350,7 @@ test('can add yourself to the follow-me channel', async () => {
     kody,
     createMessage,
     followMeChannel,
-    getBotMessages,
+    botChannel,
     guild,
     reactFromUser,
   } = await setup()
@@ -338,6 +358,7 @@ test('can add yourself to the follow-me channel', async () => {
   await meetup(
     createMessage(`?meetup follow-me ${followMeUserMessage}`, kody.user),
   )
+  assert(followMeChannel.lastMessage, 'Bot did not add follow me message')
   expect(followMeChannel.lastMessage.content).toEqual(
     `
 Raise your hand ✋ to be notified whenever ${kody.user} schedules and starts meetups. Here's a bit about ${kody.user}:
@@ -346,9 +367,9 @@ Raise your hand ✋ to be notified whenever ${kody.user} schedules and starts me
   `.trim(),
   )
 
-  let botMessages = getBotMessages()
-  expect(botMessages).toHaveLength(1)
-  expect(botMessages[0].content).toContain(`I've posted a message in`)
+  expect(botChannel.messages.cache.size).toBe(1)
+  assert(botChannel.lastMessage, 'Bot did not reply')
+  expect(botChannel.lastMessage.content).toContain(`I've posted a message in`)
 
   // can update the follow-me bio
   followMeUserMessage = `I am a super neat person who likes to schedule meetups`
@@ -365,9 +386,10 @@ Raise your hand ✋ to be notified whenever ${kody.user} schedules and starts me
   )
   expect(followMeChannel.messages.cache.size).toBe(1)
 
-  botMessages = getBotMessages()
-  expect(botMessages).toHaveLength(2)
-  expect(botMessages[1].content).toContain(`I've updated your message in`)
+  expect(botChannel.messages.cache.size).toBe(2)
+  expect(botChannel.lastMessage.content).toContain(
+    `I've updated your message in`,
+  )
 
   // kody wants to delete the follow-me message so kody reacts with ❌
   reactFromUser({user: kody, message: botFollowMeMessage, emoji: {name: '❌'}})
@@ -388,6 +410,7 @@ test('followers are notified when you schedule and start a meetup', async () => 
   } = await setup()
   await meetup(createMessage(`?meetup follow-me I am Kody`, kody.user))
   const followMeChannel = getFollowMeChannel(guild)
+  assert(followMeChannel, 'Cannot get follow-me channel from the guild')
   const followMeMessage = followMeChannel.messages.cache.find(msg =>
     msg.content.includes(kody.id),
   )
@@ -407,6 +430,7 @@ test('followers are notified when you schedule and start a meetup', async () => 
   )
 
   const scheduledMeetupMessage = scheduledMeetupsChannel.lastMessage
+  assert(scheduledMeetupMessage, 'Bot did not post a scheduled meetup message')
 
   // marty signs up to be notified about this event
   reactFromUser({
@@ -415,6 +439,7 @@ test('followers are notified when you schedule and start a meetup', async () => 
     emoji: {name: '✋'},
   })
 
+  assert(meetupNotificationsChannel.lastMessage, 'Bot did not notify')
   expect(meetupNotificationsChannel.lastMessage.content).toBe(
     `
 📣 ${kody} has scheduled a meetup:
@@ -434,6 +459,8 @@ CC: ${hannah}
   })
 
   await cleanup(guild)
+
+  assert(meetupNotificationsChannel.lastMessage, 'Bot did not notify')
   expect(meetupNotificationsChannel.lastMessage.content).toBe(
     `
 🏁 ${kody} has started the meetup:
@@ -471,6 +498,7 @@ test('can use "TESTING" in the subject to test things out and not notify anyone'
   } = await setup()
   await meetup(createMessage(`?meetup follow-me I am Kody`, kody.user))
   const followMeChannel = getFollowMeChannel(guild)
+  assert(followMeChannel, 'Cannot get follow-me channel from the guild')
   const followMeMessage = followMeChannel.messages.cache.find(msg =>
     msg.content.includes(kody.id),
   )
@@ -490,6 +518,7 @@ test('can use "TESTING" in the subject to test things out and not notify anyone'
   )
 
   const scheduledMeetupMessage = scheduledMeetupsChannel.lastMessage
+  assert(scheduledMeetupMessage, 'Bot did not post a scheduled meetup message')
 
   // marty signs up to be notified about this event
   reactFromUser({
@@ -498,6 +527,7 @@ test('can use "TESTING" in the subject to test things out and not notify anyone'
     emoji: {name: '✋'},
   })
 
+  assert(meetupNotificationsChannel.lastMessage, 'Bot did not notify')
   expect(meetupNotificationsChannel.lastMessage.content).toBe(
     `
 📣 ${kody} has scheduled a meetup:
@@ -517,6 +547,8 @@ CC: ${hannah.displayName}
   })
 
   await cleanup(guild)
+
+  assert(meetupNotificationsChannel.lastMessage, 'Bot did not notify')
   expect(meetupNotificationsChannel.lastMessage.content).toBe(
     `
 🏁 ${kody} has started the meetup:
@@ -535,6 +567,7 @@ test('users can update scheduled meetups', async () => {
     createMessage(`?meetup schedule "Migrating to Tailwind"`, kody.user),
   )
   const scheduledMessage = scheduledMeetupsChannel.lastMessage
+  assert(scheduledMessage, 'No scheduled meetup message was sent')
 
   await meetup(
     createMessage(
@@ -568,6 +601,7 @@ test('users can update scheduled recurring meetups', async () => {
     ),
   )
   const scheduledMessage = scheduledMeetupsChannel.lastMessage
+  assert(scheduledMessage, 'No scheduled meetup message was sent')
 
   await meetup(
     createMessage(
@@ -600,7 +634,7 @@ test(`users can't update a recurring meetup to a one-time meetup without force-u
     botChannel,
   } = await setup()
 
-  const isRecurring = msg => msg.includes('recurring')
+  const isRecurring = (msg: string) => msg.includes('recurring')
 
   await meetup(
     createMessage(
@@ -609,6 +643,7 @@ test(`users can't update a recurring meetup to a one-time meetup without force-u
     ),
   )
   const scheduledMessage = scheduledMeetupsChannel.lastMessage
+  assert(scheduledMessage, 'No scheduled meetup message was sent')
   let lastContent = scheduledMessage.content
   expect(isRecurring(lastContent)).toBe(true)
 
@@ -621,10 +656,12 @@ test(`users can't update a recurring meetup to a one-time meetup without force-u
     ),
   )
 
+  assert(botChannel.lastMessage, 'Bot did not reply')
   expect(botChannel.lastMessage.content).toMatchInlineSnapshot(
     `"The original meetup was recurring, but you're updating it to not be recurring. This is a common mistake. If you're sure this is the change you want, use \`?meetup force-update\` rather than \`?meetup update\`"`,
   )
   // no change to the scheduled meetup message
+  assert(scheduledMeetupsChannel.lastMessage, 'No schedule meetup lastMessage')
   expect(scheduledMeetupsChannel.lastMessage.content).toBe(lastContent)
   expect(isRecurring(lastContent)).toBe(true)
 
@@ -655,6 +692,7 @@ test(`users can't update a recurring meetup to a one-time meetup without force-u
   expect(scheduledMeetupsChannel.lastMessage.content).toBe(lastContent)
   expect(isRecurring(lastContent)).toBe(false)
 
+  assert(botChannel.lastMessage, 'Bot did not reply')
   expect(botChannel.lastMessage.content).toMatchInlineSnapshot(
     `"The original meetup was not recurring, but you're updating it to be recurring. This is a common mistake. If you're sure this is the change you want, use \`?meetup force-update\` rather than \`?meetup update\`"`,
   )
@@ -685,6 +723,7 @@ test('long messages are split automatically so every user sees the notification'
   } = await setup()
   await meetup(createMessage(`?meetup follow-me I am Kody`, kody.user))
   const followMeChannel = getFollowMeChannel(guild)
+  assert(followMeChannel, 'Cannot get follow-me channel from the guild')
   const followMeMessage = followMeChannel.messages.cache.find(msg =>
     msg.content.includes(kody.id),
   )
@@ -706,6 +745,7 @@ test('long messages are split automatically so every user sees the notification'
   )
 
   const scheduledMeetupMessage = scheduledMeetupsChannel.lastMessage
+  assert(scheduledMeetupMessage, 'Bot did not post a scheduled meetup message')
 
   expect(scheduledMeetupsChannel.messages.cache.size).toBe(1)
   expect(meetupNotificationsChannel.messages.cache.size).toBe(2)

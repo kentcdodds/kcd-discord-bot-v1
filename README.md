@@ -42,18 +42,12 @@ To get a list of commands, run: `?help` in
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-## Installation
-
-This module is distributed via [npm][npm] which is bundled with [node][node] and
-should be installed as one of your project's `dependencies`:
-
-```
-npm install --save kcd-discord-bot
-```
-
 ## Usage
 
 I deploy this on [Heroku](https://heroku.com/).
+
+If you want to fork it, by my guest. It's not built to be a general solution so
+you'll probably have to change a bunch of things 😅
 
 ## Issues
 

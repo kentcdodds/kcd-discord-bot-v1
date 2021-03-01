@@ -1,11 +1,16 @@
-const Discord = require('discord.js')
-const {rest} = require('msw')
-const {server} = require('server')
-const {makeFakeClient} = require('test-utils')
-const {blog} = require('../blog')
+import Discord from 'discord.js'
+import {rest} from 'msw'
+import {server} from 'server'
+import {makeFakeClient} from 'test-utils'
+import {blog} from '../blog'
 
-const setup = async command => {
-  const {client, defaultChannels, kody, cleanup} = await makeFakeClient()
+const setup = async (command: string) => {
+  const {
+    client,
+    defaultChannels: {talkToBotsChannel},
+    kody,
+    cleanup,
+  } = await makeFakeClient()
   const message = new Discord.Message(
     client,
     {
@@ -13,24 +18,27 @@ const setup = async command => {
       content: `?blog ${command}`,
       author: kody.user,
     },
-    defaultChannels.talkToBotsChannel,
+    talkToBotsChannel,
   )
   Object.assign(message, {
     mentions: new Discord.MessageMentions(message, [], [], false),
   })
   await blog(message)
 
-  const messages = Array.from(
-    defaultChannels.talkToBotsChannel.messages.cache.values(),
-  )
-  return {messages, cleanup}
+  if (talkToBotsChannel.messages.cache.size !== 1) {
+    throw new Error(`The bot didn't send only a single reply`)
+  }
+
+  const reply = talkToBotsChannel.lastMessage
+  if (!reply) throw new Error(`The bot didn't send a reply`)
+
+  return {reply, cleanup}
 }
 
 test('should show the list of the last 10 articles', async () => {
-  const {messages} = await setup('last')
+  const {reply} = await setup('last')
 
-  expect(messages).toHaveLength(1)
-  expect(messages[0].content).toMatchInlineSnapshot(`
+  expect(reply.content).toMatchInlineSnapshot(`
     "This is the list of the last 10 articles on the blog:
     - How to React ⚛️
       <https://kentcdodds.com/blog/how-to-react>
@@ -58,8 +66,7 @@ test('should show the list of the last 10 articles', async () => {
 test('should show articles matching the search string', async () => {
   let utils = await setup('open source')
 
-  expect(utils.messages).toHaveLength(1)
-  expect(utils.messages[0].content).toMatchInlineSnapshot(`
+  expect(utils.reply.content).toMatchInlineSnapshot(`
     "This is the list of the articles matching \\"open source\\" 💻:
     - Favor Progress Over Pride in Open Source
       <https://kentcdodds.com/blog/favor-progress-over-pride-in-open-source>
@@ -72,34 +79,28 @@ test('should show articles matching the search string', async () => {
   utils.cleanup()
   utils = await setup('conditionally render content in JSX')
 
-  expect(utils.messages).toHaveLength(1)
-  expect(utils.messages[0].content).toEqual(
+  expect(utils.reply.content).toEqual(
     `https://kentcdodds.com/blog/use-ternaries-rather-than-and-and-in-jsx`,
   )
   utils.cleanup()
 
   utils = await setup(`why you shouldn't mock fetch or your AP`)
 
-  expect(utils.messages).toHaveLength(1)
-  expect(utils.messages[0].content).toEqual(
+  expect(utils.reply.content).toEqual(
     `https://kentcdodds.com/blog/stop-mocking-fetch`,
   )
 })
 
 test('should show the first articles retrieved', async () => {
-  const {messages} = await setup(`latest`)
+  const {reply} = await setup(`latest`)
 
-  expect(messages).toHaveLength(1)
-  expect(messages[0].content).toEqual(
-    `https://kentcdodds.com/blog/how-to-react`,
-  )
+  expect(reply.content).toEqual(`https://kentcdodds.com/blog/how-to-react`)
 })
 
 test('should show an info message if not articles are found', async () => {
-  const {messages} = await setup(`not exist`)
+  const {reply} = await setup(`not exist`)
 
-  expect(messages).toHaveLength(1)
-  expect(messages[0].content).toMatchInlineSnapshot(
+  expect(reply.content).toMatchInlineSnapshot(
     `"Unfortunately there is no article matching \\"not exist\\" 😟. Try searching here: <https://kentcdodds.com/blog>"`,
   )
 })
@@ -111,28 +112,25 @@ test('should show an info message if there is an issue retrying articles', async
     }),
   )
 
-  const {messages} = await setup(`not exist`)
+  const {reply} = await setup(`not exist`)
 
-  expect(messages).toHaveLength(1)
-  expect(messages[0].content).toMatchInlineSnapshot(
+  expect(reply.content).toMatchInlineSnapshot(
     `"Something went wrong retrieving the list of articles 😬. Try searching here: <https://kentcdodds.com/blog>"`,
   )
 })
 
 test('should give an error message if the user not provide a search term', async () => {
-  const {messages} = await setup(``)
+  const {reply} = await setup(``)
 
-  expect(messages).toHaveLength(1)
-  expect(messages[0].content).toMatchInlineSnapshot(
+  expect(reply.content).toMatchInlineSnapshot(
     `"A search term is required. For example: \`?blog state management\`"`,
   )
 })
 
 test('should show the first 10 results if there are more', async () => {
-  const {messages} = await setup(`re`)
+  const {reply} = await setup(`re`)
 
-  expect(messages).toHaveLength(1)
-  expect(messages[0].content).toMatchInlineSnapshot(`
+  expect(reply.content).toMatchInlineSnapshot(`
     "There are too many results for \\"re\\". Here are the top 10:
     - How to React ⚛️
       <https://kentcdodds.com/blog/how-to-react>
@@ -158,8 +156,7 @@ test('should show the first 10 results if there are more', async () => {
 })
 
 test('should return an article link for random', async () => {
-  const {messages} = await setup(`random`)
+  const {reply} = await setup(`random`)
 
-  expect(messages).toHaveLength(1)
-  expect(messages[0].content).toContain(`https://kentcdodds.com/blog/`)
+  expect(reply.content).toContain(`https://kentcdodds.com/blog/`)
 })

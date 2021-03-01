@@ -1,6 +1,6 @@
-const Discord = require('discord.js')
-const {makeFakeClient, waitUntil} = require('test-utils')
-const {handleNewMessage} = require('..')
+import Discord from 'discord.js'
+import {makeFakeClient, waitUntil} from 'test-utils'
+import {handleNewMessage} from '..'
 
 test('handles incoming messages', async () => {
   const {client, defaultChannels, kody} = await makeFakeClient()
@@ -17,10 +17,8 @@ test('handles incoming messages', async () => {
       Array.from(defaultChannels.talkToBotsChannel.messages.cache.values()),
     ).toHaveLength(1),
   )
-  const messages = Array.from(
-    defaultChannels.talkToBotsChannel.messages.cache.values(),
-  )
-  expect(messages[0].content).toMatchInlineSnapshot(`
+  expect(defaultChannels.talkToBotsChannel.lastMessage?.content)
+    .toMatchInlineSnapshot(`
     "Here are the available commands (for more details on a command, type \`?help <name-of-command>\`):
 
     - help: Lists available commands

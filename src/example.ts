@@ -1,24 +1,23 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-unused-vars */
-const path = require('path')
-const Discord = require('discord.js')
-const {cleanupGuildOnInterval, getChannel} = require('./utils')
-const {default: rollbar} = require('./rollbar')
+import path from 'path'
+import Discord from 'discord.js'
+import dotenv from 'dotenv'
+import {cleanupGuildOnInterval, getChannel} from './utils'
+import {onboarding, commands, clubApplication, admin} from './setup'
 
-require('dotenv').config({
+dotenv.config({
   path: path.join(__dirname, '..', `/.env.local`),
 })
-
-const {onboarding, commands, clubApplication, admin} = require('.')
 
 const client = new Discord.Client()
 
 console.log('logging in')
-rollbar.log('hello world')
-client.login(process.env.DISCORD_BOT_TOKEN)
+void client.login(process.env.DISCORD_BOT_TOKEN)
 
 const getKcdGuild = () => client.guilds.cache.find(({name}) => name === 'KCD')
 const getKent = () =>
-  getKcdGuild().members.cache.find(
+  getKcdGuild()?.members.cache.find(
     ({user: {username, discriminator}}) =>
       username === 'kentcdodds' && discriminator === '0001',
   )
@@ -27,6 +26,8 @@ client.on('ready', async () => {
   console.log('ready to go')
   // commands.setup(client)
   const kcd = getKcdGuild()
+  if (!kcd) throw new Error('Could not find KCD guild')
+
   console.log(kcd.emojis.cache)
   // console.log(kcd.emojis.cache.find(({name}) => '✋' === name))
   // const upcomingMeetups = getChannel(kcd, {name: 'upcoming-meetups'})

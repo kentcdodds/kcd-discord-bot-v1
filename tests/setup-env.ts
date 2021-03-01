@@ -1,5 +1,5 @@
-const {DiscordManager} = require('test-utils')
-const {server} = require('./server')
+import {DiscordManager} from './test-utils'
+import {server} from './server'
 
 process.env.CONVERT_KIT_API_KEY = 'FAKE_CONVERT_KIT_API_KEY'
 process.env.CONVERT_KIT_API_SECRET = 'FAKE_CONVERT_KIT_API_SECRET'

@@ -1,0 +1,15 @@
+{
+  "extends": "../node_modules/kcd-scripts/shared-tsconfig.json",
+  "exclude": ["../node_modules"],
+  "include": ["./*", "./**/*"],
+  "compilerOptions": {
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "target": "es2020",
+    "typeRoots": ["../types", "../node_modules/@types"],
+    "noUncheckedIndexedAccess": true,
+    "paths": {
+      "*": ["*", "../tests/*"]
+    }
+  }
+}

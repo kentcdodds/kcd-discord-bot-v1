@@ -32,10 +32,10 @@
     "validate": "kcd-scripts validate"
   },
   "dependencies": {
-    "@babel/runtime": "^7.13.6",
+    "@babel/runtime": "^7.13.8",
     "discord.js": "12.5.1",
     "dotenv": "^8.2.0",
-    "got": "^11.8.1",
+    "got": "^11.8.2",
     "leven": "^3.1.0",
     "match-sorter": "^6.3.0",
     "md5-hash": "^1.0.1",
@@ -47,10 +47,11 @@
     "set-interval-async": "^1.0.34"
   },
   "devDependencies": {
+    "@types/jest": "^26.0.20",
     "@types/open-graph-scraper": "^4.7.0",
     "@types/set-interval-async": "^1.0.0",
-    "kcd-scripts": "^7.7.0",
-    "msw": "^0.26.2",
+    "kcd-scripts": "^8.0.0",
+    "msw": "^0.27.0",
     "ts-node": "^9.1.1",
     "typescript": "^4.2.2"
   },

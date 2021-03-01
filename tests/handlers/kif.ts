@@ -1,5 +1,5 @@
-const {rest} = require('msw')
-const kif = require('../data/kif.json')
+import {rest} from 'msw'
+import kif from '../data/kif.json'
 
 const handlers = [
   rest.get(
@@ -15,4 +15,4 @@ const handlers = [
   ),
 ]
 
-module.exports = handlers
+export {handlers}

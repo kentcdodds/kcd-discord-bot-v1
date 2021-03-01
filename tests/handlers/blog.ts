@@ -1,5 +1,5 @@
-const {rest} = require('msw')
-const posts = require('../data/kcd-blog.json')
+import {rest} from 'msw'
+import posts from '../data/kcd-blog.json'
 
 const handlers = [
   rest.get('https://kentcdodds.com/blog.json', (req, res, ctx) => {
@@ -7,4 +7,4 @@ const handlers = [
   }),
 ]
 
-module.exports = handlers
+export {handlers}

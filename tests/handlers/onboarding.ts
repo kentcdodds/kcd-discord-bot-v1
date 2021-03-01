@@ -1,4 +1,10 @@
-const {rest} = require('msw')
+import {rest} from 'msw'
+
+type RequestBody = {
+  first_name: string
+  email: string
+  fields: Array<string>
+}
 
 const handlers = [
   rest.get('https://api.convertkit.com/v3/subscribers', (req, res, ctx) => {
@@ -15,7 +21,7 @@ const handlers = [
     'https://api.convertkit.com/v3/forms/:formId/subscribe',
     (req, res, ctx) => {
       const {formId} = req.params
-      const {first_name, email, fields} = req.body
+      const {first_name, email, fields} = req.body as RequestBody
       return res(
         ctx.json({
           subscription: {
@@ -43,7 +49,7 @@ const handlers = [
     'https://api.convertkit.com/v3/tags/:tagId/subscribe',
     (req, res, ctx) => {
       const {tagId} = req.params
-      const {first_name, email, fields} = req.body
+      const {first_name, email, fields} = req.body as RequestBody
       return res(
         ctx.json({
           subscription: {
@@ -78,4 +84,4 @@ const handlers = [
   ),
 ]
 
-module.exports = handlers
+export {handlers}

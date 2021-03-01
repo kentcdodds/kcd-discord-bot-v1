@@ -1,9 +1,21 @@
-/* eslint-disable no-await-in-loop */
-const Discord = require('discord.js')
-const {SnowflakeUtil} = require('discord.js')
-const DiscordManager = require('./DiscordManager')
+import type * as TDiscord from 'discord.js'
+import Discord, {SnowflakeUtil} from 'discord.js'
+import {DiscordManager} from './DiscordManager'
 
-async function createEmojis(guild) {
+type Handler = {handle(data: unknown): unknown}
+type ClientActions = {
+  MessageDelete: Handler
+  MessageUpdate: Handler
+  ChannelUpdate: Handler
+  ChannelDelete: Handler
+  MessageReactionAdd: Handler
+}
+const getClientActions = (client: TDiscord.Client): ClientActions => {
+  // @ts-expect-error client.actions is psuedo-private, but we accept the risks
+  return client.actions
+}
+
+async function createEmojis(guild: TDiscord.Guild) {
   const emojies = [
     'jest',
     'react',
@@ -21,29 +33,29 @@ async function createEmojis(guild) {
     'ReactTestingLibrary',
     'DOMTestingLibrary',
   ]
-  const guildEmojis = {}
+  const guildEmojis: Record<string, TDiscord.GuildEmoji> = {}
   for (const emoji of emojies) {
     guildEmojis[emoji] = await guild.emojis.create(Buffer.from(emoji), emoji)
   }
   return guildEmojis
 }
 
-async function createChannels(client, guild) {
+async function createChannels(client: TDiscord.Client, guild: TDiscord.Guild) {
   const talkToBotsChannel = await guild.channels.create('🤖-talk-to-bots')
   guild.channels.cache.set(talkToBotsChannel.id, talkToBotsChannel)
 
   const privateChatCategory = await guild.channels.create('Private Chat', {
-    type: 'CATEGORY',
+    type: 'category',
   })
   guild.channels.cache.set(privateChatCategory.id, privateChatCategory)
 
   const onBoardingCategory = await guild.channels.create('Onboarding-1', {
-    type: 'CATEGORY',
+    type: 'category',
   })
   guild.channels.cache.set(onBoardingCategory.id, onBoardingCategory)
 
   const meetupsCategory = await guild.channels.create('Meetups', {
-    type: 'CATEGORY',
+    type: 'category',
   })
   guild.channels.cache.set(meetupsCategory.id, meetupsCategory)
 
@@ -89,7 +101,7 @@ async function createChannels(client, guild) {
   }
 }
 
-function createRoles(client, guild) {
+function createRoles(client: TDiscord.Client, guild: TDiscord.Guild) {
   const everyoneRole = new Discord.Role(
     client,
     {id: guild.id, name: '@everyone'},
@@ -164,7 +176,7 @@ async function makeFakeClient() {
   const defaultChannels = await createChannels(client, guild)
   await createEmojis(guild)
 
-  async function createUser(username, options = {}) {
+  async function createUser(username: string, options = {}) {
     const newMember = new Discord.GuildMember(client, {nick: username}, guild)
     newMember.user = new Discord.User(client, {
       id: SnowflakeUtil.generate(),
@@ -205,20 +217,48 @@ async function makeFakeClient() {
     message,
     reactionName,
     emoji = guild.emojis.cache.find(({name}) => reactionName === name),
-  } = {}) {
+  }:
+    | {
+        user?: TDiscord.GuildMember | TDiscord.User
+        message: TDiscord.Message
+        reactionName: string
+        emoji?: TDiscord.GuildEmoji
+      }
+    | {
+        user?: TDiscord.GuildMember | TDiscord.User
+        message: TDiscord.Message
+        reactionName?: string
+        emoji: TDiscord.GuildEmoji
+      }) {
+    if (!emoji) {
+      throw new Error(
+        `No guild emoji found with the name ${
+          typeof reactionName === 'undefined' ? 'NO NAME GIVEN' : reactionName
+        }`,
+      )
+    }
     const handleData = {
       channel_id: message.channel.id,
       message_id: message.id,
       user_id: user.id,
       emoji: {name: emoji.name, id: emoji.id},
     }
-    const result = client.actions.MessageReactionAdd.handle(handleData)
-    if (result.message) {
-      if (!DiscordManager.reactions[result.message.id]) {
-        DiscordManager.reactions[result.message.id] = {}
+    const result = getClientActions(client).MessageReactionAdd.handle(
+      handleData,
+    ) as
+      | {
+          message: TDiscord.Message
+          reaction: TDiscord.MessageReaction
+          user: TDiscord.User
+        }
+      | false
+    if (result) {
+      let reactionsMap = DiscordManager.reactions[result.message.id]
+      if (!reactionsMap) {
+        reactionsMap = {}
+        DiscordManager.reactions[result.message.id] = reactionsMap
       }
-      const msgReactions = DiscordManager.reactions[result.message.id]
-      msgReactions[result.reaction.emoji.name] = result.reaction
+      reactionsMap[result.reaction.emoji.name] = result.reaction
     } else {
       console.warn('reactFromUser did not work', handleData)
     }
@@ -245,12 +285,15 @@ async function makeFakeClient() {
   }
 }
 
-function waitUntil(expectation, {timeout = 3000, interval = 1000} = {}) {
+function waitUntil(
+  expectation: () => void,
+  {timeout = 3000, interval = 1000} = {},
+) {
   if (interval < 1) interval = 1
   const maxTries = Math.ceil(timeout / interval)
   let tries = 0
   return new Promise((resolve, reject) => {
-    const rejectOrRerun = error => {
+    const rejectOrRerun = (error: unknown) => {
       if (tries > maxTries) {
         reject(error)
         return
@@ -261,9 +304,9 @@ function waitUntil(expectation, {timeout = 3000, interval = 1000} = {}) {
       tries += 1
       try {
         Promise.resolve(expectation())
-          .then(() => resolve())
+          .then(() => resolve(undefined))
           .catch(rejectOrRerun)
-      } catch (error) {
+      } catch (error: unknown) {
         rejectOrRerun(error)
       }
     }
@@ -271,8 +314,8 @@ function waitUntil(expectation, {timeout = 3000, interval = 1000} = {}) {
   })
 }
 
-module.exports = {
-  makeFakeClient,
-  waitUntil,
-  DiscordManager,
-}
+export {makeFakeClient, waitUntil, DiscordManager, getClientActions}
+/*
+eslint
+  no-await-in-loop: "off",
+*/

@@ -220,16 +220,21 @@ async function makeFakeClient() {
   }:
     | {
         user?: TDiscord.GuildMember | TDiscord.User
-        message: TDiscord.Message
+        message?: TDiscord.Message
         reactionName: string
         emoji?: TDiscord.GuildEmoji
       }
     | {
         user?: TDiscord.GuildMember | TDiscord.User
-        message: TDiscord.Message
+        message?: TDiscord.Message
         reactionName?: string
         emoji: TDiscord.GuildEmoji
       }) {
+    if (!message) {
+      throw new Error(
+        `Tried to react to a message but did not provide a message`,
+      )
+    }
     if (!emoji) {
       throw new Error(
         `No guild emoji found with the name ${

@@ -1,13 +1,25 @@
-const {rest} = require('msw')
-const {server} = require('server')
-const {makeFakeClient} = require('test-utils')
-const {isWelcomeChannel} = require('../utils')
-const {
-  onboarding: {handleNewMember, handleNewMessage, handleUpdatedMessage},
-} = require('..')
+import type * as TDiscord from 'discord.js'
+import Discord from 'discord.js'
+import {rest} from 'msw'
+import {server} from 'server'
+import {makeFakeClient} from 'test-utils'
+import {isWelcomeChannel, isTextChannel} from '../utils'
+import {
+  handleNewMember,
+  handleNewMessage,
+  handleUpdatedMessage,
+} from '../onboarding'
 
-function getOnBoardingChannels(guild) {
-  return Array.from(guild.channels.cache.filter(isWelcomeChannel).values())
+function assertTextChannel(ch: unknown): asserts ch is TDiscord.TextChannel {
+  const {type, name} = (ch as TDiscord.GuildChannel | undefined) ?? {
+    type: 'unknown',
+    name: 'unknown',
+  }
+  if (type !== 'text') {
+    throw new Error(
+      `Channel ${name} is not a text channel (it's type is: ${type})`,
+    )
+  }
 }
 
 async function setup() {
@@ -26,11 +38,13 @@ async function setup() {
 
   await handleNewMember(member)
 
-  const [onboardingChannel] = getOnBoardingChannels(guild)
+  const onboardingChannel = Array.from(guild.channels.cache.values())
+    .filter(isTextChannel)
+    .find(isWelcomeChannel)
 
-  async function send(content) {
+  async function send(content: string) {
     const message = sendFromUser({
-      user: member.user,
+      user: member,
       channel: onboardingChannel,
       content,
     })
@@ -38,19 +52,22 @@ async function setup() {
     return message
   }
 
-  async function update(oldMessage, newContent) {
-    const newMessage = {
-      ...oldMessage,
-      content: newContent,
-      guild,
+  async function update(oldMessage: TDiscord.Message, newContent: string) {
+    assertTextChannel(onboardingChannel)
+
+    const newMessage = new Discord.Message(
       client,
-    }
+      {id: oldMessage.id, content: newContent, author: oldMessage.member?.user},
+      onboardingChannel,
+    )
+
     onboardingChannel.messages.cache.set(newMessage.id, newMessage)
     await handleUpdatedMessage(oldMessage, newMessage)
     return newMessage
   }
 
   function getMessageThread() {
+    assertTextChannel(onboardingChannel)
     return `
 Messages in ${onboardingChannel.name}
 
@@ -70,12 +87,13 @@ ${Array.from(onboardingChannel.messages.cache.values())
   }
 
   function getBotResponses() {
+    assertTextChannel(onboardingChannel)
     const response = []
     const messages = Array.from(
       onboardingChannel.messages.cache.values(),
     ).reverse()
     for (const message of messages) {
-      if (message.author.id === client.user.id) response.push(message)
+      if (message.author.id === client.user?.id) response.push(message)
       else break
     }
     return response
@@ -84,9 +102,14 @@ ${Array.from(onboardingChannel.messages.cache.values())
       .join('\n')
   }
 
-  const react = (message, emoji) =>
-    reactFromUser({user: member.user, message, reactionName: emoji})
+  const react = (
+    message: TDiscord.Message | undefined,
+    reactionName: string,
+  ) => {
+    return reactFromUser({user: member.user, message, reactionName})
+  }
 
+  assertTextChannel(onboardingChannel)
   return {
     member,
     send,
@@ -143,7 +166,7 @@ test('the typical flow', async () => {
         }),
       )
     }),
-    rest.put(
+    rest.put<{fields: {tech_interests: string}}>(
       'https://api.convertkit.com/v3/subscribers/:subscriberId',
       (req, res, ctx) => {
         expect(req.body.fields).toEqual({tech_interests: 'cypress,jest'})
@@ -169,8 +192,8 @@ test('the typical flow', async () => {
   const techMessage = messages.find(msg =>
     msg.content.includes('the tech you are most interested in'),
   )
-  await react(techMessage, 'jest')
-  await react(techMessage, 'cypress')
+  react(techMessage, 'jest')
+  react(techMessage, 'cypress')
 
   await send('anything else?')
   await send('delete')

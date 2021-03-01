@@ -1,11 +1,16 @@
-const Discord = require('discord.js')
-const {SnowflakeUtil} = require('discord.js')
-const {rest} = require('msw')
-const {makeFakeClient} = require('test-utils')
-const {server} = require('server')
-const {thanks} = require('../thanks')
+import assert from 'assert'
+import Discord, {SnowflakeUtil} from 'discord.js'
+import {rest} from 'msw'
+import {makeFakeClient} from 'test-utils'
+import {server} from 'server'
+import {thanks} from '../thanks'
+import type {
+  ThanksHistory,
+  GitHubResponseBody,
+  GitHubRequestBody,
+} from '../thanks'
 
-async function setup(content, mentionedUsernames = []) {
+async function setup(content: string, mentionedUsernames: Array<string> = []) {
   const {client, defaultChannels, kody, createUser} = await makeFakeClient()
   const mentionedUsers = (
     await Promise.all(mentionedUsernames.map(username => createUser(username)))
@@ -15,9 +20,16 @@ async function setup(content, mentionedUsernames = []) {
     client,
     {
       id: SnowflakeUtil.generate(),
-      content: content.replace(/@(\S+)/, (_, mention) =>
-        mentionedUsers.find(user => user.username === mention),
-      ),
+      content: content.replace(/@(\S+)/, (_, mention) => {
+        const mentionedUser = mentionedUsers.find(
+          user => user.username === mention,
+        )
+        assert(
+          mentionedUser,
+          `Content had an ID for which there was no mentioned user: ${mention}`,
+        )
+        return mentionedUser.toString()
+      }),
       author: kody.user,
     },
     defaultChannels.talkToBotsChannel,
@@ -45,9 +57,9 @@ async function setup(content, mentionedUsernames = []) {
 
 test('should say thanks if the message is complete', async () => {
   let thanksRetrieved = false
-  let savedThanks = {}
+  let savedThanks: GitHubRequestBody
   server.use(
-    rest.get(
+    rest.get<GitHubResponseBody>(
       `https://api.github.com/gists/${process.env.GIST_REPO_THANKS}`,
       (req, res, ctx) => {
         thanksRetrieved = true
@@ -57,7 +69,7 @@ test('should say thanks if the message is complete', async () => {
         )
       },
     ),
-    rest.patch(
+    rest.patch<GitHubRequestBody>(
       `https://api.github.com/gists/${process.env.GIST_REPO_THANKS}`,
       (req, res, ctx) => {
         savedThanks = req.body
@@ -77,18 +89,24 @@ test('should say thanks if the message is complete', async () => {
 
   await thanks(message)
 
+  const [user1] = mentionedUsers
+  assert(user1)
+
   const thanksMessage = `https://discordapp.com/channels/${botChannel.guild.id}/${botChannel.id}/${message.id}`
-  const thanksObject = {}
-  thanksObject[mentionedUsers[0].id] = [thanksMessage]
+  const thanksObject: ThanksHistory = {}
+  thanksObject[user1.id] = [thanksMessage]
   expect(thanksRetrieved).toBeTruthy()
+
+  // @ts-expect-error no idea how to deal with this situation...
+  assert(savedThanks, 'Thanks not saved')
   expect(JSON.parse(savedThanks.files['thanks.json'].content)).toMatchObject(
     thanksObject,
   )
   expect(getBotMessages()).toHaveLength(1)
   expect(getThanksMessages()).toHaveLength(1)
-  expect(getThanksMessages()[0].content).toEqual(
+  expect(getThanksMessages()[0]?.content).toEqual(
     `
-Hey <@!${mentionedUsers[0].id}>! You got thanked! 🎉
+Hey <@!${user1.id}>! You got thanked! 🎉
 
 <@!${kody.id}> appreciated you for:
 
@@ -97,10 +115,10 @@ Hey <@!${mentionedUsers[0].id}>! You got thanked! 🎉
 Link: <${thanksMessage}>
   `.trim(),
   )
-  expect(getBotMessages()[0].content).toEqual(
+  expect(getBotMessages()[0]?.content).toEqual(
     `Aw! Thanks! https://discordapp.com/channels/${botChannel.guild.id}/${
       thanksChannel.id
-    }/${getThanksMessages()[0].id} 😍`,
+    }/${getThanksMessages()[0]?.id} 😍`,
   )
 })
 
@@ -132,7 +150,7 @@ test('should say thanks if there is no for', async () => {
 
   expect(getBotMessages()).toHaveLength(1)
   expect(getThanksMessages()).toHaveLength(1)
-  expect(getThanksMessages()[0].content.replace(/\d+/g, 123))
+  expect(getThanksMessages()[0]?.content.replace(/\d+/g, '123'))
     .toMatchInlineSnapshot(`
     "Hey <@!123>! You got thanked! 🎉
 
@@ -172,7 +190,7 @@ test('should say thanks if there is no message', async () => {
 
   expect(getBotMessages()).toHaveLength(1)
   expect(getThanksMessages()).toHaveLength(1)
-  expect(getThanksMessages()[0].content.replace(/\d+/g, 123))
+  expect(getThanksMessages()[0]?.content.replace(/\d+/g, '123'))
     .toMatchInlineSnapshot(`
     "Hey <@!123>! You got thanked! 🎉
 
@@ -202,7 +220,7 @@ test('should show a message if the user has never been thanked', async () => {
 
   expect(getBotMessages()).toHaveLength(1)
   expect(getThanksMessages()).toHaveLength(0)
-  expect(getBotMessages()[0].content).toMatchInlineSnapshot(`
+  expect(getBotMessages()[0]?.content).toMatchInlineSnapshot(`
     "This is the rank of the requested member:
     - kody hasn't been thanked yet 🙁"
   `)
@@ -213,7 +231,7 @@ test('should show the rank of the user message', async () => {
     '?thanks rank',
   )
 
-  const ranks = {}
+  const ranks: ThanksHistory = {}
   ranks[kody.id] = ['link_to_message']
 
   server.use(
@@ -232,7 +250,7 @@ test('should show the rank of the user message', async () => {
 
   expect(getBotMessages()).toHaveLength(1)
   expect(getThanksMessages()).toHaveLength(0)
-  expect(getBotMessages()[0].content).toMatchInlineSnapshot(`
+  expect(getBotMessages()[0]?.content).toMatchInlineSnapshot(`
     "This is the rank of the requested member:
     - kody has been thanked 1 time 👏"
   `)
@@ -246,8 +264,11 @@ test('should show the rank of the mentioned user', async () => {
     mentionedUsers,
   } = await setup('?thanks rank', ['user1'])
 
-  const ranks = {}
-  ranks[mentionedUsers[0].id] = ['link_to_message1', 'link_to_message2']
+  const ranks: ThanksHistory = {}
+
+  const [user1] = mentionedUsers
+  assert(user1)
+  ranks[user1.id] = ['link_to_message1', 'link_to_message2']
 
   server.use(
     rest.get(
@@ -265,7 +286,7 @@ test('should show the rank of the mentioned user', async () => {
 
   expect(getBotMessages()).toHaveLength(1)
   expect(getThanksMessages()).toHaveLength(0)
-  expect(getBotMessages()[0].content).toMatchInlineSnapshot(`
+  expect(getBotMessages()[0]?.content).toMatchInlineSnapshot(`
     "This is the rank of the requested member:
     - user1 has been thanked 2 times 👏"
   `)
@@ -279,7 +300,7 @@ test('should show the rank of the top 10 users', async () => {
     Array.from(Array(20).keys()).map(index => createUser(`user${index}`)),
   )
 
-  const ranks = {}
+  const ranks: ThanksHistory = {}
   rankedUsers.forEach((rankedUser, index) => {
     ranks[rankedUser.id] = Array.from(Array(index).keys()).map(
       messageIndex => `link_to_message${messageIndex}`,
@@ -302,7 +323,7 @@ test('should show the rank of the top 10 users', async () => {
 
   expect(getBotMessages()).toHaveLength(1)
   expect(getThanksMessages()).toHaveLength(0)
-  expect(getBotMessages()[0].content).toMatchInlineSnapshot(`
+  expect(getBotMessages()[0]?.content).toMatchInlineSnapshot(`
     "This is the list of the top thanked members 💪:
     - user19 has been thanked 19 times 👏
     - user18 has been thanked 18 times 👏
@@ -337,7 +358,7 @@ test('should give an error if there are some issues retrieving data from gist', 
 
   expect(getBotMessages()).toHaveLength(1)
   expect(getThanksMessages()).toHaveLength(0)
-  expect(getBotMessages()[0].content).toMatchInlineSnapshot(
+  expect(getBotMessages()[0]?.content).toMatchInlineSnapshot(
     `"There is an issue retrieving the history. Please try again later 🙏"`,
   )
 })
@@ -360,7 +381,7 @@ test('should give an error if no user is thanked', async () => {
 
   expect(getBotMessages()).toHaveLength(1)
   expect(getThanksMessages()).toHaveLength(0)
-  expect(getBotMessages()[0].content).toMatchInlineSnapshot(
+  expect(getBotMessages()[0]?.content).toMatchInlineSnapshot(
     `"You have to mention someone specific you want to thank."`,
   )
 })

@@ -12,6 +12,15 @@ import {
 } from '../utils'
 
 type ThanksHistory = Record<string, Array<string> | undefined>
+type GitHubRequestBody = {
+  public: 'false'
+  files: {
+    'thanks.json': {
+      content: string
+    }
+  }
+}
+type GitHubResponseBody = {files: {['thanks.json']?: {content: string}}}
 
 async function getThanksHistory(): Promise<ThanksHistory> {
   const response = (await got.get(
@@ -22,7 +31,7 @@ async function getThanksHistory(): Promise<ThanksHistory> {
       },
       responseType: 'json',
     },
-  )) as {body: {files: {['thanks.json']?: {content: string}}}}
+  )) as {body: GitHubResponseBody}
   try {
     return JSON.parse(response.body.files['thanks.json']?.content ?? '{}')
   } catch {
@@ -31,7 +40,7 @@ async function getThanksHistory(): Promise<ThanksHistory> {
 }
 
 async function saveThanksHistory(history: ThanksHistory) {
-  const body = {
+  const body: GitHubRequestBody = {
     public: 'false',
     files: {
       'thanks.json': {
@@ -216,3 +225,4 @@ ${commandsList.join('\n')}
 }
 
 export {thanks}
+export type {ThanksHistory, GitHubResponseBody, GitHubRequestBody}

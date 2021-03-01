@@ -4,11 +4,7 @@ import {rest} from 'msw'
 import {server} from 'server'
 import {makeFakeClient} from 'test-utils'
 import {isWelcomeChannel, isTextChannel} from '../utils'
-import {
-  handleNewMember,
-  handleNewMessage,
-  handleUpdatedMessage,
-} from '../onboarding'
+import {handleNewMember, handleNewMessage, handleUpdatedMessage} from '..'
 
 function assertTextChannel(ch: unknown): asserts ch is TDiscord.TextChannel {
   const {type, name} = (ch as TDiscord.GuildChannel | undefined) ?? {

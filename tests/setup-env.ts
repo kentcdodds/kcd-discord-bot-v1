@@ -1,4 +1,3 @@
-import type * as TDiscord from 'discord.js'
 import {DiscordManager} from './test-utils'
 import {server} from './server'
 

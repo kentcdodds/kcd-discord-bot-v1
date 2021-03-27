@@ -37,7 +37,7 @@ test('should show the list of the last 10 articles', async () => {
   const {reply} = await setup('last')
 
   expect(reply.content).toMatchInlineSnapshot(`
-    "This is the list of the last 10 articles on the blog:
+    This is the list of the last 10 articles on the blog:
     - How to React ⚛️
       <https://kentcdodds.com/blog/how-to-react>
     - Favor Progress Over Pride in Open Source
@@ -57,7 +57,7 @@ test('should show the list of the last 10 articles', async () => {
     - JavaScript to Know for React
       <https://kentcdodds.com/blog/javascript-to-know-for-react>
     - How I structure Express apps
-      <https://kentcdodds.com/blog/how-i-structure-express-apps>"
+      <https://kentcdodds.com/blog/how-i-structure-express-apps>
   `)
 })
 
@@ -65,13 +65,13 @@ test('should show articles matching the search string', async () => {
   let utils = await setup('open source')
 
   expect(utils.reply.content).toMatchInlineSnapshot(`
-    "This is the list of the articles matching \\"open source\\" 💻:
+    This is the list of the articles matching "open source" 💻:
     - Favor Progress Over Pride in Open Source
       <https://kentcdodds.com/blog/favor-progress-over-pride-in-open-source>
     - How getting into Open Source has been awesome for me
       <https://kentcdodds.com/blog/how-getting-into-open-source-has-been-awesome-for-me>
     - What open source project should I contribute to?
-      <https://kentcdodds.com/blog/what-open-source-project-should-i-contribute-to>"
+      <https://kentcdodds.com/blog/what-open-source-project-should-i-contribute-to>
   `)
 
   utils.cleanup()
@@ -99,7 +99,7 @@ test('should show an info message if not articles are found', async () => {
   const {reply} = await setup(`not exist`)
 
   expect(reply.content).toMatchInlineSnapshot(
-    `"Unfortunately there is no article matching \\"not exist\\" 😟. Try searching here: <https://kentcdodds.com/blog>"`,
+    `Unfortunately there is no article matching "not exist" 😟. Try searching here: <https://kentcdodds.com/blog>`,
   )
 })
 
@@ -113,7 +113,7 @@ test('should show an info message if there is an issue retrying articles', async
   const {reply} = await setup(`not exist`)
 
   expect(reply.content).toMatchInlineSnapshot(
-    `"Something went wrong retrieving the list of articles 😬. Try searching here: <https://kentcdodds.com/blog>"`,
+    `Something went wrong retrieving the list of articles 😬. Try searching here: <https://kentcdodds.com/blog>`,
   )
 })
 
@@ -129,7 +129,7 @@ test('should show the first 10 results if there are more', async () => {
   const {reply} = await setup(`re`)
 
   expect(reply.content).toMatchInlineSnapshot(`
-    "There are too many results for \\"re\\". Here are the top 10:
+    There are too many results for "re". Here are the top 10:
     - How to React ⚛️
       <https://kentcdodds.com/blog/how-to-react>
     - useState lazy initialization and function updates
@@ -149,7 +149,7 @@ test('should show the first 10 results if there are more', async () => {
     - How I Record Educational Videos
       <https://kentcdodds.com/blog/how-i-record-educational-videos>
     - Should I write a test or fix a bug?
-      <https://kentcdodds.com/blog/should-i-write-a-test-or-fix-a-bug>"
+      <https://kentcdodds.com/blog/should-i-write-a-test-or-fix-a-bug>
   `)
 })
 

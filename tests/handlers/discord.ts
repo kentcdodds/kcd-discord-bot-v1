@@ -158,6 +158,11 @@ const handlers = [
         throw new Error(`No message could be found with id ${messageId}`)
       }
       delete DiscordManager.reactions[message.id]?.[emoji.name]
+      getClientActions(guild.client).MessageReactionRemoveEmoji.handle({
+        message_id: messageId,
+        channel_id: channelId,
+        emoji,
+      })
       message.reactions.cache.delete(emoji.name)
       return res(ctx.json([]))
     },

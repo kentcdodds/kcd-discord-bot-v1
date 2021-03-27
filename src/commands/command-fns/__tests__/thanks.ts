@@ -152,13 +152,13 @@ test('should say thanks if there is no for', async () => {
   expect(getThanksMessages()).toHaveLength(1)
   expect(getThanksMessages()[0]?.content.replace(/\d+/g, '123'))
     .toMatchInlineSnapshot(`
-    "Hey <@!123>! You got thanked! 🎉
+    Hey <@!123>! You got thanked! 🎉
 
     <@!123> appreciated you for:
 
     > tadaa
 
-    Link: <https://discordapp.com/channels/123/123/123>"
+    Link: <https://discordapp.com/channels/123/123/123>
   `)
 })
 
@@ -192,11 +192,11 @@ test('should say thanks if there is no message', async () => {
   expect(getThanksMessages()).toHaveLength(1)
   expect(getThanksMessages()[0]?.content.replace(/\d+/g, '123'))
     .toMatchInlineSnapshot(`
-    "Hey <@!123>! You got thanked! 🎉
+    Hey <@!123>! You got thanked! 🎉
 
     <@123> appreciated you.
 
-    Link: <https://discordapp.com/channels/123/123/123>"
+    Link: <https://discordapp.com/channels/123/123/123>
   `)
 })
 

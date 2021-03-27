@@ -19,7 +19,7 @@ test('handles incoming messages', async () => {
   )
   expect(defaultChannels.talkToBotsChannel.lastMessage?.content)
     .toMatchInlineSnapshot(`
-    "Here are the available commands (for more details on a command, type \`?help <name-of-command>\`):
+    Here are the available commands (for more details on a command, type \`?help <name-of-command>\`):
 
     - help: Lists available commands
     - kif: Send a KCD gif (send \`?help kif\` for more info)
@@ -28,6 +28,6 @@ test('handles incoming messages', async () => {
     - info: Gives information about the bot (deploy date etc.)
     - private-chat: Create a private channel with who you want. This channel is temporary.
     - blog: Find articles on Kent's blog: <https://kentcdodds.com/blog>
-    - meetup: Enable users to start and schedule meetups"
+    - meetup: Enable users to start and schedule meetups
   `)
 })

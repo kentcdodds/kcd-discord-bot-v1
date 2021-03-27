@@ -195,7 +195,7 @@ test('the typical flow', async () => {
   await send('delete')
 
   expect(getMessageThread()).toMatchInlineSnapshot(`
-    "Messages in 🌊-welcome-fredjoe_1234
+    Messages in 🌊-welcome-fredjoe_1234
 
     BOT: Hello <@mock-user> 👋
 
@@ -215,7 +215,7 @@ test('the typical flow', async () => {
 
     Please read about our code of conduct here: https://kentcdodds.com/conduct
 
-    Do you agree to abide by and uphold the code of conduct? **The only correct answer is \\"yes\\"**
+    Do you agree to abide by and uphold the code of conduct? **The only correct answer is "yes"**
     fredjoe: yes
     BOT: Great, thanks for helping us keep this an awesome place to be.
     BOT: **Based on what you read in the Code of Conduct**, what's the email address you send Code of Conduct concerns and violations to? (If you're not sure, open the code of conduct to find out).
@@ -229,7 +229,7 @@ test('the typical flow', async () => {
 
     Here's how you set your avatar: <https://support.discord.com/hc/en-us/articles/204156688-How-do-I-change-my-avatar->
 
-    **When you're finished (or if you'd like to just move on), just say \\"done\\"**
+    **When you're finished (or if you'd like to just move on), just say "done"**
     fredjoe: done
     BOT: Ok, please do set your avatar later though. It helps keep everything human (and I'll bug you about it every now and then until you do 😈 😅).
     BOT: Here are your answers:
@@ -240,7 +240,7 @@ test('the typical flow', async () => {
 
     If you'd like to change any, then edit your responses above.
 
-    **If everything's correct, simply reply \\"yes\\"**.
+    **If everything's correct, simply reply "yes"**.
     fredjoe: yes
     BOT: Awesome, welcome to the KCD Community on Discord!
     BOT: 🎉 You should be good to go now. Don't forget to check fred@example.com for a confirmation email. 📬
@@ -261,11 +261,11 @@ test('the typical flow', async () => {
 
     Enjoy the community!
     fredjoe: anything else?
-    BOT: We're all done. This channel will get deleted automatically eventually, but if you want to delete it yourself, then say \\"delete\\".
+    BOT: We're all done. This channel will get deleted automatically eventually, but if you want to delete it yourself, then say "delete".
     fredjoe: delete
     BOT: This channel is getting deleted for the following reason: Requested by the member
 
-    Goodbye 👋"
+    Goodbye 👋
   `)
 
   expect(
@@ -312,7 +312,7 @@ test('typing and editing to an invalid value', async () => {
   await send('team@kentcdodds.com')
 
   expect(getBotResponses()).toMatchInlineSnapshot(`
-    "BOT: That's right!
+    BOT: That's right!
     BOT: It's more fun here when folks have an avatar. You can go ahead and set yours now 😄
 
     I got this image using your email address with gravatar.com. You can use it for your avatar if you like.
@@ -321,7 +321,7 @@ test('typing and editing to an invalid value', async () => {
 
     Here's how you set your avatar: <https://support.discord.com/hc/en-us/articles/204156688-How-do-I-change-my-avatar->
 
-    **When you're finished (or if you'd like to just move on), just say \\"done\\"**"
+    **When you're finished (or if you'd like to just move on), just say "done"**
   `)
   await send('done')
 
@@ -387,7 +387,7 @@ test('typing and editing to an invalid value', async () => {
   await send('delete')
 
   expect(getMessageThread()).toMatchInlineSnapshot(`
-    "Messages in 🌊-welcome-fredjoe_1234
+    Messages in 🌊-welcome-fredjoe_1234
 
     BOT: Hello <@mock-user> 👋
 
@@ -409,7 +409,7 @@ test('typing and editing to an invalid value', async () => {
 
     Please read about our code of conduct here: https://kentcdodds.com/conduct
 
-    Do you agree to abide by and uphold the code of conduct? **The only correct answer is \\"yes\\"**
+    Do you agree to abide by and uphold the code of conduct? **The only correct answer is "yes"**
     fredjoe: Yes
     BOT: Great, thanks for helping us keep this an awesome place to be.
     BOT: **Based on what you read in the Code of Conduct**, what's the email address you send Code of Conduct concerns and violations to? (If you're not sure, open the code of conduct to find out).
@@ -423,7 +423,7 @@ test('typing and editing to an invalid value', async () => {
 
     Here's how you set your avatar: <https://support.discord.com/hc/en-us/articles/204156688-How-do-I-change-my-avatar->
 
-    **When you're finished (or if you'd like to just move on), just say \\"done\\"**
+    **When you're finished (or if you'd like to just move on), just say "done"**
     fredjoe: done
     BOT: Ok, please do set your avatar later though. It helps keep everything human (and I'll bug you about it every now and then until you do 😈 😅).
     BOT: Here are your answers:
@@ -434,7 +434,7 @@ test('typing and editing to an invalid value', async () => {
 
     If you'd like to change any, then edit your responses above.
 
-    **If everything's correct, simply reply \\"yes\\"**.
+    **If everything's correct, simply reply "yes"**.
     fredjoe: yes
     BOT: There are existing errors with your previous answers, please edit your answer above before continuing.
     BOT: Thanks for fixing things up, now we can continue.
@@ -446,7 +446,7 @@ test('typing and editing to an invalid value', async () => {
 
     If you'd like to change any, then edit your responses above.
 
-    **If everything's correct, simply reply \\"yes\\"**.
+    **If everything's correct, simply reply "yes"**.
     fredjoe: yes
     BOT: Awesome, welcome to the KCD Community on Discord!
     BOT: 🎉 You should be good to go now. Don't forget to check fred@acme.com for a confirmation email. 📬
@@ -482,7 +482,7 @@ test('typing and editing to an invalid value', async () => {
     fredjoe: delete
     BOT: This channel is getting deleted for the following reason: Requested by the member
 
-    Goodbye 👋"
+    Goodbye 👋
   `)
 
   expect(
@@ -528,7 +528,7 @@ test('a new member with some info already', async () => {
   await send('anything else?')
 
   expect(getMessageThread()).toMatchInlineSnapshot(`
-    "Messages in 🌊-welcome-fredjoe_1234
+    Messages in 🌊-welcome-fredjoe_1234
 
     BOT: Hello <@mock-user> 👋
 
@@ -548,7 +548,7 @@ test('a new member with some info already', async () => {
 
     Please read about our code of conduct here: https://kentcdodds.com/conduct
 
-    Do you agree to abide by and uphold the code of conduct? **The only correct answer is \\"yes\\"**
+    Do you agree to abide by and uphold the code of conduct? **The only correct answer is "yes"**
     fredjoe: yes
     BOT: Great, thanks for helping us keep this an awesome place to be.
     BOT: **Based on what you read in the Code of Conduct**, what's the email address you send Code of Conduct concerns and violations to? (If you're not sure, open the code of conduct to find out).
@@ -561,7 +561,7 @@ test('a new member with some info already', async () => {
 
     If you'd like to change any, then edit your responses above.
 
-    **If everything's correct, simply reply \\"yes\\"**.
+    **If everything's correct, simply reply "yes"**.
     fredjoe: yes
     BOT: Awesome, welcome to the KCD Community on Discord!
     BOT: 🎉 You should be good to go now. 
@@ -582,7 +582,7 @@ test('a new member with some info already', async () => {
 
     Enjoy the community!
     fredjoe: anything else?
-    BOT: We're all done. This channel will get deleted automatically eventually, but if you want to delete it yourself, then say \\"delete\\"."
+    BOT: We're all done. This channel will get deleted automatically eventually, but if you want to delete it yourself, then say "delete".
   `)
 
   expect(

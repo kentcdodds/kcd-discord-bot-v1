@@ -53,7 +53,7 @@ test('prints useful info', async () => {
     throw new Error(`The bot didn't send exactly one reply`)
   }
   expect(reply.content).toMatchInlineSnapshot(`
-    "Here's some info about the currently running bot:
+    Here's some info about the currently running bot:
 
       Started at: Wed, 21 Oct 2020 07:20:15 GMT (now)
       Built at: Sun, 18 Oct 2020 04:35:12 GMT (3.1 days ago)
@@ -61,6 +61,6 @@ test('prints useful info', async () => {
         author: Kent C. Dodds
         date: Sat, 17 Oct 2020 18:01:47 GMT (3.6 days ago)
         message: improve the info command
-        link: <https://github.com/kentcdodds/kcd-discord-bot/commit/b84d60ca5507ebf73c8fd2fe620a8ad1cdf1958e>"
+        link: <https://github.com/kentcdodds/kcd-discord-bot/commit/b84d60ca5507ebf73c8fd2fe620a8ad1cdf1958e>
   `)
 })

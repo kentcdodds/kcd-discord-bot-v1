@@ -2,14 +2,45 @@ import type * as TDiscord from 'discord.js'
 import Discord, {SnowflakeUtil} from 'discord.js'
 import {DiscordManager} from './DiscordManager'
 
-type Handler = {handle(data: unknown): unknown}
+type Handler<Data = unknown, Return = unknown> = {handle(data: Data): Return}
 type ClientActions = {
   MessageDelete: Handler
   MessageUpdate: Handler
   ChannelUpdate: Handler
   ChannelDelete: Handler
-  MessageReactionAdd: Handler
+  MessageReactionAdd: Handler<
+    {
+      channel_id: string
+      message_id: string
+      user_id: string
+      emoji: {name: string; id?: string}
+    },
+    | {
+        message: TDiscord.Message
+        reaction: TDiscord.MessageReaction
+        user: TDiscord.User
+      }
+    | false
+  >
+  MessageCreate: Handler<
+    {
+      id: string
+      content: string
+      author: TDiscord.User
+      channel_id: string
+    },
+    {message?: TDiscord.Message}
+  >
+  MessageReactionRemoveEmoji: Handler<
+    {
+      channel_id: string
+      message_id: string
+      emoji: {name: string; id: string | null}
+    },
+    {reaction: TDiscord.MessageReaction} | false
+  >
 }
+
 const getClientActions = (client: TDiscord.Client): ClientActions => {
   // @ts-expect-error client.actions is psuedo-private, but we accept the risks
   return client.actions
@@ -17,6 +48,10 @@ const getClientActions = (client: TDiscord.Client): ClientActions => {
 
 async function createEmojis(guild: TDiscord.Guild) {
   const emojies = [
+    'bot-ask',
+    'bot-office-hours',
+    'bot-dontasktoask',
+    'bot-help',
     'jest',
     'react',
     'reactquery',
@@ -43,6 +78,14 @@ async function createEmojis(guild: TDiscord.Guild) {
 async function createChannels(client: TDiscord.Client, guild: TDiscord.Guild) {
   const talkToBotsChannel = await guild.channels.create('🤖-talk-to-bots')
   guild.channels.cache.set(talkToBotsChannel.id, talkToBotsChannel)
+
+  const generalChannel = await guild.channels.create('💬-general')
+  guild.channels.cache.set(generalChannel.id, generalChannel)
+
+  const kcdOfficeHoursChannel = await guild.channels.create(
+    '🏫-kcd-office-hours',
+  )
+  guild.channels.cache.set(kcdOfficeHoursChannel.id, kcdOfficeHoursChannel)
 
   const privateChatCategory = await guild.channels.create('Private Chat', {
     type: 'category',
@@ -88,6 +131,7 @@ async function createChannels(client: TDiscord.Client, guild: TDiscord.Guild) {
   )
 
   return {
+    generalChannel,
     tipsChannel,
     botsOnlyChannel,
     introductionChannel,
@@ -111,35 +155,47 @@ function createRoles(client: TDiscord.Client, guild: TDiscord.Guild) {
 
   const officeHoursRole = new Discord.Role(
     client,
-    {id: SnowflakeUtil.generate(), name: 'Notify: Office Hours'},
+    {
+      id: SnowflakeUtil.generate(new Date('2020-01-01')),
+      name: 'Notify: Office Hours',
+    },
     guild,
   )
   guild.roles.cache.set(officeHoursRole.id, officeHoursRole)
 
   const liveStreamRole = new Discord.Role(
     client,
-    {id: SnowflakeUtil.generate(), name: 'Notify: Kent Live'},
+    {
+      id: SnowflakeUtil.generate(new Date('2020-01-02')),
+      name: 'Notify: Kent Live',
+    },
     guild,
   )
   guild.roles.cache.set(liveStreamRole.id, liveStreamRole)
 
   const unconfirmedRole = new Discord.Role(
     client,
-    {id: SnowflakeUtil.generate(), name: 'Unconfirmed Member'},
+    {
+      id: SnowflakeUtil.generate(new Date('2020-01-03')),
+      name: 'Unconfirmed Member',
+    },
     guild,
   )
   guild.roles.cache.set(unconfirmedRole.id, unconfirmedRole)
 
   const memberRole = new Discord.Role(
     client,
-    {id: SnowflakeUtil.generate(), name: 'Member'},
+    {id: SnowflakeUtil.generate(new Date('2020-01-04')), name: 'Member'},
     guild,
   )
   guild.roles.cache.set(memberRole.id, memberRole)
 
   const newConfirmedMemberRole = new Discord.Role(
     client,
-    {id: SnowflakeUtil.generate(), name: 'New confirmed member'},
+    {
+      id: SnowflakeUtil.generate(new Date('2020-01-05')),
+      name: 'New confirmed member',
+    },
     guild,
   )
   guild.roles.cache.set(newConfirmedMemberRole.id, newConfirmedMemberRole)
@@ -159,13 +215,13 @@ async function makeFakeClient() {
   Object.assign(client, {
     token: process.env.DISCORD_BOT_TOKEN,
     user: new Discord.ClientUser(client, {
-      id: SnowflakeUtil.generate(),
+      id: SnowflakeUtil.generate(new Date('2020-01-06')),
       bot: true,
       username: 'BOT',
     }),
   })
   const guild = new Discord.Guild(client, {
-    id: SnowflakeUtil.generate(),
+    id: SnowflakeUtil.generate(new Date('2020-01-07')),
     name: 'KCD',
   })
 
@@ -190,26 +246,34 @@ async function makeFakeClient() {
     return newMember
   }
 
-  const kody = await createUser('kody')
-  const marty = await createUser('marty')
-  const hannah = await createUser('hannah')
+  const kody = await createUser('kody', {
+    id: SnowflakeUtil.generate(new Date('2014-05-26')),
+  })
+  const marty = await createUser('marty', {
+    id: SnowflakeUtil.generate(new Date('2014-05-27')),
+  })
+  const hannah = await createUser('hannah', {
+    id: SnowflakeUtil.generate(new Date('2014-05-28')),
+  })
 
   function sendFromUser({
     user = kody,
     content = 'content',
     channel = defaultChannels.talkToBotsChannel,
   } = {}) {
-    const userMessage = new Discord.Message(
-      client,
-      {
-        id: SnowflakeUtil.generate(Date.now()),
-        content,
-        author: user,
-      },
-      channel,
-    )
-    channel.messages.cache.set(userMessage.id, userMessage)
-    return userMessage
+    const messageData = {
+      id: SnowflakeUtil.generate(Date.now()),
+      content,
+      author: user.user,
+      channel_id: channel.id,
+    }
+    const {message} = getClientActions(client).MessageCreate.handle(messageData)
+    if (!message) {
+      throw new Error(
+        `Failed to sendFromUser: ${user} in ${channel} with content:\n${content}`,
+      )
+    }
+    return message
   }
 
   function reactFromUser({
@@ -250,13 +314,7 @@ async function makeFakeClient() {
     }
     const result = getClientActions(client).MessageReactionAdd.handle(
       handleData,
-    ) as
-      | {
-          message: TDiscord.Message
-          reaction: TDiscord.MessageReaction
-          user: TDiscord.User
-        }
-      | false
+    )
     if (result) {
       let reactionsMap = DiscordManager.reactions[result.message.id]
       if (!reactionsMap) {
@@ -292,7 +350,7 @@ async function makeFakeClient() {
 
 function waitUntil(
   expectation: () => void,
-  {timeout = 3000, interval = 1000} = {},
+  {timeout = 3000, interval = 100} = {},
 ) {
   if (interval < 1) interval = 1
   const maxTries = Math.ceil(timeout / interval)

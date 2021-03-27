@@ -48,10 +48,10 @@ const getClientActions = (client: TDiscord.Client): ClientActions => {
 
 async function createEmojis(guild: TDiscord.Guild) {
   const emojies = [
-    'bot-ask',
-    'bot-office-hours',
-    'bot-dontasktoask',
-    'bot-help',
+    'botask',
+    'botofficehours',
+    'botdontasktoask',
+    'bothelp',
     'jest',
     'react',
     'reactquery',

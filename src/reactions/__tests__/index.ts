@@ -34,12 +34,12 @@ async function setupTest({
   return utils
 }
 
-test('bot-ask sends the message author the ask reply', async () => {
+test('botask sends the message author the ask reply', async () => {
   const {
     defaultChannels: {generalChannel},
   } = await setupTest({
     content: `I have a question, but I'm not giving enough details`,
-    reactionName: 'bot-ask',
+    reactionName: 'botask',
   })
 
   expect(generalChannel.lastMessage?.content).toMatchInlineSnapshot(
@@ -47,12 +47,12 @@ test('bot-ask sends the message author the ask reply', async () => {
   )
 })
 
-test('bot-office-hours sends the message author the office-hours reply', async () => {
+test('botofficehours sends the message author the office-hours reply', async () => {
   const {
     defaultChannels: {generalChannel},
   } = await setupTest({
     content: `I have a question that Kent can answer but doesn't have time right now`,
-    reactionName: 'bot-office-hours',
+    reactionName: 'botofficehours',
   })
 
   expect(generalChannel.lastMessage?.content).toMatchInlineSnapshot(
@@ -60,12 +60,12 @@ test('bot-office-hours sends the message author the office-hours reply', async (
   )
 })
 
-test('bot-dontasktoask sends the message author dontasktoask.com', async () => {
+test('botdontasktoask sends the message author dontasktoask.com', async () => {
   const {
     defaultChannels: {generalChannel},
   } = await setupTest({
     content: `Can I ask a question?`,
-    reactionName: 'bot-dontasktoask',
+    reactionName: 'botdontasktoask',
   })
 
   expect(generalChannel.lastMessage?.content).toMatchInlineSnapshot(
@@ -73,19 +73,19 @@ test('bot-dontasktoask sends the message author dontasktoask.com', async () => {
   )
 })
 
-test('bot-help sends the reacting user a message in talk-to-bots with info on the reaction emoji', async () => {
+test('bothelp sends the reacting user a message in talk-to-bots with info on the reaction emoji', async () => {
   const {
     defaultChannels: {talkToBotsChannel},
   } = await setupTest({
-    reactionName: 'bot-help',
+    reactionName: 'bothelp',
   })
 
   expect(talkToBotsChannel.lastMessage?.content).toMatchInlineSnapshot(`
     <@!hannah> Here are the available bot reactions:
 
-    - bot-help: Lists available bot reactions
-    - bot-ask: Sends a reply to the message author explaining how to improve their question
-    - bot-office-hours: Sends a reply to the message author explaining how to ask their question during Office Hours.
-    - bot-dontasktoask: Sends a reply to the message author explaining that they don't need to ask to ask.
+    - bothelp: Lists available bot reactions
+    - botask: Sends a reply to the message author explaining how to improve their question
+    - botofficehours: Sends a reply to the message author explaining how to ask their question during Office Hours.
+    - botdontasktoask: Sends a reply to the message author explaining that they don't need to ask to ask.
   `)
 })

@@ -11,10 +11,10 @@ type ReactionFn = {
 
 const reactions: Record<string, ReactionFn | undefined> = {
   // the help command depends on this, so we do not include it here...
-  'bot-help': help,
-  'bot-ask': ask,
-  'bot-office-hours': officeHours,
-  'bot-dontasktoask': dontAskToAsk,
+  bothelp: help,
+  botask: ask,
+  botofficehours: officeHours,
+  botdontasktoask: dontAskToAsk,
 } as const
 
 // the help command depends on all the other commands, so we just inline it here

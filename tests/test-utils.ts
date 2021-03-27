@@ -247,7 +247,7 @@ async function makeFakeClient() {
     channel = defaultChannels.talkToBotsChannel,
   } = {}) {
     const messageData = {
-      id: SnowflakeUtil.generate(Date.now()),
+      id: SnowflakeUtil.generate(),
       content,
       author: user.user,
       channel_id: channel.id,

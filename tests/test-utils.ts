@@ -155,37 +155,28 @@ function createRoles(client: TDiscord.Client, guild: TDiscord.Guild) {
 
   const officeHoursRole = new Discord.Role(
     client,
-    {
-      id: SnowflakeUtil.generate(new Date('2020-01-01')),
-      name: 'Notify: Office Hours',
-    },
+    {id: SnowflakeUtil.generate(), name: 'Notify: Office Hours'},
     guild,
   )
   guild.roles.cache.set(officeHoursRole.id, officeHoursRole)
 
   const liveStreamRole = new Discord.Role(
     client,
-    {
-      id: SnowflakeUtil.generate(new Date('2020-01-02')),
-      name: 'Notify: Kent Live',
-    },
+    {id: SnowflakeUtil.generate(), name: 'Notify: Kent Live'},
     guild,
   )
   guild.roles.cache.set(liveStreamRole.id, liveStreamRole)
 
   const unconfirmedRole = new Discord.Role(
     client,
-    {
-      id: SnowflakeUtil.generate(new Date('2020-01-03')),
-      name: 'Unconfirmed Member',
-    },
+    {id: SnowflakeUtil.generate(), name: 'Unconfirmed Member'},
     guild,
   )
   guild.roles.cache.set(unconfirmedRole.id, unconfirmedRole)
 
   const memberRole = new Discord.Role(
     client,
-    {id: SnowflakeUtil.generate(new Date('2020-01-04')), name: 'Member'},
+    {id: SnowflakeUtil.generate(), name: 'Member'},
     guild,
   )
   guild.roles.cache.set(memberRole.id, memberRole)
@@ -193,7 +184,7 @@ function createRoles(client: TDiscord.Client, guild: TDiscord.Guild) {
   const newConfirmedMemberRole = new Discord.Role(
     client,
     {
-      id: SnowflakeUtil.generate(new Date('2020-01-05')),
+      id: SnowflakeUtil.generate(),
       name: 'New confirmed member',
     },
     guild,
@@ -215,13 +206,13 @@ async function makeFakeClient() {
   Object.assign(client, {
     token: process.env.DISCORD_BOT_TOKEN,
     user: new Discord.ClientUser(client, {
-      id: SnowflakeUtil.generate(new Date('2020-01-06')),
+      id: SnowflakeUtil.generate(),
       bot: true,
       username: 'BOT',
     }),
   })
   const guild = new Discord.Guild(client, {
-    id: SnowflakeUtil.generate(new Date('2020-01-07')),
+    id: SnowflakeUtil.generate(),
     name: 'KCD',
   })
 
@@ -246,15 +237,9 @@ async function makeFakeClient() {
     return newMember
   }
 
-  const kody = await createUser('kody', {
-    id: SnowflakeUtil.generate(new Date('2014-05-26')),
-  })
-  const marty = await createUser('marty', {
-    id: SnowflakeUtil.generate(new Date('2014-05-27')),
-  })
-  const hannah = await createUser('hannah', {
-    id: SnowflakeUtil.generate(new Date('2014-05-28')),
-  })
+  const kody = await createUser('kody', {id: SnowflakeUtil.generate()})
+  const marty = await createUser('marty', {id: SnowflakeUtil.generate()})
+  const hannah = await createUser('hannah', {id: SnowflakeUtil.generate()})
 
   function sendFromUser({
     user = kody,

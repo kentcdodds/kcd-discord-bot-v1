@@ -46,7 +46,7 @@ To get a list of commands, run: `?help` in
 
 I deploy this on [Heroku](https://heroku.com/).
 
-If you want to fork it, by my guest. It's not built to be a general solution so
+If you want to fork it, be my guest. It's not built to be a general solution so
 you'll probably have to change a bunch of things 😅
 
 ## Issues

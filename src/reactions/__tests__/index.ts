@@ -73,6 +73,19 @@ test('botdontasktoask sends the message author dontasktoask.com', async () => {
   )
 })
 
+test(`botdouble sends the message author an explanation that they shouldn't post the same thing twice`, async () => {
+  const {
+    defaultChannels: {generalChannel},
+  } = await setupTest({
+    content: `I already said this`,
+    reactionName: 'botdouble',
+  })
+
+  expect(generalChannel.lastMessage?.content).toMatchInlineSnapshot(
+    `<@!kody>, Please avoid posting the same thing in multiple channels. Choose the best channel, and wait for a response there. Please delete the other message to avoid fragmenting the answers and causing confusion. Thanks!`,
+  )
+})
+
 test('bothelp sends the reacting user a message in talk-to-bots with info on the reaction emoji', async () => {
   const {
     defaultChannels: {talkToBotsChannel},
@@ -87,5 +100,6 @@ test('bothelp sends the reacting user a message in talk-to-bots with info on the
     - botask: Sends a reply to the message author explaining how to improve their question
     - botofficehours: Sends a reply to the message author explaining how to ask their question during Office Hours.
     - botdontasktoask: Sends a reply to the message author explaining that they don't need to ask to ask.
+    - botdouble: Sends a reply to the message author explaining that they shouldn't ask the same question twice.
   `)
 })

@@ -51,6 +51,7 @@ async function createEmojis(guild: TDiscord.Guild) {
     'botask',
     'botofficehours',
     'botdontasktoask',
+    'botdouble',
     'bothelp',
     'jest',
     'react',

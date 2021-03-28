@@ -12,6 +12,7 @@ const reactions: Record<string, ReactionFn | undefined> = {
   botask: ask,
   botofficehours: officeHours,
   botdontasktoask: dontAskToAsk,
+  botdouble: doubleAsk,
 } as const
 
 async function ask(messageReaction: TDiscord.MessageReaction) {
@@ -21,6 +22,13 @@ async function ask(messageReaction: TDiscord.MessageReaction) {
 }
 ask.description =
   'Sends a reply to the message author explaining how to improve their question'
+
+async function doubleAsk(messageReaction: TDiscord.MessageReaction) {
+  await messageReaction.message.reply(
+    `Please avoid posting the same thing in multiple channels. Choose the best channel, and wait for a response there. Please delete the other message to avoid fragmenting the answers and causing confusion. Thanks!`,
+  )
+}
+doubleAsk.description = `Sends a reply to the message author explaining that they shouldn't ask the same question twice.`
 
 async function officeHours(messageReaction: TDiscord.MessageReaction) {
   const message = messageReaction.message

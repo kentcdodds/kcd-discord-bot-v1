@@ -17,7 +17,7 @@ const reactions: Record<string, ReactionFn | undefined> = {
 
 async function ask(messageReaction: TDiscord.MessageReaction) {
   await messageReaction.message.reply(
-    `We appreciate your question and we want to help you. Could you please give us more details? Please follow the guidelines in <https://kcd.im/ask> (especially the part about making a <https://kcd.im/repro>) and then we'll be able to answer your question.`,
+    `We appreciate your question and we'll do our best to help you when we can. Could you please give us more details? Please follow the guidelines in <https://kcd.im/ask> (especially the part about making a <https://kcd.im/repro>) and then we'll be able to answer your question.`,
   )
 }
 ask.description =
@@ -45,7 +45,7 @@ officeHours.description =
 async function dontAskToAsk(messageReaction: TDiscord.MessageReaction) {
   const message = messageReaction.message
   await message.reply(
-    `We're happy to answer your questions! You don't need to bother asking. Learn more: <https://dontasktoask.com>`,
+    `We're happy to answer your questions if we can, so you don't need to ask if you can ask. Learn more: <https://dontasktoask.com>`,
   )
 }
 dontAskToAsk.description = `Sends a reply to the message author explaining that they don't need to ask to ask.`

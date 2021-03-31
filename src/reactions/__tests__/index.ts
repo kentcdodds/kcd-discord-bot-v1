@@ -43,7 +43,7 @@ test('botask sends the message author the ask reply', async () => {
   })
 
   expect(generalChannel.lastMessage?.content).toMatchInlineSnapshot(
-    `<@!kody>, We appreciate your question and we want to help you. Could you please give us more details? Please follow the guidelines in <https://kcd.im/ask> (especially the part about making a <https://kcd.im/repro>) and then we'll be able to answer your question.`,
+    `<@!kody>, We appreciate your question and we'll do our best to help you when we can. Could you please give us more details? Please follow the guidelines in <https://kcd.im/ask> (especially the part about making a <https://kcd.im/repro>) and then we'll be able to answer your question.`,
   )
 })
 
@@ -69,7 +69,7 @@ test('botdontasktoask sends the message author dontasktoask.com', async () => {
   })
 
   expect(generalChannel.lastMessage?.content).toMatchInlineSnapshot(
-    `<@!kody>, We're happy to answer your questions! You don't need to bother asking. Learn more: <https://dontasktoask.com>`,
+    `<@!kody>, We're happy to answer your questions if we can, so you don't need to ask if you can ask. Learn more: <https://dontasktoask.com>`,
   )
 })
 

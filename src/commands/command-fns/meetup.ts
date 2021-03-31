@@ -45,7 +45,6 @@ async function meetup(message: TDiscord.Message) {
       return startMeetup({
         host: message.member,
         meetupDetails: `"${args}"`,
-        createVoiceChannel: !args.toLowerCase().includes('zoom.us'),
       })
     }
     case 'follow-me': {

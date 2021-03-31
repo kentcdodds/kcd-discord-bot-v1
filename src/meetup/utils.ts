@@ -52,14 +52,14 @@ async function getFollowers(
 type StartMeetupOptions = {
   host: TDiscord.GuildMember | null
   meetupDetails: string
-  createVoiceChannel: boolean
   notificationUsers?: Array<TDiscord.GuildMember>
 }
+
+const noVoiceChannelRegex = /(zoom\.us|twitch\.tv)/i
 
 async function startMeetup({
   host,
   meetupDetails,
-  createVoiceChannel,
   notificationUsers = [],
 }: StartMeetupOptions) {
   if (!host) {
@@ -70,7 +70,8 @@ async function startMeetup({
   if (subject === 'Unknown') {
     console.error(`Could not get a subject from ${meetupDetails}`)
   }
-  if (createVoiceChannel) {
+  const shouldMakeVoiceChannel = !noVoiceChannelRegex.test(meetupDetails)
+  if (shouldMakeVoiceChannel) {
     const meetupCategory = getCategoryChannel(host.guild, 'meetups')
 
     await host.guild.channels.create(

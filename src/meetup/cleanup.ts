@@ -72,7 +72,6 @@ async function handleHostReactions(message: TDiscord.Message) {
     await startMeetup({
       host,
       meetupDetails: getMeetupDetailsFromScheduledMessage(message.content),
-      createVoiceChannel: !message.content.toLowerCase().includes('zoom.us'),
       notificationUsers: await getNotificationUsers(message),
     })
 

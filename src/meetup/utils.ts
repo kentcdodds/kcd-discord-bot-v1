@@ -70,8 +70,8 @@ async function startMeetup({
   if (subject === 'Unknown') {
     console.error(`Could not get a subject from ${meetupDetails}`)
   }
-  const shouldMakeVoiceChannel = !noVoiceChannelRegex.test(meetupDetails)
-  if (shouldMakeVoiceChannel) {
+  const forceVoiceChannel = meetupDetails.includes('voice channel')
+  if (forceVoiceChannel || !noVoiceChannelRegex.test(meetupDetails)) {
     const meetupCategory = getCategoryChannel(host.guild, 'meetups')
 
     await host.guild.channels.create(

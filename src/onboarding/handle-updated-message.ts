@@ -11,7 +11,6 @@ import {
   isTextChannel,
   isRegularStep,
   Answers,
-  rollbar,
 } from './utils'
 import {getSteps, getAnswers} from './steps'
 
@@ -20,19 +19,16 @@ async function handleUpdatedMessage(
   oldMessage: TDiscord.Message | TDiscord.PartialMessage,
   newMessage: TDiscord.Message | TDiscord.PartialMessage,
 ) {
-  const {channel} = newMessage
-  if (
-    !isTextChannel(channel) ||
-    newMessage.partial ||
-    oldMessage.partial ||
-    !newMessage.content
-  ) {
-    rollbar.error(
-      `Onboarding channel had an updated message and it was a partial message. This shouldn't happen.`,
-      isTextChannel(channel) ? channel.name : 'Unknown channel',
-    )
-    return
+  if (newMessage.partial) {
+    newMessage = await newMessage.fetch()
   }
+  if (oldMessage.partial) {
+    oldMessage = await oldMessage.fetch()
+  }
+
+  const {channel, author} = newMessage
+
+  if (!isTextChannel(channel) || !newMessage.content) return
 
   const send = getSend(channel)
 
@@ -44,7 +40,7 @@ async function handleUpdatedMessage(
 
   // message must have been sent from the new member
   const memberId = getMemberIdFromChannel(channel)
-  if (newMessage.author.id !== memberId) return null
+  if (author.id !== memberId) return null
 
   const member = getMember(newMessage.guild, memberId)
   if (!member) return

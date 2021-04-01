@@ -114,7 +114,7 @@ const allSteps: ReadonlyArray<Step> = [
         }
       } catch (error: unknown) {
         rollbar.error(
-          `Trouble checking whether the email was disposable`,
+          `Trouble checking whether the email "${response}" was disposable`,
           (error as Error).message,
         )
       }

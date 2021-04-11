@@ -3,13 +3,20 @@ import {getMemberIdFromChannel, isWelcomeChannel, isTextChannel} from '../utils'
 
 const editErrorMessagePrefix = `There's a problem with an edit that was just made. Please edit the answer again to fix it.`
 
-const {CONVERT_KIT_API_SECRET, CONVERT_KIT_API_KEY} = process.env
+const {
+  CONVERT_KIT_API_SECRET,
+  CONVERT_KIT_API_KEY,
+  VERIFIER_API_KEY,
+} = process.env
 
 if (!CONVERT_KIT_API_SECRET) {
   throw new Error('CONVERT_KIT_API_SECRET env variable is required')
 }
 if (!CONVERT_KIT_API_KEY) {
   throw new Error('CONVERT_KIT_API_KEY env variable is required')
+}
+if (!VERIFIER_API_KEY) {
+  throw new Error('VERIFIER_API_KEY env variable is required')
 }
 
 function getSubscriberEndpoint(email: string) {
@@ -114,6 +121,7 @@ export {
   getSubscriberEndpoint,
   CONVERT_KIT_API_SECRET,
   CONVERT_KIT_API_KEY,
+  VERIFIER_API_KEY,
   getWelcomeChannels,
   isMemberUnconfirmed,
   getMemberWelcomeChannel,

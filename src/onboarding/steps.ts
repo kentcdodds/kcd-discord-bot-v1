@@ -2,11 +2,13 @@ import type * as TDiscord from 'discord.js'
 import got from 'got'
 import mem from 'mem'
 import md5 from 'md5-hash'
+import nodeUrl from 'url'
 import {
   getSubscriberEndpoint,
   getSend,
   CONVERT_KIT_API_KEY,
   CONVERT_KIT_API_SECRET,
+  VERIFIER_API_KEY,
   sleep,
   getChannel,
   typedBoolean,
@@ -15,6 +17,8 @@ import {
   rollbar,
 } from './utils'
 import type {Answers, Step} from './utils'
+
+const {URL} = nodeUrl
 
 const memGot = mem(got, {
   // five minutes
@@ -103,13 +107,15 @@ const allSteps: ReadonlyArray<Step> = [
 
       // let's make sure the given email isn't a disposable email
       try {
-        const {result} = await got(
-          `https://api.disposable-email-detector.com/api/dea/v1/check/${response}`,
-        ).json()
+        const verifierUrl = new URL(
+          `https://verifier.meetchopra.com/verify/${response}`,
+        )
+        verifierUrl.searchParams.append('token', VERIFIER_API_KEY ?? '')
+        const {result} = await got(verifierUrl.toString()).json()
         if (result.error) {
           throw new Error(result.error)
         }
-        if (result.isDisposable) {
+        if (!result.status) {
           return `You must use your actual email address.`
         }
       } catch (error: unknown) {

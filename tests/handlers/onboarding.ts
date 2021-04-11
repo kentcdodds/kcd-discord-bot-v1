@@ -76,12 +76,9 @@ const handlers = [
   rest.get('https://www.gravatar.com/avatar/:hash', (req, res, ctx) => {
     return res(ctx.status(200))
   }),
-  rest.get(
-    'https://api.disposable-email-detector.com/api/dea/v1/check/:email',
-    (req, res, ctx) => {
-      return res(ctx.json({result: {isDisposable: false}}))
-    },
-  ),
+  rest.get('https://verifier.meetchopra.com/verify/:email', (req, res, ctx) => {
+    return res(ctx.json({result: {status: true}}))
+  }),
 ]
 
 export {handlers}

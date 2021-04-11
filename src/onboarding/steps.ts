@@ -112,11 +112,13 @@ const allSteps: ReadonlyArray<Step> = [
         )
         verifierUrl.searchParams.append('token', VERIFIER_API_KEY ?? '')
         const {result} = await got(verifierUrl.toString()).json()
-        if (result.error) {
-          throw new Error(result.error)
+        if (result.error?.code === 500) {
+          throw new Error(result.error.message)
         }
         if (!result.status) {
-          return `You must use your actual email address.`
+          return `You must use your actual email address. Attempted to verify that ${response} exists and received the following error: ${
+            result.error?.message ?? 'Unknown error'
+          }`
         }
       } catch (error: unknown) {
         rollbar.error(

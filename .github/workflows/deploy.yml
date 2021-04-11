@@ -36,8 +36,7 @@ jobs:
       - name: 🚀 Deploy
         # only deploy main branch on pushes
         if:
-          ${{ github.ref == 'refs/heads/main' && github.event_name == 'push'
-          }}
+          ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
         uses: akhileshns/heroku-deploy@v3.6.8
         env:
           # "HD_" is removed by akhileshns/heroku-deploy
@@ -53,6 +52,7 @@ jobs:
           HD_GIST_REPO_THANKS: ${{ secrets.GIST_REPO_THANKS }}
           HD_ROLLBAR_ACCESS_TOKEN: ${{ secrets.ROLLBAR_ACCESS_TOKEN }}
           HD_ROLLBAR_ENDPOINT: ${{ secrets.ROLLBAR_ENDPOINT }}
+          HD_VERIFIER_API_KEY: ${{ secrets.VERIFIER_API_KEY }}
 
           # no need to have husky bothering installing on heroku
           HD_HUSKY_SKIP_INSTALL: '1'

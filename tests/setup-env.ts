@@ -27,21 +27,21 @@ expect.addSnapshotSerializer({
   print(val) {
     const stringVal = val as string
     return stringVal
-      .replace(/<@!?(\d+)>/g, (match, memberId) => {
+      .replace(/<@!?(\d+)>/g, (match, memberId: string) => {
         for (const guild of Object.values(DiscordManager.guilds)) {
           const member = guild.members.cache.get(memberId)
           if (member) return `<@!${member.displayName}>`
         }
         return match
       })
-      .replace(/<#(\d+)>/g, (match, channelId) => {
+      .replace(/<#(\d+)>/g, (match, channelId: string) => {
         for (const guild of Object.values(DiscordManager.guilds)) {
           const channel = guild.channels.cache.get(channelId)
           if (channel) return `<#${channel.name}>`
         }
         return match
       })
-      .replace(/<@&(\d+)>/g, (match, roleId) => {
+      .replace(/<@&(\d+)>/g, (match, roleId: string) => {
         for (const guild of Object.values(DiscordManager.guilds)) {
           const role = guild.roles.cache.get(roleId)
           if (role) return `<@&${role.name}>`

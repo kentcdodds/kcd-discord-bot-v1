@@ -53,8 +53,8 @@ test('sends a gif', async () => {
   const {reply} = await setup('?kif hi')
 
   expect(reply.content).toMatchInlineSnapshot(`
-    "From: kody
-    https://giphy.com/gifs/hi-kentcdodds-VbzmrabLQFE8VbQY3V"
+    From: kody
+    https://giphy.com/gifs/hi-kentcdodds-VbzmrabLQFE8VbQY3V
   `)
 })
 
@@ -62,9 +62,9 @@ test('suggests similar item', async () => {
   const {reply} = await setup('?kif peace fail')
 
   expect(reply.content).toMatchInlineSnapshot(`
-    "Did you mean \\"peace fall\\"?
+    Did you mean "peace fall"?
     From: kody
-    https://giphy.com/gifs/fall-peace-kentcdodds-U3nGECxxmHugNeAm6n"
+    https://giphy.com/gifs/fall-peace-kentcdodds-U3nGECxxmHugNeAm6n
   `)
 })
 
@@ -86,9 +86,9 @@ test('should use username in the from if nickname is not defined', async () => {
   })
 
   expect(reply.content).toMatchInlineSnapshot(`
-    "Did you mean \\"peace fall\\"?
+    Did you mean "peace fall"?
     From: userWithOnlyUsername
-    https://giphy.com/gifs/fall-peace-kentcdodds-U3nGECxxmHugNeAm6n"
+    https://giphy.com/gifs/fall-peace-kentcdodds-U3nGECxxmHugNeAm6n
   `)
 })
 
@@ -96,11 +96,11 @@ test('suggests two items', async () => {
   const {reply} = await setup('?kif peac')
 
   expect(reply.content).toMatchInlineSnapshot(`
-    "Couldn't find a kif for: \\"peac\\"
+    Couldn't find a kif for: "peac"
 
-    Did you mean \\"peace\\" or \\"peace fall\\"?
+    Did you mean "peace" or "peace fall"?
 
-    _This message will self-destruct in about 10 seconds_"
+    _This message will self-destruct in about 10 seconds_
   `)
 })
 
@@ -108,11 +108,11 @@ test('suggests several items (but no more than 6)', async () => {
   const {reply} = await setup('?kif a')
 
   expect(reply.content).toMatchInlineSnapshot(`
-    "Couldn't find a kif for: \\"a\\"
+    Couldn't find a kif for: "a"
 
-    Did you mean \\"aw\\", \\"adorable\\", \\"agree\\", \\"agreed\\", \\"aw shucks\\", or \\"peace\\"?
+    Did you mean "aw", "adorable", "agree", "agreed", "aw shucks", or "peace"?
 
-    _This message will self-destruct in about 10 seconds_"
+    _This message will self-destruct in about 10 seconds_
   `)
 })
 
@@ -120,8 +120,8 @@ test(`says it can't find something if it can't`, async () => {
   const {reply} = await setup('?kif djskfjdlakfjewoifdjd')
 
   expect(reply.content).toMatchInlineSnapshot(`
-    "Couldn't find a kif for: \\"djskfjdlakfjewoifdjd\\"
+    Couldn't find a kif for: "djskfjdlakfjewoifdjd"
 
-    _This message will self-destruct in about 10 seconds_"
+    _This message will self-destruct in about 10 seconds_
   `)
 })

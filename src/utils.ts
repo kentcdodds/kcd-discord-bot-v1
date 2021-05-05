@@ -255,8 +255,15 @@ function cleanupGuildOnInterval(
   cb: (client: TDiscord.Guild) => Promise<unknown>,
   interval: number,
 ) {
+  const uncaughtError = new Error(
+    'Uncaught cleanupGuildOnInterval callback error',
+  )
   setIntervalAsync(() => {
-    return Promise.all(Array.from(client.guilds.cache.values()).map(cb))
+    return Promise.all(Array.from(client.guilds.cache.values()).map(cb)).catch(
+      error => {
+        rollbar.error(uncaughtError.stack, error)
+      },
+    )
   }, interval)
 }
 

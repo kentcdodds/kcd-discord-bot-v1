@@ -121,7 +121,7 @@ test('should give an error message if the user not provide a search term', async
   const {reply} = await setup(``)
 
   expect(reply.content).toMatchInlineSnapshot(
-    `"A search term is required. For example: \`?blog state management\`"`,
+    `A search term is required. For example: \`?blog state management\``,
   )
 })
 

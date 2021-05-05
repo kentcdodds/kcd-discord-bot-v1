@@ -1,8 +1,8 @@
 // Command purpose:
 // to automate creating new learning clubs https://kcd.im/clubs
 import type * as TDiscord from 'discord.js'
-import got from 'got'
 import redent from 'redent'
+import got from 'got'
 import ogs from 'open-graph-scraper'
 import rollbar from '../../../rollbar'
 import {
@@ -169,7 +169,7 @@ Please fix the ${problems} above and try again. Please be sure to follow the tem
   }
 
   const activeClubMessage = await openClubsChannel.send(
-    getActiveClubMessage({formLink, formData, member}),
+    await getActiveClubMessage({formLink, formData, member}),
   )
   const activeClubMessageLink = getMessageLink(activeClubMessage)
   await sendBotMessageReply(
@@ -221,7 +221,7 @@ async function getFormData(formLink: string): Promise<FormData> {
 const clipLongText = (text: string, max: number) =>
   text.length > max ? `${text.slice(0, max - 3)}...` : text
 
-function getActiveClubMessage({
+async function getActiveClubMessage({
   formLink,
   formData,
   member,

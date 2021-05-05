@@ -21,6 +21,7 @@ const handlers = [
     '*/api/:apiVersion/channels/:channelId/messages',
     (req, res, ctx) => {
       const {channelId} = req.params
+      requiredParam(channelId, 'channelId param required')
       const channelInfo = DiscordManager.channels[channelId]
       if (!channelInfo) {
         throw new Error(`No channel with the id of ${channelId}`)
@@ -103,6 +104,10 @@ const handlers = [
     '*/api/:apiVersion/channels/:channelId/messages/:messageId/reactions/:reaction',
     (req, res, ctx) => {
       const {channelId, messageId, reaction} = req.params
+      requiredParam(channelId, 'channelId param required')
+      requiredParam(messageId, 'messageId param required')
+      requiredParam(reaction, 'reaction param required')
+
       const emoji = Util.parseEmoji(reaction)
       if (!emoji) {
         throw new Error(`No emojis could be parsed from ${reaction}`)
@@ -137,6 +142,10 @@ const handlers = [
     '*/api/:apiVersion/channels/:channelId/messages/:messageId/reactions/:reaction',
     (req, res, ctx) => {
       const {channelId, messageId, reaction} = req.params
+      requiredParam(channelId, 'channelId param required')
+      requiredParam(messageId, 'messageId param required')
+      requiredParam(reaction, 'reaction param required')
+
       const emoji = Util.parseEmoji(reaction)
       if (!emoji) {
         throw new Error(`No emojis could be parsed from ${reaction}`)
@@ -197,46 +206,52 @@ const handlers = [
   rest.delete(
     '*/api/:apiVersion/guilds/:guildId/members/:memberId/roles/:roleId',
     (req, res, ctx) => {
-      const updateUser = {
-        id: req.params.memberId,
-      }
-      const guild = DiscordManager.guilds[req.params.guildId]
+      const {guildId, memberId, roleId} = req.params
+      requiredParam(guildId, 'guildId param required')
+      requiredParam(memberId, 'memberId param required')
+      requiredParam(roleId, 'roleId param required')
+
+      const guild = DiscordManager.guilds[guildId]
       if (!guild) {
-        throw new Error(`No guild with the ID of ${req.params.guildId}`)
+        throw new Error(`No guild with the ID of ${guildId}`)
       }
 
       const user = Array.from(guild.members.cache.values()).find(
-        guildMember => guildMember.user.id === req.params.memberId,
+        guildMember => guildMember.user.id === memberId,
       ) as TDiscord.GuildMember & {_roles: Array<string>}
-      const removedRole = guild.roles.cache.get(req.params.roleId)
+      const removedRole = guild.roles.cache.get(roleId)
       if (!removedRole) {
-        throw new Error(`No role with the ID of ${req.params.roleId}`)
+        throw new Error(`No role with the ID of ${roleId}`)
       }
-      user._roles = user._roles.filter(roleId => roleId !== removedRole.id)
-      return res(ctx.status(200), ctx.json(updateUser))
+      user._roles = user._roles.filter(
+        userRoleId => userRoleId !== removedRole.id,
+      )
+      return res(ctx.status(200), ctx.json({id: memberId}))
     },
   ),
   rest.put(
     '*/api/:apiVersion/guilds/:guildId/members/:memberId/roles/:roleId',
     (req, res, ctx) => {
-      const updateUser = {
-        id: req.params.memberId,
-      }
-      const guild = DiscordManager.guilds[req.params.guildId]
+      const {guildId, memberId, roleId} = req.params
+      requiredParam(guildId, 'guildId param required')
+      requiredParam(memberId, 'memberId param required')
+      requiredParam(roleId, 'roleId param required')
+
+      const guild = DiscordManager.guilds[guildId]
       if (!guild) {
-        throw new Error(`No guild with the ID of ${req.params.guildId}`)
+        throw new Error(`No guild with the ID of ${guildId}`)
       }
 
       const user = Array.from(guild.members.cache.values()).find(
-        guildMember => guildMember.user.id === req.params.memberId,
+        guildMember => guildMember.user.id === memberId,
       ) as TDiscord.GuildMember & {_roles: Array<string>}
 
-      const assignedRole = guild.roles.cache.get(req.params.roleId)
+      const assignedRole = guild.roles.cache.get(roleId)
       if (!assignedRole) {
-        throw new Error(`No role with the ID of ${req.params.roleId}`)
+        throw new Error(`No role with the ID of ${roleId}`)
       }
       user._roles.push(assignedRole.id)
-      return res(ctx.status(200), ctx.json(updateUser))
+      return res(ctx.status(200), ctx.json({id: memberId}))
     },
   ),
   rest.patch(
@@ -328,5 +343,12 @@ const handlers = [
     )
   }),
 ]
+
+function requiredParam(
+  value: unknown,
+  message: string,
+): asserts value is string {
+  if (typeof value !== 'string') throw new Error(message)
+}
 
 export {handlers}

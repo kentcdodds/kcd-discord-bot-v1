@@ -136,7 +136,7 @@ test('there is a limit on the length of the meetup details', async () => {
   expect(scheduledMeetupsChannel.messages.cache.size).toBe(0)
   assert(botChannel.lastMessage, 'Bot did not reply')
   expect(botChannel.lastMessage.content).toMatchInlineSnapshot(
-    `"Meetup details are limited to 800 characters and your details are 874 characters. If you need to, put extra details somewhere online and link to it."`,
+    `Meetup details are limited to 800 characters and your details are 874 characters. If you need to, put extra details somewhere online and link to it.`,
   )
 })
 
@@ -298,7 +298,7 @@ test('can start a meetup right away with the start subcommand', async () => {
   const meetupChannels = Array.from(getMeetupChannels(guild).values())
   expect(meetupChannels).toHaveLength(1)
   expect(meetupChannels[0]?.name).toMatchInlineSnapshot(
-    `"🤪 Meetup: kody \\"Migrating to Tailwind\\""`,
+    `🤪 Meetup: kody "Migrating to Tailwind"`,
   )
 })
 
@@ -658,7 +658,7 @@ test(`users can't update a recurring meetup to a one-time meetup without force-u
 
   assert(botChannel.lastMessage, 'Bot did not reply')
   expect(botChannel.lastMessage.content).toMatchInlineSnapshot(
-    `"The original meetup was recurring, but you're updating it to not be recurring. This is a common mistake. If you're sure this is the change you want, use \`?meetup force-update\` rather than \`?meetup update\`"`,
+    `The original meetup was recurring, but you're updating it to not be recurring. This is a common mistake. If you're sure this is the change you want, use \`?meetup force-update\` rather than \`?meetup update\``,
   )
   // no change to the scheduled meetup message
   assert(scheduledMeetupsChannel.lastMessage, 'No schedule meetup lastMessage')
@@ -694,7 +694,7 @@ test(`users can't update a recurring meetup to a one-time meetup without force-u
 
   assert(botChannel.lastMessage, 'Bot did not reply')
   expect(botChannel.lastMessage.content).toMatchInlineSnapshot(
-    `"The original meetup was not recurring, but you're updating it to be recurring. This is a common mistake. If you're sure this is the change you want, use \`?meetup force-update\` rather than \`?meetup update\`"`,
+    `The original meetup was not recurring, but you're updating it to be recurring. This is a common mistake. If you're sure this is the change you want, use \`?meetup force-update\` rather than \`?meetup update\``,
   )
   // try to change to recurring with force
   await meetup(

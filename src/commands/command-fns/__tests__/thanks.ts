@@ -221,8 +221,8 @@ test('should show a message if the user has never been thanked', async () => {
   expect(getBotMessages()).toHaveLength(1)
   expect(getThanksMessages()).toHaveLength(0)
   expect(getBotMessages()[0]?.content).toMatchInlineSnapshot(`
-    "This is the rank of the requested member:
-    - kody hasn't been thanked yet 🙁"
+    This is the rank of the requested member:
+    - kody hasn't been thanked yet 🙁
   `)
 })
 
@@ -251,8 +251,8 @@ test('should show the rank of the user message', async () => {
   expect(getBotMessages()).toHaveLength(1)
   expect(getThanksMessages()).toHaveLength(0)
   expect(getBotMessages()[0]?.content).toMatchInlineSnapshot(`
-    "This is the rank of the requested member:
-    - kody has been thanked 1 time 👏"
+    This is the rank of the requested member:
+    - kody has been thanked 1 time 👏
   `)
 })
 
@@ -287,8 +287,8 @@ test('should show the rank of the mentioned user', async () => {
   expect(getBotMessages()).toHaveLength(1)
   expect(getThanksMessages()).toHaveLength(0)
   expect(getBotMessages()[0]?.content).toMatchInlineSnapshot(`
-    "This is the rank of the requested member:
-    - user1 has been thanked 2 times 👏"
+    This is the rank of the requested member:
+    - user1 has been thanked 2 times 👏
   `)
 })
 
@@ -324,7 +324,7 @@ test('should show the rank of the top 10 users', async () => {
   expect(getBotMessages()).toHaveLength(1)
   expect(getThanksMessages()).toHaveLength(0)
   expect(getBotMessages()[0]?.content).toMatchInlineSnapshot(`
-    "This is the list of the top thanked members 💪:
+    This is the list of the top thanked members 💪:
     - user19 has been thanked 19 times 👏
     - user18 has been thanked 18 times 👏
     - user17 has been thanked 17 times 👏
@@ -335,7 +335,7 @@ test('should show the rank of the top 10 users', async () => {
     - user12 has been thanked 12 times 👏
     - user11 has been thanked 11 times 👏
     - user10 has been thanked 10 times 👏
-    - user9 has been thanked 9 times 👏"
+    - user9 has been thanked 9 times 👏
   `)
 })
 
@@ -359,7 +359,7 @@ test('should give an error if there are some issues retrieving data from gist', 
   expect(getBotMessages()).toHaveLength(1)
   expect(getThanksMessages()).toHaveLength(0)
   expect(getBotMessages()[0]?.content).toMatchInlineSnapshot(
-    `"There is an issue retrieving the history. Please try again later 🙏"`,
+    `There is an issue retrieving the history. Please try again later 🙏`,
   )
 })
 
@@ -382,6 +382,6 @@ test('should give an error if no user is thanked', async () => {
   expect(getBotMessages()).toHaveLength(1)
   expect(getThanksMessages()).toHaveLength(0)
   expect(getBotMessages()[0]?.content).toMatchInlineSnapshot(
-    `"You have to mention someone specific you want to thank."`,
+    `You have to mention someone specific you want to thank.`,
   )
 })

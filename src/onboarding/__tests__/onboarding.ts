@@ -129,7 +129,7 @@ test('the typical flow', async () => {
   } = await setup()
 
   expect(onboardingChannel.name).toMatchInlineSnapshot(
-    `"🌊-welcome-fredjoe_1234"`,
+    `🌊-welcome-fredjoe_1234`,
   )
 
   const name = 'Fred'
@@ -272,7 +272,7 @@ test('the typical flow', async () => {
     Array.from(member.roles.cache.values())
       .map(role => role.name)
       .join(', '),
-  ).toMatchInlineSnapshot(`"Member, @everyone"`)
+  ).toMatchInlineSnapshot(`Member, @everyone`)
 })
 
 // eslint-disable-next-line max-lines-per-function
@@ -290,24 +290,24 @@ test('typing and editing to an invalid value', async () => {
   // invalid email
   await send('not an email')
   expect(getBotResponses()).toMatchInlineSnapshot(
-    `"BOT: That doesn't look like an email address. Please provide a proper email address."`,
+    `BOT: That doesn't look like an email address. Please provide a proper email address.`,
   )
 
   // valid email
   let emailMessage = await send('fred@example.com')
   expect(getBotResponses()).toMatchInlineSnapshot(`
-    "BOT: Awesome, when we're done here, you'll receive a confirmation email to: fred@example.com.
+    BOT: Awesome, when we're done here, you'll receive a confirmation email to: fred@example.com.
     BOT: Our community is commited to certain standards of behavior and we enforce that behavior to ensure it's a nice place to spend time.
 
     Please read about our code of conduct here: https://kentcdodds.com/conduct
 
-    Do you agree to abide by and uphold the code of conduct? **The only correct answer is \\"yes\\"**"
+    Do you agree to abide by and uphold the code of conduct? **The only correct answer is "yes"**
   `)
 
   let cocMessage = await send('yes')
   expect(getBotResponses()).toMatchInlineSnapshot(`
-    "BOT: Great, thanks for helping us keep this an awesome place to be.
-    BOT: **Based on what you read in the Code of Conduct**, what's the email address you send Code of Conduct concerns and violations to? (If you're not sure, open the code of conduct to find out)."
+    BOT: Great, thanks for helping us keep this an awesome place to be.
+    BOT: **Based on what you read in the Code of Conduct**, what's the email address you send Code of Conduct concerns and violations to? (If you're not sure, open the code of conduct to find out).
   `)
   await send('team@kentcdodds.com')
 
@@ -328,7 +328,7 @@ test('typing and editing to an invalid value', async () => {
   // edit something to invalid
   emailMessage = await update(emailMessage, 'not an email')
   expect(getBotResponses()).toMatchInlineSnapshot(`
-    "BOT: Ok, please do set your avatar later though. It helps keep everything human (and I'll bug you about it every now and then until you do 😈 😅).
+    BOT: Ok, please do set your avatar later though. It helps keep everything human (and I'll bug you about it every now and then until you do 😈 😅).
     BOT: Here are your answers:
       First Name: Fred
       Email: fred@example.com
@@ -337,13 +337,13 @@ test('typing and editing to an invalid value', async () => {
 
     If you'd like to change any, then edit your responses above.
 
-    **If everything's correct, simply reply \\"yes\\"**.
-    BOT: There's a problem with an edit that was just made. Please edit the answer again to fix it. That doesn't look like an email address. Please provide a proper email address."
+    **If everything's correct, simply reply "yes"**.
+    BOT: There's a problem with an edit that was just made. Please edit the answer again to fix it. That doesn't look like an email address. Please provide a proper email address.
   `)
 
   cocMessage = await update(cocMessage, 'No')
   expect(getBotResponses()).toMatchInlineSnapshot(`
-    "BOT: Ok, please do set your avatar later though. It helps keep everything human (and I'll bug you about it every now and then until you do 😈 😅).
+    BOT: Ok, please do set your avatar later though. It helps keep everything human (and I'll bug you about it every now and then until you do 😈 😅).
     BOT: Here are your answers:
       First Name: Fred
       Email: fred@example.com
@@ -352,13 +352,13 @@ test('typing and editing to an invalid value', async () => {
 
     If you'd like to change any, then edit your responses above.
 
-    **If everything's correct, simply reply \\"yes\\"**.
+    **If everything's correct, simply reply "yes"**.
     BOT: There's a problem with an edit that was just made. Please edit the answer again to fix it. That doesn't look like an email address. Please provide a proper email address.
-    BOT: There's a problem with an edit that was just made. Please edit the answer again to fix it. You must agree to the code of conduct to join this community. Do you agree to abide by and uphold the code of conduct? (The answer must be \\"yes\\")"
+    BOT: There's a problem with an edit that was just made. Please edit the answer again to fix it. You must agree to the code of conduct to join this community. Do you agree to abide by and uphold the code of conduct? (The answer must be "yes")
   `)
   await update(emailMessage, 'fred@acme.com')
   expect(getBotResponses()).toMatchInlineSnapshot(`
-    "BOT: Ok, please do set your avatar later though. It helps keep everything human (and I'll bug you about it every now and then until you do 😈 😅).
+    BOT: Ok, please do set your avatar later though. It helps keep everything human (and I'll bug you about it every now and then until you do 😈 😅).
     BOT: Here are your answers:
       First Name: Fred
       Email: fred@acme.com
@@ -367,14 +367,14 @@ test('typing and editing to an invalid value', async () => {
 
     If you'd like to change any, then edit your responses above.
 
-    **If everything's correct, simply reply \\"yes\\"**.
-    BOT: There's a problem with an edit that was just made. Please edit the answer again to fix it. You must agree to the code of conduct to join this community. Do you agree to abide by and uphold the code of conduct? (The answer must be \\"yes\\")"
+    **If everything's correct, simply reply "yes"**.
+    BOT: There's a problem with an edit that was just made. Please edit the answer again to fix it. You must agree to the code of conduct to join this community. Do you agree to abide by and uphold the code of conduct? (The answer must be "yes")
   `)
 
   // try to send "yes" to complete everything despite there being an edit error
   await send('yes')
   expect(getBotResponses()).toMatchInlineSnapshot(
-    `"BOT: There are existing errors with your previous answers, please edit your answer above before continuing."`,
+    `BOT: There are existing errors with your previous answers, please edit your answer above before continuing.`,
   )
 
   await update(cocMessage, 'Yes')
@@ -489,7 +489,7 @@ test('typing and editing to an invalid value', async () => {
     Array.from(member.roles.cache.values())
       .map(role => role.name)
       .join(', '),
-  ).toMatchInlineSnapshot(`"Member, @everyone"`)
+  ).toMatchInlineSnapshot(`Member, @everyone`)
 })
 
 test('a new member with some info already', async () => {
@@ -589,5 +589,5 @@ test('a new member with some info already', async () => {
     Array.from(member.roles.cache.values())
       .map(role => role.name)
       .join(', '),
-  ).toMatchInlineSnapshot(`"Member, @everyone"`)
+  ).toMatchInlineSnapshot(`Member, @everyone`)
 })

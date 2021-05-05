@@ -50,6 +50,6 @@ test('help with a specific command', async () => {
     throw new Error(`The bot didn't send exactly one reply`)
   }
   expect(reply.content).toMatchInlineSnapshot(
-    `"Gives information about the bot (deploy date etc.)"`,
+    `Gives information about the bot (deploy date etc.)`,
   )
 })

@@ -17,6 +17,7 @@ test.each([
   ],
 ])('"%s" matches', (input, parsed) => {
   const match = input.match(commandRegex)
+  // eslint-disable-next-line jest/no-if
   if (!match) throw new Error(`This input does not match the regex:\n${input}`)
   expect(match.groups).toEqual(parsed)
 })

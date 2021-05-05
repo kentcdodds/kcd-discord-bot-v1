@@ -207,7 +207,7 @@ test('the typical flow', async () => {
     BOT: What's your first name?
     fredjoe: Fred
     BOT: Great, hi Fred 👋
-    BOT: _I've changed your nickname on this server to Fred. If you'd like to change it back then type: \`/nick fredjoe\`_
+    BOT: _I've changed your nickname on this server to Fred. You can change it back if you'd like. (Learn more: <https://support.discord.com/hc/en-us/articles/219070107-Server-Nicknames>)_
     BOT: What's your email address? (This will look you up on Kent's mailing list. If you're not already on it, you'll be added and will receive a confirmation email.)
     fredjoe: fred@example.com
     BOT: Awesome, when we're done here, you'll receive a confirmation email to: fred@example.com.
@@ -290,6 +290,12 @@ test('typing and editing to an invalid value', async () => {
   // invalid email
   await send('not an email')
   expect(getBotResponses()).toMatchInlineSnapshot(
+    `BOT: You gave "not an email", but email addresses can't have a space in them. Please provide a proper email address.`,
+  )
+
+  // invalid email take 2
+  await send('not_an_email')
+  expect(getBotResponses()).toMatchInlineSnapshot(
     `BOT: That doesn't look like an email address. Please provide a proper email address.`,
   )
 
@@ -338,7 +344,7 @@ test('typing and editing to an invalid value', async () => {
     If you'd like to change any, then edit your responses above.
 
     **If everything's correct, simply reply "yes"**.
-    BOT: There's a problem with an edit that was just made. Please edit the answer again to fix it. That doesn't look like an email address. Please provide a proper email address.
+    BOT: There's a problem with an edit that was just made. Please edit the answer again to fix it. You gave "not an email", but email addresses can't have a space in them. Please provide a proper email address.
   `)
 
   cocMessage = await update(cocMessage, 'No')
@@ -353,7 +359,7 @@ test('typing and editing to an invalid value', async () => {
     If you'd like to change any, then edit your responses above.
 
     **If everything's correct, simply reply "yes"**.
-    BOT: There's a problem with an edit that was just made. Please edit the answer again to fix it. That doesn't look like an email address. Please provide a proper email address.
+    BOT: There's a problem with an edit that was just made. Please edit the answer again to fix it. You gave "not an email", but email addresses can't have a space in them. Please provide a proper email address.
     BOT: There's a problem with an edit that was just made. Please edit the answer again to fix it. You must agree to the code of conduct to join this community. Do you agree to abide by and uphold the code of conduct? (The answer must be "yes")
   `)
   await update(emailMessage, 'fred@acme.com')
@@ -399,9 +405,11 @@ test('typing and editing to an invalid value', async () => {
     BOT: What's your first name?
     fredjoe: Freddy
     BOT: Great, hi Freddy 👋
-    BOT: _I've changed your nickname on this server to Fred. If you'd like to change it back then type: \`/nick fredjoe\`_
+    BOT: _I've changed your nickname on this server to Fred. You can change it back if you'd like. (Learn more: <https://support.discord.com/hc/en-us/articles/219070107-Server-Nicknames>)_
     BOT: What's your email address? (This will look you up on Kent's mailing list. If you're not already on it, you'll be added and will receive a confirmation email.)
     fredjoe: not an email
+    BOT: You gave "not an email", but email addresses can't have a space in them. Please provide a proper email address.
+    fredjoe: not_an_email
     BOT: That doesn't look like an email address. Please provide a proper email address.
     fredjoe: fred@acme.com
     BOT: Awesome, when we're done here, you'll receive a confirmation email to: fred@acme.com.
@@ -466,7 +474,7 @@ test('typing and editing to an invalid value', async () => {
     🤪 I really enjoy:
 
     Enjoy the community!
-    BOT: _I've changed your nickname on this server to Freddy. If you'd like to change it back then type: \`/nick fredjoe\`_
+    BOT: _I've changed your nickname on this server to Freddy. You can change it back if you'd like. (Learn more: <https://support.discord.com/hc/en-us/articles/219070107-Server-Nicknames>)_
     BOT: Thanks for fixing things up, now we can continue.
     BOT: The first thing I'd suggest you do is go to channel_💁-tips-id to read up on some of the things you can do here.
 
@@ -540,7 +548,7 @@ test('a new member with some info already', async () => {
     BOT: What's your first name?
     fredjoe: Fred
     BOT: Great, hi Fred 👋
-    BOT: _I've changed your nickname on this server to Fred. If you'd like to change it back then type: \`/nick fredjoe\`_
+    BOT: _I've changed your nickname on this server to Fred. You can change it back if you'd like. (Learn more: <https://support.discord.com/hc/en-us/articles/219070107-Server-Nicknames>)_
     BOT: What's your email address? (This will look you up on Kent's mailing list. If you're not already on it, you'll be added and will receive a confirmation email.)
     fredjoe: fred+already-subscribed@example.com
     BOT: Oh, nice, fred+already-subscribed@example.com is already a part of Kent's mailing list (you rock 🤘), so you won't be getting a confirmation email after all.

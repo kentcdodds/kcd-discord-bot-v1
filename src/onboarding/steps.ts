@@ -1,8 +1,8 @@
+import nodeUrl from 'url'
 import type * as TDiscord from 'discord.js'
 import got from 'got'
 import mem from 'mem'
 import md5 from 'md5-hash'
-import nodeUrl from 'url'
 import {
   getSubscriberEndpoint,
   getSend,
@@ -44,6 +44,12 @@ const firstStep: RegularStep = {
   validate({message}) {
     const response = message.content
     const base = `That does not look like a first name.{qualifier} I need to know what to call you. What's your real first name?`
+    if (response.includes(' ')) {
+      return `${base.replace(
+        '{qualifier}',
+        ` You gave me "${response}" which includes a space.`,
+      )} (If your real first name actually does include a space, then please email team@kentcdodds.com.`
+    }
     if (response.length < 0) {
       return base.replace('{qualifier}', ` It's too short.`)
     }
@@ -58,12 +64,15 @@ const firstStep: RegularStep = {
       if (previousNickname === answers.name) {
         return
       }
-      const newNickname = previousNickname.includes('🚀')
-        ? `${answers.name} 🚀`
+      let newNickname = previousNickname.includes('🏆')
+        ? `${answers.name} 🏆`
         : answers.name ?? ''
+      newNickname = previousNickname.includes('🚀')
+        ? `${newNickname} 🚀`
+        : newNickname
       await member.setNickname(newNickname, 'Set during onboarding')
       await send(
-        `_I've changed your nickname on this server to ${answers.name}. If you'd like to change it back then type: \`/nick ${previousNickname}\`_`,
+        `_I've changed your nickname on this server to ${answers.name}. You can change it back if you'd like. (Learn more: <https://support.discord.com/hc/en-us/articles/219070107-Server-Nicknames>)_`,
       )
     } catch (error: unknown) {
       // not sure when this would fail, but if it does, it's not a huge deal.
@@ -98,6 +107,9 @@ const allSteps: ReadonlyArray<Step> = [
       null,
     validate: async ({message}) => {
       const response = message.content
+      if (response.includes(' ')) {
+        return `You gave "${response}", but email addresses can't have a space in them. Please provide a proper email address.`
+      }
       if (!/^.+@.+\..+$/.test(response)) {
         return `That doesn't look like an email address. Please provide a proper email address.`
       }
@@ -112,8 +124,10 @@ const allSteps: ReadonlyArray<Step> = [
         )
         verifierUrl.searchParams.append('token', VERIFIER_API_KEY ?? '')
         const {result} = await got(verifierUrl.toString()).json()
-        if (result.error?.code === 500) {
-          throw new Error(result.error.message)
+        const {error = {}} = result
+        const {message: errorMessage, code: errorCode} = error
+        if (typeof errorMessage === 'string' && errorCode === 500) {
+          throw new Error(errorMessage)
         }
         if (!result.status) {
           return `You must use your actual email address. Attempted to verify that ${response} exists and received the following error: ${

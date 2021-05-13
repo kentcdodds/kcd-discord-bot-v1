@@ -148,9 +148,7 @@ async function thanks(message: TDiscord.Message) {
           count: thanksHistory[usr.id]?.length ?? 0,
         }
       })
-      .sort((a, z) => {
-        return a.count === z.count ? 0 : z.count > a.count ? 1 : -1
-      })
+      .sort((a, z) => z.count - a.count)
       .map(({username, count}) => {
         const times = `time${count === 1 ? '' : 's'}`
         return count > 0

@@ -132,6 +132,13 @@ Link: <${messageLink}>`
   )
 }
 
+function tupleEquals<T>(actual: T[], target: T[]) {
+  if (actual.length !== target.length) {
+    return false
+  }
+  return actual.every((argument, index) => argument === target[index])
+}
+
 async function thanks(message: TDiscord.Message) {
   const guild = message.guild
   if (!guild) return
@@ -185,11 +192,7 @@ async function thanks(message: TDiscord.Message) {
   }
 
   const rankArgumentList = rankArgs.split(' ')
-  if (
-    rankArgumentList.length === 2 &&
-    rankArgumentList[0] === 'rank' &&
-    rankArgumentList[1] === 'top'
-  ) {
+  if (tupleEquals(rankArgumentList, ['rank', 'top'])) {
     const uniqueUsers = new Set(thanksHistory.map(([receiver]) => receiver))
     const userThankCounts: Array<[string, number]> = Array.from(
       uniqueUsers,
@@ -209,7 +212,7 @@ This is the list of the top thanked members 💪:
 ${listUsersByThanksReceived(topUsers)}
       `.trim(),
     )
-  } else if (rankArgumentList.length === 1 && rankArgumentList[0] === 'rank') {
+  } else if (tupleEquals(rankArgumentList, ['rank'])) {
     const mentionedMembers = Array.from(
       message.mentions.members?.values() ?? {length: 0},
     )
@@ -225,11 +228,7 @@ This is the rank of the requested ${members}:
 ${listUsersByThanksReceived(searchedMembers)}
       `.trim(),
     )
-  } else if (
-    rankArgumentList.length === 2 &&
-    rankArgumentList[0] === 'gratitude' &&
-    rankArgumentList[1] === 'rank'
-  ) {
+  } else if (tupleEquals(rankArgumentList, ['gratitude', 'rank'])) {
     const mentionedMembers = Array.from(
       message.mentions.members?.values() ?? {length: 0},
     )
@@ -243,6 +242,26 @@ ${listUsersByThanksReceived(searchedMembers)}
       `
 This is the rank of the requested ${members}:
 ${listUsersByThanksSent(searchedMembers)}
+      `.trim(),
+    )
+  } else if (tupleEquals(rankArgumentList, ['gratitude', 'rank', 'top'])) {
+    const uniqueUsers = new Set(thanksHistory.map(([, sender]) => sender))
+    const userThankCounts: Array<[string, number]> = Array.from(
+      uniqueUsers,
+    ).map(user => [
+      user,
+      thanksHistory.filter(([, sender]) => sender === user).length,
+    ])
+    const topUsers = userThankCounts
+      .sort(([, aCount], [, bCount]) => bCount - aCount)
+      .flatMap(([memberId]) => getMember(guild, memberId) ?? [])
+      .map(({user}) => user)
+      .slice(0, 10)
+
+    return message.channel.send(
+      `
+This is the list of the most grateful members 💪:
+${listUsersByThanksSent(topUsers)}
       `.trim(),
     )
   } else {

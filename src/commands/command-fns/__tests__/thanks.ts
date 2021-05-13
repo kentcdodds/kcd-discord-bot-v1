@@ -453,7 +453,59 @@ test('should show the gratitude rank of the mentioned user', async () => {
   `)
 })
 
-test.todo('should show the gratitude rank of the top 10 users')
+test('should show the gratitude rank of the top 10 users', async () => {
+  const {
+    getBotMessages,
+    getThanksMessages,
+    kody,
+    message,
+    createUser,
+  } = await setup('?thanks gratitude rank top')
+  const rankedUsers = await Promise.all(
+    Array.from(Array(20).keys()).map(index => createUser(`user${index}`)),
+  )
+
+  const thanksHistory: ThanksHistory = []
+  rankedUsers.forEach((rankedUser, index) => {
+    Array<string>(index)
+      .fill('link_to_message')
+      .forEach(mockThankMessage =>
+        thanksHistory.push([kody.id, rankedUser.id, mockThankMessage]),
+      )
+  })
+
+  server.use(
+    rest.get(
+      `https://api.github.com/gists/${process.env.GIST_REPO_THANKS}`,
+      (req, res, ctx) => {
+        return res(
+          ctx.status(200),
+          ctx.json({
+            files: {'thanks.json': {content: JSON.stringify(thanksHistory)}},
+          }),
+        )
+      },
+    ),
+  )
+
+  await thanks(message)
+
+  expect(getBotMessages()).toHaveLength(1)
+  expect(getThanksMessages()).toHaveLength(0)
+  expect(getBotMessages()[0]?.content).toMatchInlineSnapshot(`
+    This is the list of the most grateful members 💪:
+    - user19 has thanked other people 19 times 👏
+    - user18 has thanked other people 18 times 👏
+    - user17 has thanked other people 17 times 👏
+    - user16 has thanked other people 16 times 👏
+    - user15 has thanked other people 15 times 👏
+    - user14 has thanked other people 14 times 👏
+    - user13 has thanked other people 13 times 👏
+    - user12 has thanked other people 12 times 👏
+    - user11 has thanked other people 11 times 👏
+    - user10 has thanked other people 10 times 👏
+  `)
+})
 
 test('should give an error if there are some issues retrieving data from gist', async () => {
   server.use(

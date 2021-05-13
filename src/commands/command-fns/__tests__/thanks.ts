@@ -195,7 +195,7 @@ test('should say thanks if there is no message', async () => {
     .toMatchInlineSnapshot(`
     Hey <@!123>! You got thanked! 🎉
 
-    <@123> appreciated you.
+    <@!123> appreciated you.
 
     Link: <https://discordapp.com/channels/123/123/123>
   `)

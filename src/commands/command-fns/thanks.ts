@@ -119,7 +119,7 @@ Link: <${messageLink}>`
     : `
 Hey ${thankedMembersList}! You got thanked! 🎉
 
-${member.user} appreciated you.
+${member} appreciated you.
 
 Link: <${messageLink}>`
 

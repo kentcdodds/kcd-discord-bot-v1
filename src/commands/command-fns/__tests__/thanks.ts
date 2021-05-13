@@ -93,9 +93,9 @@ test('should say thanks if the message is complete', async () => {
   assert(user1)
 
   const thanksMessageLink = `https://discordapp.com/channels/${botChannel.guild.id}/${botChannel.id}/${message.id}`
-  const thanksHistory: ThanksHistory = [
-    [user1.id, kody.user.id, thanksMessageLink],
-  ]
+  const thanksHistory: ThanksHistory = {
+    [thanksMessageLink]: {thanker: kody.user.id, thanked: [user1.id]},
+  }
   expect(thanksRetrieved).toBeTruthy()
 
   // @ts-expect-error no idea how to deal with this situation...
@@ -232,9 +232,9 @@ test('should show the rank of the user message', async () => {
     '?thanks rank',
   )
 
-  const thanksHistory: ThanksHistory = [
-    [kody.id, 'senderId', 'link_to_message'],
-  ]
+  const thanksHistory: ThanksHistory = {
+    mockMessageId: {thanker: 'mockThanker', thanked: [kody.id]},
+  }
 
   server.use(
     rest.get(
@@ -271,10 +271,10 @@ test('should show the rank of the mentioned user', async () => {
 
   const [user1] = mentionedUsers
   assert(user1)
-  const thanksHistory: ThanksHistory = [
-    [user1.id, kody.id, 'link_to_message1'],
-    [user1.id, kody.id, 'link_to_message2'],
-  ]
+  const thanksHistory: ThanksHistory = {
+    link_to_message1: {thanker: kody.id, thanked: [user1.id]},
+    link_to_message2: {thanker: kody.id, thanked: [user1.id]},
+  }
 
   server.use(
     rest.get(
@@ -312,13 +312,16 @@ test('should show the rank of the top 10 users', async () => {
     Array.from(Array(20).keys()).map(index => createUser(`user${index}`)),
   )
 
-  const thanksHistory: ThanksHistory = []
+  const thanksHistory: ThanksHistory = {}
   rankedUsers.forEach((rankedUser, index) => {
     Array<string>(index)
       .fill('link_to_message')
-      .forEach(mockThankMessage =>
-        thanksHistory.push([rankedUser.id, kody.id, mockThankMessage]),
-      )
+      .forEach((_, i) => {
+        thanksHistory[`mockMessageId${index}+${i}`] = {
+          thanker: kody.id,
+          thanked: [rankedUser.id],
+        }
+      })
   })
 
   server.use(
@@ -385,9 +388,9 @@ test('should show the gratitude rank of the user', async () => {
     '?thanks gratitude rank',
   )
 
-  const thanksHistory: ThanksHistory = [
-    ['someone else', kody.id, 'link_to_message'],
-  ]
+  const thanksHistory: ThanksHistory = {
+    link_to_message: {thanker: kody.id, thanked: ['someone else']},
+  }
 
   server.use(
     rest.get(
@@ -424,10 +427,11 @@ test('should show the gratitude rank of the mentioned user', async () => {
 
   const [user1] = mentionedUsers
   assert(user1)
-  const thanksHistory: ThanksHistory = [
-    [kody.id, user1.id, 'link_to_message1'],
-    [kody.id, user1.id, 'link_to_message2'],
-  ]
+
+  const thanksHistory: ThanksHistory = {
+    link_to_message1: {thanker: user1.id, thanked: [kody.id]},
+    link_to_message2: {thanker: user1.id, thanked: [kody.id]},
+  }
 
   server.use(
     rest.get(
@@ -465,13 +469,16 @@ test('should show the gratitude rank of the top 10 users', async () => {
     Array.from(Array(20).keys()).map(index => createUser(`user${index}`)),
   )
 
-  const thanksHistory: ThanksHistory = []
+  const thanksHistory: ThanksHistory = {}
   rankedUsers.forEach((rankedUser, index) => {
     Array<string>(index)
       .fill('link_to_message')
-      .forEach(mockThankMessage =>
-        thanksHistory.push([kody.id, rankedUser.id, mockThankMessage]),
-      )
+      .forEach((_, i) => {
+        thanksHistory[`mockMessageId${index}+${i}`] = {
+          thanker: rankedUser.id,
+          thanked: [kody.id],
+        }
+      })
   })
 
   server.use(

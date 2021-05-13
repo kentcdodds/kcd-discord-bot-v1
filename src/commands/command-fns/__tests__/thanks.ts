@@ -302,9 +302,7 @@ test('should show the rank of the top 10 users', async () => {
 
   const ranks: ThanksHistory = {}
   rankedUsers.forEach((rankedUser, index) => {
-    ranks[rankedUser.id] = Array.from(Array(index).keys()).map(
-      messageIndex => `link_to_message${messageIndex}`,
-    )
+    ranks[rankedUser.id] = Array(index).fill('link_to_message')
   })
 
   server.use(

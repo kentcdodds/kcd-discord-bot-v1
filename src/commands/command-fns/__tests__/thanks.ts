@@ -413,7 +413,46 @@ test('should show the gratitude rank of the user', async () => {
   `)
 })
 
-test.todo('should show the gratitude rank of the mentioned user')
+test('should show the gratitude rank of the mentioned user', async () => {
+  const {
+    getBotMessages,
+    getThanksMessages,
+    kody,
+    message,
+    mentionedUsers,
+  } = await setup('?thanks gratitude rank', ['user1'])
+
+  const [user1] = mentionedUsers
+  assert(user1)
+  const thanksHistory: ThanksHistory = [
+    [kody.id, user1.id, 'link_to_message1'],
+    [kody.id, user1.id, 'link_to_message2'],
+  ]
+
+  server.use(
+    rest.get(
+      `https://api.github.com/gists/${process.env.GIST_REPO_THANKS}`,
+      (req, res, ctx) => {
+        return res(
+          ctx.status(200),
+          ctx.json({
+            files: {'thanks.json': {content: JSON.stringify(thanksHistory)}},
+          }),
+        )
+      },
+    ),
+  )
+
+  await thanks(message)
+
+  expect(getBotMessages()).toHaveLength(1)
+  expect(getThanksMessages()).toHaveLength(0)
+  expect(getBotMessages()[0]?.content).toMatchInlineSnapshot(`
+    This is the rank of the requested member:
+    - user1 has thanked other people 2 times 👏
+  `)
+})
+
 test.todo('should show the gratitude rank of the top 10 users')
 
 test('should give an error if there are some issues retrieving data from gist', async () => {

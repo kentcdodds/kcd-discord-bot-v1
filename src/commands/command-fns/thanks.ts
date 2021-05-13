@@ -207,6 +207,26 @@ This is the rank of the requested ${members}:
 ${listThanks(searchedMembers)}
       `.trim(),
     )
+  } else if (
+    rankArgumentList.length === 2 &&
+    rankArgumentList[0] === 'gratitude' &&
+    rankArgumentList[1] === 'rank'
+  ) {
+    const mentionedMembers = Array.from(
+      message.mentions.members?.values() ?? {length: 0},
+    )
+    let searchedMembers = [message.author]
+    if (mentionedMembers.length > 0) {
+      searchedMembers = mentionedMembers.map(member => member.user)
+    }
+
+    const members = `member${searchedMembers.length === 1 ? '' : 's'}`
+    return message.channel.send(
+      `
+This is the rank of the requested ${members}:
+- kody hasn't thanked anyone yet 🙁
+`.trim(),
+    )
   } else {
     return sayThankYou(args, message, thanksHistory)
   }

@@ -213,8 +213,11 @@ thanks.help = async (message: TDiscord.Message) => {
   const commandsList = [
     `- Send \`?thanks @UserName for answering my question about which socks I should wear and being so polite.\` (for example), and your thanks will appear in the ${thanksChannel}.`,
     `- Send \`?thanks rank\` to show the number of times you have been thanked.`,
-    `- Send \`?thanks rank top\` to show the top 10 users.`,
-    `- Send \`?thanks rank @Username\` to show the number of times have been thanked the mentioned users.`,
+    `- Send \`?thanks rank top\` to show the top 10 most thanked users.`,
+    `- Send \`?thanks rank @Username\` to show the number of times @Username has been thanked.`,
+    `- Send \`?thanks gratitude rank\` to show the number of times you have thanked someone else.`,
+    `- Send \`?thanks gratitude top\` to show the top 10 users who have thanked others the most times.`,
+    `- Send \`?thanks gratitude @UserName\` to show the number of times @Username has thanked someone else.`,
   ]
   await message.channel.send(
     `

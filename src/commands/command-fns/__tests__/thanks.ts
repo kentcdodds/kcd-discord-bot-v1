@@ -339,6 +339,10 @@ test('should show the rank of the top 10 users', async () => {
   `)
 })
 
+test.todo('should show the gratitude rank of the user message')
+test.todo('should show the gratitude rank of the mentioned user')
+test.todo('should show the gratitude rank of the top 10 users')
+
 test('should give an error if there are some issues retrieving data from gist', async () => {
   server.use(
     rest.get(

@@ -84,7 +84,7 @@ Thanks goes to these people ([emoji key][emojis]):
     <td align="center"><a href="http://devstack.ng"><img src="https://avatars.githubusercontent.com/u/8310934?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Prince Abalogu</b></sub></a><br /><a href="https://github.com/kentcdodds/kcd-discord-bot/commits?author=MrAbalogu" title="Documentation">📖</a></td>
   </tr>
   <tr>
-    <td align="center"><a href="https://fildon.github.io"><img src="https://avatars.githubusercontent.com/u/10462288?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Rupert McKay</b></sub></a><br /><a href="https://github.com/kentcdodds/kcd-discord-bot/commits?author=fildon" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://fildon.github.io"><img src="https://avatars.githubusercontent.com/u/10462288?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Rupert McKay</b></sub></a><br /><a href="https://github.com/kentcdodds/kcd-discord-bot/commits?author=fildon" title="Documentation">📖</a> <a href="https://github.com/kentcdodds/kcd-discord-bot/commits?author=fildon" title="Code">💻</a> <a href="https://github.com/kentcdodds/kcd-discord-bot/commits?author=fildon" title="Tests">⚠️</a></td>
   </tr>
 </table>
 

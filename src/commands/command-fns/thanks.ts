@@ -11,7 +11,12 @@ import {
   getTextChannel,
 } from '../utils'
 
-type ThanksHistory = Record<string, Array<string> | undefined>
+/**
+ * Each tuple in this array represents:
+ *
+ * `[recipientId, senderId, messageLink]`
+ */
+type ThanksHistory = Array<[string, string, string]>
 type GitHubRequestBody = {
   public: 'false'
   files: {
@@ -35,7 +40,7 @@ async function getThanksHistory(): Promise<ThanksHistory> {
   try {
     return JSON.parse(response.body.files['thanks.json']?.content ?? '{}')
   } catch {
-    return {}
+    return []
   }
 }
 
@@ -84,11 +89,13 @@ async function sayThankYou(
 
   const messageLink = getMessageLink(message)
 
-  thankedMembers.forEach(thankedMember => {
-    const history = thanksHistory[thankedMember.id] ?? []
-    history.push(messageLink)
-    thanksHistory[thankedMember.id] = history
-  })
+  thanksHistory = thanksHistory.concat(
+    thankedMembers.map(thankedMember => [
+      thankedMember.id,
+      member.user.id,
+      messageLink,
+    ]),
+  )
 
   try {
     await saveThanksHistory(thanksHistory)
@@ -145,7 +152,8 @@ async function thanks(message: TDiscord.Message) {
       .map(usr => {
         return {
           username: usr.username,
-          count: thanksHistory[usr.id]?.length ?? 0,
+          count: thanksHistory.filter(([receiver]) => receiver === usr.id)
+            .length,
         }
       })
       .sort((a, z) => z.count - a.count)
@@ -164,18 +172,19 @@ async function thanks(message: TDiscord.Message) {
     rankArgumentList[0] === 'rank' &&
     rankArgumentList[1] === 'top'
   ) {
-    const sortedUsers = Object.keys(thanksHistory).sort((a, b) => {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      return thanksHistory[b]!.length - thanksHistory[a]!.length
-    })
-    const topUsers: Array<TDiscord.User> = []
-    sortedUsers.forEach(user => {
-      if (topUsers.length > 10) return
-      const member = getMember(guild, user)
-      if (member) {
-        topUsers.push(member.user)
-      }
-    })
+    const uniqueUsers = new Set(thanksHistory.map(([receiver]) => receiver))
+    const userThankCounts: Array<[string, number]> = Array.from(
+      uniqueUsers,
+    ).map(user => [
+      user,
+      thanksHistory.filter(([receiver]) => receiver === user).length,
+    ])
+    const topUsers = userThankCounts
+      .sort(([, aCount], [, bCount]) => bCount - aCount)
+      .flatMap(([memberId]) => getMember(guild, memberId) ?? [])
+      .map(({user}) => user)
+      .slice(0, 10)
+
     return message.channel.send(
       `
 This is the list of the top thanked members 💪:

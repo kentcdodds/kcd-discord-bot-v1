@@ -92,15 +92,16 @@ test('should say thanks if the message is complete', async () => {
   const [user1] = mentionedUsers
   assert(user1)
 
-  const thanksMessage = `https://discordapp.com/channels/${botChannel.guild.id}/${botChannel.id}/${message.id}`
-  const thanksObject: ThanksHistory = {}
-  thanksObject[user1.id] = [thanksMessage]
+  const thanksMessageLink = `https://discordapp.com/channels/${botChannel.guild.id}/${botChannel.id}/${message.id}`
+  const thanksHistory: ThanksHistory = [
+    [user1.id, kody.user.id, thanksMessageLink],
+  ]
   expect(thanksRetrieved).toBeTruthy()
 
   // @ts-expect-error no idea how to deal with this situation...
   assert(savedThanks, 'Thanks not saved')
   expect(JSON.parse(savedThanks.files['thanks.json'].content)).toMatchObject(
-    thanksObject,
+    thanksHistory,
   )
   expect(getBotMessages()).toHaveLength(1)
   expect(getThanksMessages()).toHaveLength(1)
@@ -112,7 +113,7 @@ Hey <@!${user1.id}>! You got thanked! 🎉
 
 > the help with epicReact
 
-Link: <${thanksMessage}>
+Link: <${thanksMessageLink}>
   `.trim(),
   )
   expect(getBotMessages()[0]?.content).toEqual(
@@ -231,8 +232,9 @@ test('should show the rank of the user message', async () => {
     '?thanks rank',
   )
 
-  const ranks: ThanksHistory = {}
-  ranks[kody.id] = ['link_to_message']
+  const thanksHistory: ThanksHistory = [
+    [kody.id, 'senderId', 'link_to_message'],
+  ]
 
   server.use(
     rest.get(
@@ -240,7 +242,9 @@ test('should show the rank of the user message', async () => {
       (req, res, ctx) => {
         return res(
           ctx.status(200),
-          ctx.json({files: {'thanks.json': {content: JSON.stringify(ranks)}}}),
+          ctx.json({
+            files: {'thanks.json': {content: JSON.stringify(thanksHistory)}},
+          }),
         )
       },
     ),
@@ -260,15 +264,17 @@ test('should show the rank of the mentioned user', async () => {
   const {
     getBotMessages,
     getThanksMessages,
+    kody,
     message,
     mentionedUsers,
   } = await setup('?thanks rank', ['user1'])
 
-  const ranks: ThanksHistory = {}
-
   const [user1] = mentionedUsers
   assert(user1)
-  ranks[user1.id] = ['link_to_message1', 'link_to_message2']
+  const thanksHistory: ThanksHistory = [
+    [user1.id, kody.id, 'link_to_message1'],
+    [user1.id, kody.id, 'link_to_message2'],
+  ]
 
   server.use(
     rest.get(
@@ -276,7 +282,9 @@ test('should show the rank of the mentioned user', async () => {
       (req, res, ctx) => {
         return res(
           ctx.status(200),
-          ctx.json({files: {'thanks.json': {content: JSON.stringify(ranks)}}}),
+          ctx.json({
+            files: {'thanks.json': {content: JSON.stringify(thanksHistory)}},
+          }),
         )
       },
     ),
@@ -293,16 +301,24 @@ test('should show the rank of the mentioned user', async () => {
 })
 
 test('should show the rank of the top 10 users', async () => {
-  const {getBotMessages, getThanksMessages, message, createUser} = await setup(
-    '?thanks rank top',
-  )
+  const {
+    getBotMessages,
+    getThanksMessages,
+    kody,
+    message,
+    createUser,
+  } = await setup('?thanks rank top')
   const rankedUsers = await Promise.all(
     Array.from(Array(20).keys()).map(index => createUser(`user${index}`)),
   )
 
-  const ranks: ThanksHistory = {}
+  const thanksHistory: ThanksHistory = []
   rankedUsers.forEach((rankedUser, index) => {
-    ranks[rankedUser.id] = Array(index).fill('link_to_message')
+    Array<string>(index)
+      .fill('link_to_message')
+      .forEach(mockThankMessage =>
+        thanksHistory.push([rankedUser.id, kody.id, mockThankMessage]),
+      )
   })
 
   server.use(
@@ -311,7 +327,9 @@ test('should show the rank of the top 10 users', async () => {
       (req, res, ctx) => {
         return res(
           ctx.status(200),
-          ctx.json({files: {'thanks.json': {content: JSON.stringify(ranks)}}}),
+          ctx.json({
+            files: {'thanks.json': {content: JSON.stringify(thanksHistory)}},
+          }),
         )
       },
     ),
@@ -333,7 +351,6 @@ test('should show the rank of the top 10 users', async () => {
     - user12 has been thanked 12 times 👏
     - user11 has been thanked 11 times 👏
     - user10 has been thanked 10 times 👏
-    - user9 has been thanked 9 times 👏
   `)
 })
 

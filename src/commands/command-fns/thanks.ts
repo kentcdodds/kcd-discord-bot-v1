@@ -11,7 +11,10 @@ import {
   getTextChannel,
 } from '../utils'
 
-type ThanksHistory = Record<string, Array<string> | undefined>
+/**
+ * Stores all thank history, keyed by message id
+ */
+type ThanksHistory = Record<string, {thanker: string; thanked: Array<string>}>
 type GitHubRequestBody = {
   public: 'false'
   files: {
@@ -84,11 +87,10 @@ async function sayThankYou(
 
   const messageLink = getMessageLink(message)
 
-  thankedMembers.forEach(thankedMember => {
-    const history = thanksHistory[thankedMember.id] ?? []
-    history.push(messageLink)
-    thanksHistory[thankedMember.id] = history
-  })
+  thanksHistory[messageLink] = {
+    thanker: member.user.id,
+    thanked: thankedMembers.map(({id}) => id),
+  }
 
   try {
     await saveThanksHistory(thanksHistory)
@@ -112,7 +114,7 @@ Link: <${messageLink}>`
     : `
 Hey ${thankedMembersList}! You got thanked! 🎉
 
-${member.user} appreciated you.
+${member} appreciated you.
 
 Link: <${messageLink}>`
 
@@ -123,6 +125,13 @@ Link: <${messageLink}>`
   return message.channel.send(
     `Aw! Thanks! ${getMessageLink(newThanksMessage)} 😍`,
   )
+}
+
+function tupleEquals<T>(actual: T[], target: T[]) {
+  if (actual.length !== target.length) {
+    return false
+  }
+  return actual.every((argument, index) => argument === target[index])
 }
 
 async function thanks(message: TDiscord.Message) {
@@ -140,17 +149,17 @@ async function thanks(message: TDiscord.Message) {
     )
   }
 
-  function listThanks(users: Array<TDiscord.User>) {
+  function listUsersByThanksReceived(users: Array<TDiscord.User>) {
     return users
       .map(usr => {
         return {
           username: usr.username,
-          count: thanksHistory[usr.id]?.length ?? 0,
+          count: Object.values(thanksHistory).filter(({thanked}) =>
+            thanked.includes(usr.id),
+          ).length,
         }
       })
-      .sort((a, z) => {
-        return a.count === z.count ? 0 : z.count > a.count ? 1 : -1
-      })
+      .sort((a, z) => z.count - a.count)
       .map(({username, count}) => {
         const times = `time${count === 1 ? '' : 's'}`
         return count > 0
@@ -160,31 +169,51 @@ async function thanks(message: TDiscord.Message) {
       .join('\n')
   }
 
+  function listUsersByThanksSent(users: Array<TDiscord.User>) {
+    return users
+      .map(usr => {
+        return {
+          username: usr.username,
+          count: Object.values(thanksHistory).filter(
+            ({thanker}) => thanker === usr.id,
+          ).length,
+        }
+      })
+      .sort((a, z) => z.count - a.count)
+      .map(({username, count}) => {
+        const times = `time${count === 1 ? '' : 's'}`
+        return count > 0
+          ? `- ${username} has thanked other people ${count} ${times} 👏`
+          : `- ${username} hasn't thanked anyone yet 🙁`
+      })
+      .join('\n')
+  }
+
   const rankArgumentList = rankArgs.split(' ')
-  if (
-    rankArgumentList.length === 2 &&
-    rankArgumentList[0] === 'rank' &&
-    rankArgumentList[1] === 'top'
-  ) {
-    const sortedUsers = Object.keys(thanksHistory).sort((a, b) => {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      return thanksHistory[b]!.length - thanksHistory[a]!.length
-    })
-    const topUsers: Array<TDiscord.User> = []
-    sortedUsers.forEach(user => {
-      if (topUsers.length > 10) return
-      const member = getMember(guild, user)
-      if (member) {
-        topUsers.push(member.user)
-      }
-    })
+  if (tupleEquals(rankArgumentList, ['rank', 'top'])) {
+    const uniqueThankees = new Set(
+      Object.values(thanksHistory).flatMap(({thanked}) => thanked),
+    )
+    const userThankCounts: Array<[string, number]> = Array.from(
+      uniqueThankees,
+    ).map(user => [
+      user,
+      Object.values(thanksHistory).filter(({thanked}) => thanked.includes(user))
+        .length,
+    ])
+    const topUsers = userThankCounts
+      .sort(([, aCount], [, bCount]) => bCount - aCount)
+      .flatMap(([memberId]) => getMember(guild, memberId) ?? [])
+      .map(({user}) => user)
+      .slice(0, 10)
+
     return message.channel.send(
       `
 This is the list of the top thanked members 💪:
-${listThanks(topUsers)}
+${listUsersByThanksReceived(topUsers)}
       `.trim(),
     )
-  } else if (rankArgumentList.length === 1 && rankArgumentList[0] === 'rank') {
+  } else if (tupleEquals(rankArgumentList, ['rank'])) {
     const mentionedMembers = Array.from(
       message.mentions.members?.values() ?? {length: 0},
     )
@@ -197,7 +226,46 @@ ${listThanks(topUsers)}
     return message.channel.send(
       `
 This is the rank of the requested ${members}:
-${listThanks(searchedMembers)}
+${listUsersByThanksReceived(searchedMembers)}
+      `.trim(),
+    )
+  } else if (tupleEquals(rankArgumentList, ['gratitude', 'rank'])) {
+    const mentionedMembers = Array.from(
+      message.mentions.members?.values() ?? {length: 0},
+    )
+    let searchedMembers = [message.author]
+    if (mentionedMembers.length > 0) {
+      searchedMembers = mentionedMembers.map(member => member.user)
+    }
+
+    const members = `member${searchedMembers.length === 1 ? '' : 's'}`
+    return message.channel.send(
+      `
+This is the rank of the requested ${members}:
+${listUsersByThanksSent(searchedMembers)}
+      `.trim(),
+    )
+  } else if (tupleEquals(rankArgumentList, ['gratitude', 'rank', 'top'])) {
+    const uniqueThankers = new Set(
+      Object.values(thanksHistory).map(({thanker}) => thanker),
+    )
+    const userThankCounts: Array<[string, number]> = Array.from(
+      uniqueThankers,
+    ).map(user => [
+      user,
+      Object.values(thanksHistory).filter(({thanker}) => thanker === user)
+        .length,
+    ])
+    const topUsers = userThankCounts
+      .sort(([, aCount], [, bCount]) => bCount - aCount)
+      .flatMap(([memberId]) => getMember(guild, memberId) ?? [])
+      .map(({user}) => user)
+      .slice(0, 10)
+
+    return message.channel.send(
+      `
+This is the list of the most grateful members 💪:
+${listUsersByThanksSent(topUsers)}
       `.trim(),
     )
   } else {
@@ -213,8 +281,11 @@ thanks.help = async (message: TDiscord.Message) => {
   const commandsList = [
     `- Send \`?thanks @UserName for answering my question about which socks I should wear and being so polite.\` (for example), and your thanks will appear in the ${thanksChannel}.`,
     `- Send \`?thanks rank\` to show the number of times you have been thanked.`,
-    `- Send \`?thanks rank top\` to show the top 10 users.`,
-    `- Send \`?thanks rank @Username\` to show the number of times have been thanked the mentioned users.`,
+    `- Send \`?thanks rank top\` to show the top 10 most thanked users.`,
+    `- Send \`?thanks rank @Username\` to show the number of times @Username has been thanked.`,
+    `- Send \`?thanks gratitude rank\` to show the number of times you have thanked someone else.`,
+    `- Send \`?thanks gratitude rank top\` to show the top 10 users who have thanked others the most times.`,
+    `- Send \`?thanks gratitude rank @UserName\` to show the number of times @Username has thanked someone else.`,
   ]
   await message.channel.send(
     `

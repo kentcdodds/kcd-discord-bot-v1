@@ -83,6 +83,9 @@ Thanks goes to these people ([emoji key][emojis]):
     <td align="center"><a href="http://peter.hozak.info/"><img src="https://avatars0.githubusercontent.com/u/1087670?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Peter Hozák</b></sub></a><br /><a href="https://github.com/kentcdodds/kcd-discord-bot/commits?author=Aprillion" title="Code">💻</a> <a href="https://github.com/kentcdodds/kcd-discord-bot/commits?author=Aprillion" title="Tests">⚠️</a></td>
     <td align="center"><a href="http://devstack.ng"><img src="https://avatars.githubusercontent.com/u/8310934?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Prince Abalogu</b></sub></a><br /><a href="https://github.com/kentcdodds/kcd-discord-bot/commits?author=MrAbalogu" title="Documentation">📖</a></td>
   </tr>
+  <tr>
+    <td align="center"><a href="https://fildon.github.io"><img src="https://avatars.githubusercontent.com/u/10462288?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Rupert McKay</b></sub></a><br /><a href="https://github.com/kentcdodds/kcd-discord-bot/commits?author=fildon" title="Documentation">📖</a></td>
+  </tr>
 </table>
 
 <!-- markdownlint-restore -->

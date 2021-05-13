@@ -147,7 +147,7 @@ async function thanks(message: TDiscord.Message) {
     )
   }
 
-  function listThanks(users: Array<TDiscord.User>) {
+  function listUsersByThanksReceived(users: Array<TDiscord.User>) {
     return users
       .map(usr => {
         return {
@@ -162,6 +162,24 @@ async function thanks(message: TDiscord.Message) {
         return count > 0
           ? `- ${username} has been thanked ${count} ${times} 👏`
           : `- ${username} hasn't been thanked yet 🙁`
+      })
+      .join('\n')
+  }
+
+  function listUsersByThanksSent(users: Array<TDiscord.User>) {
+    return users
+      .map(usr => {
+        return {
+          username: usr.username,
+          count: thanksHistory.filter(([, sender]) => sender === usr.id).length,
+        }
+      })
+      .sort((a, z) => z.count - a.count)
+      .map(({username, count}) => {
+        const times = `time${count === 1 ? '' : 's'}`
+        return count > 0
+          ? `- ${username} has thanked other people ${count} ${times} 👏`
+          : `- ${username} hasn't thanked anyone yet 🙁`
       })
       .join('\n')
   }
@@ -188,7 +206,7 @@ async function thanks(message: TDiscord.Message) {
     return message.channel.send(
       `
 This is the list of the top thanked members 💪:
-${listThanks(topUsers)}
+${listUsersByThanksReceived(topUsers)}
       `.trim(),
     )
   } else if (rankArgumentList.length === 1 && rankArgumentList[0] === 'rank') {
@@ -204,7 +222,7 @@ ${listThanks(topUsers)}
     return message.channel.send(
       `
 This is the rank of the requested ${members}:
-${listThanks(searchedMembers)}
+${listUsersByThanksReceived(searchedMembers)}
       `.trim(),
     )
   } else if (
@@ -224,8 +242,8 @@ ${listThanks(searchedMembers)}
     return message.channel.send(
       `
 This is the rank of the requested ${members}:
-- kody hasn't thanked anyone yet 🙁
-`.trim(),
+${listUsersByThanksSent(searchedMembers)}
+      `.trim(),
     )
   } else {
     return sayThankYou(args, message, thanksHistory)

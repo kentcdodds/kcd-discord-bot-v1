@@ -380,7 +380,39 @@ test('should show a message if the user has never thanked', async () => {
   `)
 })
 
-test.todo('should show the gratitude rank of the user')
+test('should show the gratitude rank of the user', async () => {
+  const {getBotMessages, getThanksMessages, message, kody} = await setup(
+    '?thanks gratitude rank',
+  )
+
+  const thanksHistory: ThanksHistory = [
+    ['someone else', kody.id, 'link_to_message'],
+  ]
+
+  server.use(
+    rest.get(
+      `https://api.github.com/gists/${process.env.GIST_REPO_THANKS}`,
+      (req, res, ctx) => {
+        return res(
+          ctx.status(200),
+          ctx.json({
+            files: {'thanks.json': {content: JSON.stringify(thanksHistory)}},
+          }),
+        )
+      },
+    ),
+  )
+
+  await thanks(message)
+
+  expect(getBotMessages()).toHaveLength(1)
+  expect(getThanksMessages()).toHaveLength(0)
+  expect(getBotMessages()[0]?.content).toMatchInlineSnapshot(`
+    This is the rank of the requested member:
+    - kody has thanked other people 1 time 👏
+  `)
+})
+
 test.todo('should show the gratitude rank of the mentioned user')
 test.todo('should show the gratitude rank of the top 10 users')
 

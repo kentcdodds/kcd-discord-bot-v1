@@ -85,6 +85,7 @@ Thanks goes to these people ([emoji key][emojis]):
   </tr>
   <tr>
     <td align="center"><a href="https://fildon.github.io"><img src="https://avatars.githubusercontent.com/u/10462288?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Rupert McKay</b></sub></a><br /><a href="https://github.com/kentcdodds/kcd-discord-bot/commits?author=fildon" title="Documentation">📖</a> <a href="https://github.com/kentcdodds/kcd-discord-bot/commits?author=fildon" title="Code">💻</a> <a href="https://github.com/kentcdodds/kcd-discord-bot/commits?author=fildon" title="Tests">⚠️</a></td>
+    <td align="center"><a href="https://bouwe.io"><img src="https://avatars.githubusercontent.com/u/4126793?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Bouwe K. Westerdijk</b></sub></a><br /><a href="https://github.com/kentcdodds/kcd-discord-bot/commits?author=bouwe77" title="Code">💻</a> <a href="https://github.com/kentcdodds/kcd-discord-bot/commits?author=bouwe77" title="Tests">⚠️</a></td>
   </tr>
 </table>
 

@@ -36,7 +36,7 @@ async function officeHours(messageReaction: TDiscord.MessageReaction) {
   if (!officeHoursChannel) return
 
   await message.reply(
-    `If you don't get a satisfactory answer here, then you can feel free to ask Kent during his <https://kcd.im/office-hours> in ${officeHoursChannel}. To do so, formulate your question to make sure it's clear (follow the guildelines in <https://kcd.im/ask>) and a <https://kcd.im/repro> helps a lot if applicable. Then post it to ${officeHoursChannel} or join the meeting and ask live. Kent streams/records his office hours on YouTube so even if you can't make it in person, you should be able to watch his answer later.`,
+    `If you don't get a satisfactory answer here, feel free to ask Kent during his <https://kcd.im/office-hours> in ${officeHoursChannel}. To do so, formulate your question to make sure it's clear (follow the guidelines in <https://kcd.im/ask>) and a <https://kcd.im/repro> helps a lot if applicable. Then post it to ${officeHoursChannel} or join the meeting and ask live. Kent streams/records his office hours on YouTube so even if you can't make it in person, you should be able to watch his answer later.`,
   )
 }
 officeHours.description =

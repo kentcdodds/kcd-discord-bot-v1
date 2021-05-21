@@ -56,7 +56,7 @@ test('botofficehours sends the message author the office-hours reply', async () 
   })
 
   expect(generalChannel.lastMessage?.content).toMatchInlineSnapshot(
-    `<@!kody>, If you don't get a satisfactory answer here, then you can feel free to ask Kent during his <https://kcd.im/office-hours> in <#🏫-kcd-office-hours>. To do so, formulate your question to make sure it's clear (follow the guildelines in <https://kcd.im/ask>) and a <https://kcd.im/repro> helps a lot if applicable. Then post it to <#🏫-kcd-office-hours> or join the meeting and ask live. Kent streams/records his office hours on YouTube so even if you can't make it in person, you should be able to watch his answer later.`,
+    `<@!kody>, If you don't get a satisfactory answer here, feel free to ask Kent during his <https://kcd.im/office-hours> in <#🏫-kcd-office-hours>. To do so, formulate your question to make sure it's clear (follow the guidelines in <https://kcd.im/ask>) and a <https://kcd.im/repro> helps a lot if applicable. Then post it to <#🏫-kcd-office-hours> or join the meeting and ask live. Kent streams/records his office hours on YouTube so even if you can't make it in person, you should be able to watch his answer later.`,
   )
 })
 

@@ -90,6 +90,16 @@
         "code",
         "test"
       ]
+    },
+    {
+      "login": "bouwe77",
+      "name": "Bouwe K. Westerdijk",
+      "avatar_url": "https://avatars.githubusercontent.com/u/4126793?v=4",
+      "profile": "https://bouwe.io",
+      "contributions": [
+        "code",
+        "test"
+      ]
     }
   ]
 }

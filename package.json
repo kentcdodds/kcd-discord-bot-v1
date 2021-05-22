@@ -34,7 +34,7 @@
   "dependencies": {
     "@babel/runtime": "^7.14.0",
     "discord.js": "12.5.3",
-    "dotenv": "^8.5.1",
+    "dotenv": "^10.0.0",
     "got": "^11.8.2",
     "leven": "^3.1.0",
     "match-sorter": "^6.3.0",
@@ -48,7 +48,7 @@
   },
   "devDependencies": {
     "@types/jest": "^26.0.23",
-    "@types/open-graph-scraper": "^4.7.0",
+    "@types/open-graph-scraper": "^4.8.0",
     "@types/set-interval-async": "^1.0.0",
     "kcd-scripts": "^10.0.0",
     "msw": "^0.28.2",

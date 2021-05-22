@@ -249,6 +249,26 @@ ${reply}
   }
 }
 
+function getErrorStack(error: unknown) {
+  if (typeof error === 'string') return error
+  if (error instanceof Error) return error.stack
+  return 'Unknown Error'
+}
+
+function botLog(guild: TDiscord.Guild, message: string) {
+  try {
+    const botsChannel = getTextChannel(guild, 'bot-logs')
+    if (!botsChannel) return
+
+    // fire and forget, who cares if it fails
+    botsChannel.send(message).catch(() => {
+      // ignore
+    })
+  } catch (error: unknown) {
+    console.error(`Unabel to log message: "${message}"`, getErrorStack(error))
+  }
+}
+
 // read up on dynamic setIntervalAsync here: https://github.com/ealmansi/set-interval-async#dynamic-and-fixed-setintervalasync
 function cleanupGuildOnInterval(
   client: TDiscord.Client,
@@ -295,6 +315,7 @@ export {
   getMessageLink,
   isWelcomeChannel,
   sendBotMessageReply,
+  botLog,
   getSelfDestructTime,
   welcomeChannelPrefix,
   privateChannelPrefix,

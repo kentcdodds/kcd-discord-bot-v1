@@ -1,5 +1,6 @@
 import Discord from 'discord.js'
 import {setup} from './setup'
+import {botLog} from './utils'
 import rollbar from './rollbar'
 
 function start() {
@@ -11,6 +12,11 @@ function start() {
   client.on('ready', () => {
     rollbar.log('Client logged in... Setting up client.')
     setup(client)
+
+    const guild = client.guilds.cache.find(({name}) => name === 'KCD')
+    if (guild) {
+      botLog(guild, 'Logged in and ready to go.')
+    }
   })
 }
 

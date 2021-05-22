@@ -255,18 +255,34 @@ function getErrorStack(error: unknown) {
   return 'Unknown Error'
 }
 
-function botLog(guild: TDiscord.Guild, message: string) {
-  try {
-    const botsChannel = getTextChannel(guild, 'bot-logs')
-    if (!botsChannel) return
+function getErrorMessage(error: unknown) {
+  if (typeof error === 'string') return error
+  if (error instanceof Error) return error.message
+  return 'Unknown Error'
+}
 
-    // fire and forget, who cares if it fails
-    botsChannel.send(message).catch(() => {
-      // ignore
-    })
+function botLog(guild: TDiscord.Guild, messageFn: () => string) {
+  const botsChannel = getTextChannel(guild, 'bot-logs')
+  if (!botsChannel) return
+
+  let message: string
+  try {
+    message = messageFn()
   } catch (error: unknown) {
-    console.error(`Unabel to log message: "${message}"`, getErrorStack(error))
+    console.error(`Unable to get message for bot log`, getErrorStack(error))
+    return
   }
+
+  const callerStack = new Error('Caller stack:')
+
+  // fire and forget, who cares if it fails
+  botsChannel.send(message).catch((error: unknown) => {
+    console.error(
+      `Unabel to log message: "${message}"`,
+      getErrorStack(error),
+      callerStack,
+    )
+  })
 }
 
 // read up on dynamic setIntervalAsync here: https://github.com/ealmansi/set-interval-async#dynamic-and-fixed-setintervalasync
@@ -316,6 +332,8 @@ export {
   isWelcomeChannel,
   sendBotMessageReply,
   botLog,
+  getErrorStack,
+  getErrorMessage,
   getSelfDestructTime,
   welcomeChannelPrefix,
   privateChannelPrefix,

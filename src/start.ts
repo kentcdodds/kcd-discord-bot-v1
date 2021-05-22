@@ -15,7 +15,7 @@ function start() {
 
     const guild = client.guilds.cache.find(({name}) => name === 'KCD')
     if (guild) {
-      botLog(guild, 'Logged in and ready to go.')
+      botLog(guild, () => 'Logged in and ready to go.')
     }
   })
 }

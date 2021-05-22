@@ -5,6 +5,7 @@ import {
   getWelcomeChannels,
   getMemberIdFromChannel,
   getSend,
+  botLog,
 } from './utils'
 import {deleteWelcomeChannel} from './delete-welcome-channel'
 import {handleNewMessage} from './handle-new-message'
@@ -34,9 +35,13 @@ async function cleanup(guild: TDiscord.Guild) {
     // they don't have a welcome channel
     .filter(member => !getMemberWelcomeChannel(member))
     // map them to a promise to kick them
-    .mapValues(member =>
-      member.kick(`Old unconfirmed member with no welcome channel`),
-    )
+    .mapValues(member => {
+      botLog(
+        guild,
+        () => `Kicking unconfirmed member with no welcome channel: ${member}`,
+      )
+      return member.kick(`Old unconfirmed member with no welcome channel`)
+    })
     .values()
 
   const channelDeletes = welcomeChannels

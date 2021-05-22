@@ -2,6 +2,7 @@ import type * as TDiscord from 'discord.js'
 import Discord from 'discord.js'
 import {firstStep} from './steps'
 import {
+  botLog,
   getMessageContents,
   getSend,
   isCategoryChannel,
@@ -10,9 +11,12 @@ import {
 
 async function handleNewMember(member: TDiscord.GuildMember) {
   const {
+    guild,
     user,
     user: {username, discriminator},
   } = member
+
+  botLog(guild, () => `${member} just joined, creating onboarding channel.`)
 
   const everyoneRole = member.guild.roles.cache.find(
     ({name}) => name === '@everyone',
@@ -86,6 +90,8 @@ In less than 5 minutes, you'll have full access to this server. So, let's get st
 
   const answers = {}
   await send(await getMessageContents(firstStep.question, answers, member))
+
+  botLog(guild, () => `${member} onboarding channel created: ${channel}`)
 }
 
 export {handleNewMember}

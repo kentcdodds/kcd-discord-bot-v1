@@ -12,6 +12,9 @@ import {
   rollbar,
   sendBotMessageReply,
   sendSelfDestructMessage,
+  getErrorMessage,
+  botLog,
+  getMessageLink,
 } from '../utils'
 
 type KifData = {
@@ -33,8 +36,9 @@ const kifCache: {
 
 type KifsRawData = {content: string; encoding: 'utf8'}
 
-async function getKifInfo({force = false} = {}) {
+async function getKifInfo(message: TDiscord.Message, {force = false} = {}) {
   if (kifCache.initialized && !force) return kifCache
+  const {guild} = message
 
   const kifs = (await got(
     'https://api.github.com/repos/kentcdodds/kifs/contents/kifs.json',
@@ -47,11 +51,22 @@ async function getKifInfo({force = false} = {}) {
           Buffer.from(kifsData.content, kifsData.encoding).toString(),
         )
       },
-      (e: unknown) =>
+      (e: unknown) => {
         rollbar.error(
           `There was a problem getting kifs info from GitHub:`,
-          (e as Error).message,
-        ),
+          getErrorMessage(e),
+        )
+        if (guild) {
+          botLog(
+            guild,
+            () =>
+              `Trouble getting kifs from GitHub for: ${getMessageLink(
+                message,
+              )}`,
+          )
+        }
+        return {}
+      },
     )) as Record<string, KifData>
   const kifKeysWithoutEmoji = []
   const kifMap: typeof kifCache['kifMap'] = {}
@@ -64,6 +79,9 @@ async function getKifInfo({force = false} = {}) {
     for (const alias of [...aliases, ...emojiAliases]) {
       if (kifMap[alias]) {
         rollbar.error(`Cannot have two kifs with the same alias: ${alias}`)
+        if (guild) {
+          botLog(guild, () => `Two kifs have the same alias! ${alias}`)
+        }
       }
       kifMap[alias] = gif
     }
@@ -79,8 +97,8 @@ async function getKifInfo({force = false} = {}) {
   return kifCache
 }
 
-async function getCloseMatches(search: string) {
-  const {kifKeysWithoutEmoji} = await getKifInfo()
+async function getCloseMatches(message: TDiscord.Message, search: string) {
+  const {kifKeysWithoutEmoji} = await getKifInfo(message)
   return Array.from(
     new Set([
       // levenshtein distance matters most, but we want it sorted
@@ -118,9 +136,9 @@ async function handleKifCommand(message: TDiscord.Message) {
     .replace(MessageMentions.USERS_PATTERN, '')
     .trim()
     .toLowerCase()
-  let cache = await getKifInfo()
+  let cache = await getKifInfo(message)
   if (!cache.kifMap[kifArg]) {
-    cache = await getKifInfo({force: true})
+    cache = await getKifInfo(message, {force: true})
   }
 
   const kif = cache.kifMap[kifArg]
@@ -128,7 +146,7 @@ async function handleKifCommand(message: TDiscord.Message) {
     return message.channel.send(getKifReply(message, kif))
   }
 
-  const closeMatches = await getCloseMatches(kifArg)
+  const closeMatches = await getCloseMatches(message, kifArg)
   if (closeMatches.length === 1 && closeMatches[0]) {
     const closestMatch = closeMatches[0]
     const matchingKif = cache.kifMap[closestMatch]

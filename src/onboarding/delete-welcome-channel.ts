@@ -8,6 +8,7 @@ import {
   getMemberIdFromChannel,
   getSend,
   sleep,
+  botLog,
 } from './utils'
 import {getAnswers} from './steps'
 
@@ -15,6 +16,7 @@ async function deleteWelcomeChannel(
   channel: TDiscord.TextChannel,
   reason: string,
 ) {
+  const {guild} = channel
   const send = getSend(channel)
   const memberId = getMemberIdFromChannel(channel)
   const member = channel.guild.members.cache.find(
@@ -35,6 +37,10 @@ Goodbye 👋
   if (memberIsUnconfirmed && member) {
     await send(
       `You're still an unconfirmed member so you'll be kicked from the server. But don't worry, you can try again later.`,
+    )
+    botLog(
+      guild,
+      () => `Deleting onboarding channel and kicking ${member}: ${reason}`,
     )
     promises.push(
       member.kick(

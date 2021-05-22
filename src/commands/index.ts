@@ -1,5 +1,12 @@
 import type * as TDiscord from 'discord.js'
-import {commandRegex, getRole, getMember} from './utils'
+import {
+  commandRegex,
+  getRole,
+  getMember,
+  getErrorStack,
+  getMessageLink,
+  botLog,
+} from './utils'
 import commands from './commands'
 
 function handleNewMessage(message: TDiscord.Message) {
@@ -37,7 +44,10 @@ Sorry, only members can issue commands. Please, finish the onboarding process, t
     )
   }
 
-  return commandFn(message)
+  return commandFn(message).catch((error: unknown) => {
+    console.error(getErrorStack(error))
+    botLog(guild, () => `Command for ${getMessageLink(message)} failed`)
+  })
 }
 
 function setup(client: TDiscord.Client) {

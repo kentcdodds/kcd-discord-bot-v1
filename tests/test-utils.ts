@@ -76,74 +76,50 @@ async function createEmojis(guild: TDiscord.Guild) {
   return guildEmojis
 }
 
-async function createChannels(client: TDiscord.Client, guild: TDiscord.Guild) {
-  const talkToBotsChannel = await guild.channels.create('🤖-talk-to-bots')
-  guild.channels.cache.set(talkToBotsChannel.id, talkToBotsChannel)
+type Await<Type> = Type extends Promise<infer Value> ? Await<Value> : Type
 
-  const generalChannel = await guild.channels.create('💬-general')
-  guild.channels.cache.set(generalChannel.id, generalChannel)
-
-  const kcdOfficeHoursChannel = await guild.channels.create(
-    '🏫-kcd-office-hours',
+async function awaitObject<Promises extends Record<string, Promise<unknown>>>(
+  promises: Promises,
+) {
+  const entries = Object.entries(promises)
+  const resolvedPromises = await Promise.all(
+    entries.map(([, promise]) => promise),
   )
-  guild.channels.cache.set(kcdOfficeHoursChannel.id, kcdOfficeHoursChannel)
-
-  const privateChatCategory = await guild.channels.create('Private Chat', {
-    type: 'category',
-  })
-  guild.channels.cache.set(privateChatCategory.id, privateChatCategory)
-
-  const onBoardingCategory = await guild.channels.create('Onboarding-1', {
-    type: 'category',
-  })
-  guild.channels.cache.set(onBoardingCategory.id, onBoardingCategory)
-
-  const meetupsCategory = await guild.channels.create('Meetups', {
-    type: 'category',
-  })
-  guild.channels.cache.set(meetupsCategory.id, meetupsCategory)
-
-  const introductionChannel = await guild.channels.create('👶-introductions')
-  guild.channels.cache.set(introductionChannel.id, introductionChannel)
-
-  const tipsChannel = await guild.channels.create('💁-tips')
-  guild.channels.cache.set(tipsChannel.id, tipsChannel)
-
-  const botsOnlyChannel = await guild.channels.create('🤖-bots-only')
-  guild.channels.cache.set(botsOnlyChannel.id, botsOnlyChannel)
-
-  const thanksChannel = await guild.channels.create(`😍-thank-you`)
-  guild.channels.cache.set(thanksChannel.id, thanksChannel)
-
-  const scheduledMeetupsChannel = await guild.channels.create(
-    `⏱-upcoming-meetups`,
-  )
-  guild.channels.cache.set(scheduledMeetupsChannel.id, scheduledMeetupsChannel)
-
-  const followMeChannel = await guild.channels.create('➡️-follow-me')
-  guild.channels.cache.set(followMeChannel.id, followMeChannel)
-
-  const meetupNotificationsChannel = await guild.channels.create(
-    '🔔-meetup-notifications',
-  )
-  guild.channels.cache.set(
-    meetupNotificationsChannel.id,
-    meetupNotificationsChannel,
-  )
-
-  return {
-    generalChannel,
-    tipsChannel,
-    botsOnlyChannel,
-    introductionChannel,
-    onBoardingCategory,
-    privateChatCategory,
-    talkToBotsChannel,
-    thanksChannel,
-    scheduledMeetupsChannel,
-    followMeChannel,
-    meetupNotificationsChannel,
+  return entries
+    .map(([key], index) => ({[key]: resolvedPromises[index]}))
+    .reduce(Object.assign, {}) as {
+    [Key in keyof Promises]: Await<Promises[Key]>
   }
+}
+
+async function createChannels(guild: TDiscord.Guild) {
+  const channels = await awaitObject({
+    privateChatCategory: guild.channels.create('Private Chat', {
+      type: 'category',
+    }),
+    onBoardingCategory: guild.channels.create('Onboarding-1', {
+      type: 'category',
+    }),
+    meetupsCategory: guild.channels.create('Meetups', {type: 'category'}),
+    generalChannel: guild.channels.create('💬-general'),
+    kcdOfficeHoursChannel: guild.channels.create('🏫-kcd-office-hours'),
+    introductionChannel: guild.channels.create('👶-introductions'),
+    tipsChannel: guild.channels.create('💁-tips'),
+    botLog: guild.channels.create('🤖-bot-logs'),
+    thanksChannel: guild.channels.create(`😍-thank-you`),
+    scheduledMeetupsChannel: guild.channels.create(`⏱-upcoming-meetups`),
+    followMeChannel: guild.channels.create('➡️-follow-me'),
+    meetupNotificationsChannel: guild.channels.create(
+      '🔔-meetup-notifications',
+    ),
+    talkToBotsChannel: guild.channels.create('🤖-talk-to-bots'),
+  })
+
+  for (const channel of Object.values(channels)) {
+    guild.channels.cache.set(channel.id, channel)
+  }
+
+  return channels
 }
 
 function createRoles(client: TDiscord.Client, guild: TDiscord.Guild) {
@@ -221,7 +197,7 @@ async function makeFakeClient() {
   client.guilds.cache.set(guild.id, guild)
 
   const {memberRole} = createRoles(client, guild)
-  const defaultChannels = await createChannels(client, guild)
+  const defaultChannels = await createChannels(guild)
   await createEmojis(guild)
 
   async function createUser(username: string, options = {}) {

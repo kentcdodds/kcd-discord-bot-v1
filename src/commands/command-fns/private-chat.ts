@@ -8,6 +8,7 @@ import {
   getCommandArgs,
   timeToMs,
   getRole,
+  botLog,
 } from '../utils'
 import {
   defaultLifeTimeMinute,
@@ -110,6 +111,15 @@ async function createChat(message: TDiscord.Message) {
       ],
     },
   )
+
+  botLog(
+    guild,
+    () =>
+      `Private chat created by ${member} for ${listify(
+        mentionedMembersNicknames,
+      )}: ${channel}`,
+  )
+
   return Promise.all([
     channel.send(
       `

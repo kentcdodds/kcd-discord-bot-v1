@@ -42,38 +42,37 @@ async function handleNewMember(member: TDiscord.GuildMember) {
     cat1.children.size > cat2.children.size ? 1 : -1,
   )
 
-  const channel = await member.guild.channels.create(
-    `${welcomeChannelPrefix}${username}_${discriminator}`,
-    {
-      topic: `Membership application for ${username}#${discriminator} (Member ID: "${member.id}")`,
-      reason: `To allow ${username}#${discriminator} to apply to join the community.`,
-      parent: categoryWithFewest,
-      permissionOverwrites: [
-        {
-          type: 'role',
-          id: everyoneRole.id,
-          deny: allPermissions,
-        },
-        {
-          type: 'member',
-          id: member.id,
-          allow: [
-            'ADD_REACTIONS',
-            'VIEW_CHANNEL',
-            'SEND_MESSAGES',
-            'SEND_TTS_MESSAGES',
-            'READ_MESSAGE_HISTORY',
-            'CHANGE_NICKNAME',
-          ],
-        },
-        {
-          type: 'member',
-          id: clientUser.id,
-          allow: allPermissions,
-        },
-      ],
-    },
-  )
+  const newChannelName = `${welcomeChannelPrefix}${username}_${discriminator}`
+
+  const channel = await member.guild.channels.create(newChannelName, {
+    topic: `Membership application for ${username}#${discriminator} (Member ID: "${member.id}")`,
+    reason: `To allow ${username}#${discriminator} to apply to join the community.`,
+    parent: categoryWithFewest,
+    permissionOverwrites: [
+      {
+        type: 'role',
+        id: everyoneRole.id,
+        deny: allPermissions,
+      },
+      {
+        type: 'member',
+        id: member.id,
+        allow: [
+          'ADD_REACTIONS',
+          'VIEW_CHANNEL',
+          'SEND_MESSAGES',
+          'SEND_TTS_MESSAGES',
+          'READ_MESSAGE_HISTORY',
+          'CHANGE_NICKNAME',
+        ],
+      },
+      {
+        type: 'member',
+        id: clientUser.id,
+        allow: allPermissions,
+      },
+    ],
+  })
   const send = getSend(channel)
 
   await send(
@@ -91,7 +90,7 @@ In less than 5 minutes, you'll have full access to this server. So, let's get st
   const answers = {}
   await send(await getMessageContents(firstStep.question, answers, member))
 
-  botLog(guild, () => `${member} onboarding channel created: ${channel}`)
+  botLog(guild, () => `${member} onboarding channel created: ${newChannelName}`)
 }
 
 export {handleNewMember}

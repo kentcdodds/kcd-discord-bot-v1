@@ -87,7 +87,7 @@ async function awaitObject<Promises extends Record<string, Promise<unknown>>>(
   )
   return entries
     .map(([key], index) => ({[key]: resolvedPromises[index]}))
-    .reduce(Object.assign, {}) as {
+    .reduce((acc, obj) => ({...acc, ...obj}), {}) as {
     [Key in keyof Promises]: Await<Promises[Key]>
   }
 }

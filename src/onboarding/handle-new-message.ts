@@ -11,12 +11,14 @@ import {
   isTextChannel,
   isActionOnlyStep,
   isRegularStep,
+  botLog,
 } from './utils'
 import {getSteps, getAnswers, getCurrentStep, firstStep} from './steps'
 import {deleteWelcomeChannel} from './delete-welcome-channel'
 
 async function handleNewMessage(message: TDiscord.Message) {
-  const {channel} = message
+  const {channel, guild} = message
+  if (!guild) return
   if (!isTextChannel(channel)) return
 
   const send = getSend(channel)
@@ -37,8 +39,19 @@ async function handleNewMessage(message: TDiscord.Message) {
   const memberId = getMemberIdFromChannel(channel)
   if (message.author.id !== memberId) return null
 
-  const member = getMember(message.guild, memberId)
+  const member = getMember(guild, memberId)
   if (!member) return
+
+  // if they're asking for help, let Kent know in a bot log
+  if (message.content.toLowerCase().split(/\s/).includes('help')) {
+    botLog(guild, () => {
+      const kent = guild.members.cache.find(
+        ({user: {username, discriminator}}) =>
+          username === 'kentcdodds' && discriminator === '0001',
+      )
+      return `Hey ${kent}, ${member} is asking for help in ${channel}`
+    })
+  }
 
   const steps = getSteps(member)
 

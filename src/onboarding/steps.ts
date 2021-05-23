@@ -15,6 +15,7 @@ import {
   isRegularStep,
   RegularStep,
   rollbar,
+  botLog,
 } from './utils'
 import type {Answers, Step} from './utils'
 
@@ -336,6 +337,12 @@ ${isEdit ? '' : `🎊 You now have access to the whole server. Welcome!`}
       if (response.toLowerCase() !== 'yes') {
         return `Feel free to edit any of the answers. Reply "yes" when we're good to go.`
       }
+    },
+  },
+  {
+    actionOnlyStep: true,
+    action: async ({member}) => {
+      botLog(member.guild, () => `${member} has finished onboarding`)
     },
   },
   {

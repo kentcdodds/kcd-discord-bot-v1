@@ -44,7 +44,7 @@ async function handleNewMessage(message: TDiscord.Message) {
 
   // if they're asking for help, let Kent know in a bot log
   if (message.content.toLowerCase().split(/\s/).includes('help')) {
-    botLog(guild, () => {
+    void botLog(guild, () => {
       const kent = guild.members.cache.find(
         ({user: {username, discriminator}}) =>
           username === 'kentcdodds' && discriminator === '0001',

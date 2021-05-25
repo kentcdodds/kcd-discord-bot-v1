@@ -288,8 +288,7 @@ function botLog(
 
   const callerStack = new Error('Caller stack:')
 
-  // fire and forget, who cares if it fails
-  botsChannel.send(message).catch((error: unknown) => {
+  return botsChannel.send(message).catch((error: unknown) => {
     const messageSummary =
       message.content ?? message.embed?.title ?? message.embed?.description
     console.error(

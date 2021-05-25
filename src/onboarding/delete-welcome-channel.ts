@@ -9,6 +9,8 @@ import {
   getSend,
   sleep,
   botLog,
+  getMemberLink,
+  colors,
 } from './utils'
 import {getAnswers} from './steps'
 import {DiscordAPIError} from 'discord.js'
@@ -39,10 +41,25 @@ Goodbye 👋
     await send(
       `You're still an unconfirmed member so you'll be kicked from the server. But don't worry, you can try again later.`,
     )
-    botLog(
-      guild,
-      () => `Deleting onboarding channel and kicking ${member}: ${reason}`,
-    )
+
+    void botLog(guild, () => {
+      return {
+        title: '✌️ Kicking member',
+        author: {
+          name: member.displayName,
+          iconURL: member.user.avatarURL() ?? member.user.defaultAvatarURL,
+          url: getMemberLink(member),
+        },
+        color: colors.base0F,
+        description: `Deleting onboarding channel and kicking unconfirmed member.`,
+        fields: [
+          {
+            name: 'Reason',
+            value: reason,
+          },
+        ],
+      }
+    })
     promises.push(
       member.kick(
         `Unconfirmed member with welcome channel deleted because: ${reason}`,

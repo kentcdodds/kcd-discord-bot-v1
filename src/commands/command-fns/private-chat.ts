@@ -114,7 +114,7 @@ async function createChat(message: TDiscord.Message) {
     },
   )
 
-  botLog(guild, () => {
+  void botLog(guild, () => {
     return {
       title: 'ℹ️ Private chat created',
       color: colors.base09,

@@ -47,7 +47,7 @@ Sorry, only members can issue commands. Please, finish the onboarding process, t
 
   return commandFn(message).catch((error: unknown) => {
     console.error(getErrorStack(error))
-    botLog(guild, () => {
+    void botLog(guild, () => {
       return {
         title: '❌ Command failed',
         color: colors.base08,
@@ -58,11 +58,23 @@ Sorry, only members can issue commands. Please, finish the onboarding process, t
   })
 }
 
+async function handleUpdatedMessage(
+  oldMessage: TDiscord.Message | TDiscord.PartialMessage,
+  newMessage: TDiscord.Message | TDiscord.PartialMessage,
+) {
+  if (newMessage.partial) {
+    newMessage = await newMessage.fetch()
+  }
+
+  return handleNewMessage(newMessage)
+}
+
 function setup(client: TDiscord.Client) {
   client.on('message', msg => {
     // eslint-disable-next-line no-void
     void handleNewMessage(msg)
   })
+  client.on('messageUpdate', handleUpdatedMessage)
 }
 
 export {handleNewMessage, setup}

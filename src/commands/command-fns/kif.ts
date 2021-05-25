@@ -58,7 +58,7 @@ async function getKifInfo(message: TDiscord.Message, {force = false} = {}) {
           errorMessage,
         )
         if (guild) {
-          botLog(guild, () => {
+          void botLog(guild, () => {
             return {
               title: '❌ Kif failure',
               color: colors.base08,
@@ -82,7 +82,7 @@ async function getKifInfo(message: TDiscord.Message, {force = false} = {}) {
       if (kifMap[alias]) {
         rollbar.error(`Cannot have two kifs with the same alias: ${alias}`)
         if (guild) {
-          botLog(guild, () => {
+          void botLog(guild, () => {
             return {
               title: '❌ Kif failure',
               color: colors.base08,

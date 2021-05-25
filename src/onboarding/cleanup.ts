@@ -6,6 +6,8 @@ import {
   getMemberIdFromChannel,
   getSend,
   botLog,
+  colors,
+  getMemberLink,
 } from './utils'
 import {deleteWelcomeChannel} from './delete-welcome-channel'
 import {handleNewMessage} from './handle-new-message'
@@ -36,10 +38,24 @@ async function cleanup(guild: TDiscord.Guild) {
     .filter(member => !getMemberWelcomeChannel(member))
     // map them to a promise to kick them
     .mapValues(member => {
-      botLog(
-        guild,
-        () => `Kicking unconfirmed member with no welcome channel: ${member}`,
-      )
+      void botLog(guild, () => {
+        return {
+          title: '✌️ Kicking member',
+          author: {
+            name: member.displayName,
+            iconURL: member.user.avatarURL() ?? member.user.defaultAvatarURL,
+            url: getMemberLink(member),
+          },
+          color: colors.base0F,
+          description: `${member} is unconfirmed and has no welcome channel.`,
+          fields: [
+            {
+              name: 'Cause',
+              value: `This can happen if onboading times out and channel is deleted but there's an error is kicking the member.`,
+            },
+          ],
+        }
+      })
       return member.kick(`Old unconfirmed member with no welcome channel`)
     })
     .values()

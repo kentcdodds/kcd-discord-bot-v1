@@ -16,6 +16,7 @@ import {
   RegularStep,
   rollbar,
   botLog,
+  getMemberLink,
 } from './utils'
 import type {Answers, Step} from './utils'
 
@@ -347,7 +348,17 @@ ${isEdit ? '' : `🎊 You now have access to the whole server. Welcome!`}
   {
     actionOnlyStep: true,
     action: async ({member}) => {
-      botLog(member.guild, () => `${member} has finished onboarding`)
+      void botLog(member.guild, () => {
+        return {
+          title: '🎉 New Member',
+          author: {
+            name: member.displayName,
+            iconURL: member.user.avatarURL() ?? member.user.defaultAvatarURL,
+            url: getMemberLink(member),
+          },
+          description: `${member} has successfully joined the server`,
+        }
+      })
     },
   },
   {
@@ -359,21 +370,18 @@ ${isEdit ? '' : `🎊 You now have access to the whole server. Welcome!`}
       )
       const emojis = [
         'react',
+        'remix',
+        'js',
+        'ts',
+        'node',
         'jest',
+        'msw',
         'cypress',
         'reacttestinglibrary',
         'domtestinglibrary',
-        'msw',
-        'js',
-        'ts',
         'css',
         'html',
-        'node',
         'reactquery',
-        'nextjs',
-        'gatsby',
-        'remix',
-        'graphql',
       ]
       const guild = message.guild
       if (!guild) return

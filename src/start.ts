@@ -32,19 +32,18 @@ function start() {
 
     const guild = client.guilds.cache.find(({name}) => name === 'KCD')
     if (guild) {
-      botLog(guild, () => {
+      void botLog(guild, () => {
         const commitInfo = getCommitInfo()
         const commitValue = commitInfo
-          ? `
-Commit:
-  author: ${commitInfo.author}
-  date: ${commitInfo.date}
-  message: ${commitInfo.message}
-  link: <${commitInfo.link}>
-            `.trim()
+          ? [
+              `author: ${commitInfo.author}`,
+              `date: ${commitInfo.date}`,
+              `message: ${commitInfo.message}`,
+              `link: <${commitInfo.link}>`,
+            ].join('\n')
           : null
         return {
-          title: '✅ BOT Started',
+          title: '🤖 BOT Started',
           color: colors.base0B,
           description: `Logged in and ready to go. Here's some info on the running bot:`,
           fields: [

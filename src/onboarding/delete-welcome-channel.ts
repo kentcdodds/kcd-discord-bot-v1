@@ -11,6 +11,7 @@ import {
   botLog,
 } from './utils'
 import {getAnswers} from './steps'
+import {DiscordAPIError} from 'discord.js'
 
 async function deleteWelcomeChannel(
   channel: TDiscord.TextChannel,
@@ -122,7 +123,19 @@ Goodbye 👋
   // wait for 3 seconds so folks can read the messages before it's deleted
   // note: don't do 5 seconds or more because that's how long the interval is set to
   await sleep(3000)
-  await channel.delete(reason)
+  try {
+    await channel.delete(reason)
+  } catch (error: unknown) {
+    // it's possible the channel got deleted already so let's just ignore that
+    // error
+    if (
+      error instanceof DiscordAPIError &&
+      /Unknown Channel/i.test(error.message)
+    ) {
+      return
+    }
+    throw error
+  }
 }
 
 export {deleteWelcomeChannel}

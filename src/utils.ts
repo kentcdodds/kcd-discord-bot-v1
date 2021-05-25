@@ -303,6 +303,11 @@ function cleanupGuildOnInterval(
           // we can do anyway.
           return
         }
+        if (error && (error as {status?: number}).status === 500) {
+          // if it has a status value that is 500 then there really is nothing
+          // we can do about that so just move on...
+          return
+        }
         rollbar.error(uncaughtError.stack, error)
       },
     )

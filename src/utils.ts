@@ -1,4 +1,5 @@
 import type * as TDiscord from 'discord.js'
+import {HTTPError} from 'discord.js'
 import {setIntervalAsync} from 'set-interval-async/dynamic'
 import rollbar from './rollbar'
 
@@ -297,6 +298,11 @@ function cleanupGuildOnInterval(
   setIntervalAsync(() => {
     return Promise.all(Array.from(client.guilds.cache.values()).map(cb)).catch(
       error => {
+        if (error instanceof HTTPError) {
+          // ignore HTTPErrors. If they get to this point, there's not much
+          // we can do anyway.
+          return
+        }
         rollbar.error(uncaughtError.stack, error)
       },
     )

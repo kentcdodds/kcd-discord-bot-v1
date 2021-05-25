@@ -4,7 +4,17 @@ import {botLog} from './utils'
 import rollbar from './rollbar'
 
 function start() {
-  const client = new Discord.Client()
+  const client = new Discord.Client({
+    ws: {
+      intents: [
+        'GUILDS',
+        'GUILD_MEMBERS',
+        'GUILD_EMOJIS',
+        'GUILD_MESSAGES',
+        'GUILD_MESSAGE_REACTIONS',
+      ],
+    },
+  })
 
   rollbar.log('logging in discord client')
   void client.login(process.env.DISCORD_BOT_TOKEN)

@@ -9,6 +9,8 @@ import {
   timeToMs,
   getRole,
   botLog,
+  colors,
+  getMemberLink,
 } from '../utils'
 import {
   defaultLifeTimeMinute,
@@ -94,12 +96,12 @@ async function createChat(message: TDiscord.Message) {
     Date.now() + timeToMs.minutes(defaultLifeTimeMinute),
   )
 
+  const listOfMembers = listify(mentionedMembersNicknames)
+
   const channel = await guild.channels.create(
     `${privateChannelPrefix}${channelSuffix}`,
     {
-      topic: `Private chat for ${listify(
-        mentionedMembersNicknames,
-      )} self-destruct at ${expirationDate.toUTCString()}`,
+      topic: `Private chat for ${listOfMembers} self-destruct at ${expirationDate.toUTCString()}`,
       parent: categoryPrivateChat,
       permissionOverwrites: [
         {
@@ -112,13 +114,19 @@ async function createChat(message: TDiscord.Message) {
     },
   )
 
-  botLog(
-    guild,
-    () =>
-      `Private chat created by ${member} for ${listify(
-        mentionedMembersNicknames,
-      )}: ${channel}`,
-  )
+  botLog(guild, () => {
+    return {
+      title: 'ℹ️ Private chat created',
+      color: colors.base09,
+      author: {
+        name: member.displayName,
+        iconURL: member.user.avatarURL() ?? member.user.defaultAvatarURL,
+        url: getMemberLink(member),
+      },
+      fields: [{name: 'Chat Members', value: listOfMembers}],
+      description: `Private chat created by ${member}: ${channel}`,
+    }
+  })
 
   return Promise.all([
     channel.send(

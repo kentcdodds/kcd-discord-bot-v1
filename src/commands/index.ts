@@ -6,6 +6,7 @@ import {
   getErrorStack,
   getMessageLink,
   botLog,
+  colors,
 } from './utils'
 import commands from './commands'
 
@@ -46,7 +47,14 @@ Sorry, only members can issue commands. Please, finish the onboarding process, t
 
   return commandFn(message).catch((error: unknown) => {
     console.error(getErrorStack(error))
-    botLog(guild, () => `Command for ${getMessageLink(message)} failed`)
+    botLog(guild, () => {
+      return {
+        title: '❌ Command failed',
+        color: colors.base08,
+        description: `Someone tried to send the command "${command}" and it failed`,
+        url: getMessageLink(message),
+      }
+    })
   })
 }
 

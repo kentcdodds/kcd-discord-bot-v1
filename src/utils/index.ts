@@ -1,7 +1,8 @@
 import type * as TDiscord from 'discord.js'
 import {HTTPError} from 'discord.js'
 import {setIntervalAsync} from 'set-interval-async/dynamic'
-import rollbar from './rollbar'
+import rollbar from '../rollbar'
+import * as colors from './colors'
 
 const sleep = (t: number) =>
   new Promise(resolve =>
@@ -167,6 +168,9 @@ const getMessageLink = (msg: TDiscord.Message) =>
     msg.channel.id
   }/${msg.id}`
 
+const getMemberLink = (member: TDiscord.GuildMember | TDiscord.User) =>
+  `https://discord.com/channels/@me/${member.id}`
+
 // we'd just use the message.mentions here, but sometimes the mentions aren't there for some reason 🤷‍♂️
 // so we parse it out ourselves
 function getMentionedUser(
@@ -262,13 +266,21 @@ function getErrorMessage(error: unknown) {
   return 'Unknown Error'
 }
 
-function botLog(guild: TDiscord.Guild, messageFn: () => string) {
+function botLog(
+  guild: TDiscord.Guild,
+  messageFn: () => string | TDiscord.MessageEmbedOptions,
+) {
   const botsChannel = getTextChannel(guild, 'bot-logs')
   if (!botsChannel) return
 
-  let message: string
+  let message: TDiscord.MessageOptions
   try {
-    message = messageFn()
+    const result = messageFn()
+    if (typeof result === 'string') {
+      message = {content: result}
+    } else {
+      message = {embed: result}
+    }
   } catch (error: unknown) {
     console.error(`Unable to get message for bot log`, getErrorStack(error))
     return
@@ -278,8 +290,10 @@ function botLog(guild: TDiscord.Guild, messageFn: () => string) {
 
   // fire and forget, who cares if it fails
   botsChannel.send(message).catch((error: unknown) => {
+    const messageSummary =
+      message.content ?? message.embed?.title ?? message.embed?.description
     console.error(
-      `Unabel to log message: "${message}"`,
+      `Unabel to log message: "${messageSummary}"`,
       getErrorStack(error),
       callerStack,
     )
@@ -320,7 +334,10 @@ function typedBoolean<T>(
   return Boolean(value)
 }
 
+export * from './build-info'
+
 export {
+  colors,
   cleanupGuildOnInterval,
   rollbar,
   sleep,
@@ -339,6 +356,7 @@ export {
   getMember,
   listify,
   typedBoolean,
+  getMemberLink,
   getMessageLink,
   isWelcomeChannel,
   sendBotMessageReply,

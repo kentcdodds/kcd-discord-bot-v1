@@ -77,7 +77,7 @@ const handlers = [
     return res(ctx.status(200))
   }),
   rest.get('https://verifier.meetchopra.com/verify/:email', (req, res, ctx) => {
-    return res(ctx.json({result: {status: true}}))
+    return res(ctx.json({status: true}))
   }),
 ]
 

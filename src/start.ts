@@ -1,6 +1,13 @@
 import Discord from 'discord.js'
 import {setup} from './setup'
-import {botLog} from './utils'
+import {
+  botLog,
+  getStartTimeInfo,
+  getCommitInfo,
+  getBuildTimeInfo,
+  typedBoolean,
+  colors,
+} from './utils'
 import rollbar from './rollbar'
 
 function start() {
@@ -25,7 +32,28 @@ function start() {
 
     const guild = client.guilds.cache.find(({name}) => name === 'KCD')
     if (guild) {
-      botLog(guild, () => 'Logged in and ready to go.')
+      botLog(guild, () => {
+        const commitInfo = getCommitInfo()
+        const commitValue = commitInfo
+          ? `
+Commit:
+  author: ${commitInfo.author}
+  date: ${commitInfo.date}
+  message: ${commitInfo.message}
+  link: <${commitInfo.link}>
+            `.trim()
+          : null
+        return {
+          title: '✅ BOT Started',
+          color: colors.base0B,
+          description: `Logged in and ready to go. Here's some info on the running bot:`,
+          fields: [
+            {name: 'Startup', value: getStartTimeInfo(), inline: true},
+            {name: 'Built', value: getBuildTimeInfo(), inline: true},
+            commitValue ? {name: 'Commit', value: commitValue} : null,
+          ].filter(typedBoolean),
+        }
+      })
     }
   })
 }

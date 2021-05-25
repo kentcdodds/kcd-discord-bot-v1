@@ -14,7 +14,7 @@ import {
   sendSelfDestructMessage,
   getErrorMessage,
   botLog,
-  getMessageLink,
+  colors,
 } from '../utils'
 
 type KifData = {
@@ -52,18 +52,20 @@ async function getKifInfo(message: TDiscord.Message, {force = false} = {}) {
         )
       },
       (e: unknown) => {
+        const errorMessage = getErrorMessage(e)
         rollbar.error(
           `There was a problem getting kifs info from GitHub:`,
-          getErrorMessage(e),
+          errorMessage,
         )
         if (guild) {
-          botLog(
-            guild,
-            () =>
-              `Trouble getting kifs from GitHub for: ${getMessageLink(
-                message,
-              )}`,
-          )
+          botLog(guild, () => {
+            return {
+              title: '❌ Kif failure',
+              color: colors.base08,
+              description: `Trouble getting kifs from GitHub`,
+              fields: [{name: 'Error Message', value: errorMessage}],
+            }
+          })
         }
         return {}
       },
@@ -80,7 +82,19 @@ async function getKifInfo(message: TDiscord.Message, {force = false} = {}) {
       if (kifMap[alias]) {
         rollbar.error(`Cannot have two kifs with the same alias: ${alias}`)
         if (guild) {
-          botLog(guild, () => `Two kifs have the same alias! ${alias}`)
+          botLog(guild, () => {
+            return {
+              title: '❌ Kif failure',
+              color: colors.base08,
+              description: `Two kifs have the same alias!`,
+              url: 'https://github.com/kentcdodds/kifs/edit/main/kifs.json',
+              fields: [
+                {name: 'Duplicate alias', value: alias, inline: true},
+                {name: 'First kif', value: kifMap[alias]},
+                {name: 'Second kif', value: gif},
+              ],
+            }
+          })
         }
       }
       kifMap[alias] = gif

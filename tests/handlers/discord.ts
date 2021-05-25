@@ -271,10 +271,10 @@ const handlers = [
       if (!guild) {
         throw new Error(`No guild with the ID of ${channel.guild_id}`)
       }
-      const content = (req.body as {content: string}).content
+      const content = (req.body as {content?: string}).content
       const mentions = Array.from(
-        // @ts-expect-error for some reason I can't make TS happy about matchAll
-        content.matchAll(/<@!(?<userId>\d+)>/g) as Array<RegExpMatchArray>,
+        content?.matchAll(/<@!(?<userId>\d+)>/g) ??
+          ([] as Array<RegExpMatchArray>),
       ).map(mention =>
         mention.groups?.userId
           ? guild.members.cache.get(mention.groups.userId)?.user

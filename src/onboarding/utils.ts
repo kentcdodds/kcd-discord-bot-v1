@@ -126,7 +126,7 @@ const getMemberWelcomeChannel = (member: TDiscord.GuildMember) =>
 
 function getBotLogEmbed(
   member: TDiscord.GuildMember,
-  status: string,
+  {author, fields = [], ...overrides}: Partial<TDiscord.MessageEmbedOptions>,
 ): TDiscord.MessageEmbedOptions {
   return {
     title: '👋 New Member',
@@ -134,13 +134,12 @@ function getBotLogEmbed(
       name: member.displayName,
       iconURL: member.user.avatarURL() ?? member.user.defaultAvatarURL,
       url: getMemberLink(member),
+      ...author,
     },
     color: colors.base0E,
     description: `${member} has joined the server.`,
-    fields: [
-      {name: 'Member ID', value: member.id},
-      {name: 'Status', value: status},
-    ],
+    fields: [{name: 'Member ID', value: member.id}, ...fields],
+    ...overrides,
   }
 }
 

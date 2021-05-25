@@ -19,7 +19,9 @@ async function handleNewMember(member: TDiscord.GuildMember) {
   } = member
 
   void botLog(guild, () => {
-    return getBotLogEmbed(member, 'Creating welcome channel.')
+    return getBotLogEmbed(member, {
+      fields: [{name: 'Status', value: 'Creating welcome channel.'}],
+    })
   })
 
   const everyoneRole = member.guild.roles.cache.find(
@@ -95,7 +97,9 @@ In less than 5 minutes, you'll have full access to this server. So, let's get st
   await send(await getMessageContents(firstStep.question, answers, member))
 
   void updateOnboardingBotLog(member, () =>
-    getBotLogEmbed(member, `Onboarding in: ${newChannelName}`),
+    getBotLogEmbed(member, {
+      fields: [{name: 'Status', value: `Onboarding in: ${newChannelName}`}],
+    }),
   )
 }
 

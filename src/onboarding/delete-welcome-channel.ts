@@ -1,4 +1,5 @@
 import type * as TDiscord from 'discord.js'
+import {DiscordAPIError} from 'discord.js'
 import got from 'got'
 import {
   getSubscriberEndpoint,
@@ -8,18 +9,15 @@ import {
   getMemberIdFromChannel,
   getSend,
   sleep,
-  botLog,
-  getMemberLink,
-  colors,
+  updateOnboardingBotLog,
+  getBotLogEmbed,
 } from './utils'
 import {getAnswers} from './steps'
-import {DiscordAPIError} from 'discord.js'
 
 async function deleteWelcomeChannel(
   channel: TDiscord.TextChannel,
   reason: string,
 ) {
-  const {guild} = channel
   const send = getSend(channel)
   const memberId = getMemberIdFromChannel(channel)
   const member = channel.guild.members.cache.find(
@@ -42,24 +40,15 @@ Goodbye 👋
       `You're still an unconfirmed member so you'll be kicked from the server. But don't worry, you can try again later.`,
     )
 
-    void botLog(guild, () => {
-      return {
-        title: '✌️ Kicking member',
-        author: {
-          name: member.displayName,
-          iconURL: member.user.avatarURL() ?? member.user.defaultAvatarURL,
-          url: getMemberLink(member),
-        },
-        color: colors.base0F,
-        description: `Deleting onboarding channel and kicking unconfirmed member: ${member}`,
+    void updateOnboardingBotLog(member, () =>
+      getBotLogEmbed(member, {
+        title: '✌️ New Member Kicked',
         fields: [
-          {
-            name: 'Reason',
-            value: reason,
-          },
+          {name: 'Status', value: `Kicked`},
+          {name: 'Reason', value: reason},
         ],
-      }
-    })
+      }),
+    )
     promises.push(
       member.kick(
         `Unconfirmed member with welcome channel deleted because: ${reason}`,

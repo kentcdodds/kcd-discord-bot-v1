@@ -349,7 +349,11 @@ ${isEdit ? '' : `🎊 You now have access to the whole server. Welcome!`}
     actionOnlyStep: true,
     action: async ({member}) => {
       void updateOnboardingBotLog(member, () =>
-        getBotLogEmbed(member, `Successfully joined the server 🎉`),
+        getBotLogEmbed(member, {
+          fields: [
+            {name: 'Status', value: `Successfully joined the server 🎉`},
+          ],
+        }),
       )
     },
   },

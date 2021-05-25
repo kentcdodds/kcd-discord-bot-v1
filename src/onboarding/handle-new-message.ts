@@ -62,6 +62,10 @@ async function handleNewMessage(message: TDiscord.Message) {
         description: `Hey ${kent}, ${member} is asking for help in ${channel}`,
       }
     })
+    await send(
+      `Need help? I'll ping someone to come help if they're available. If you don't hear from anyone soon then go ahead and email a screenshot of this conversation to team@kentcdodds.com`,
+    )
+    return
   }
 
   const steps = getSteps(member)

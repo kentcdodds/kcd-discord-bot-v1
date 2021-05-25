@@ -12,6 +12,8 @@ import {
   isActionOnlyStep,
   isRegularStep,
   botLog,
+  getMemberLink,
+  colors,
 } from './utils'
 import {getSteps, getAnswers, getCurrentStep, firstStep} from './steps'
 import {deleteWelcomeChannel} from './delete-welcome-channel'
@@ -49,7 +51,16 @@ async function handleNewMessage(message: TDiscord.Message) {
         ({user: {username, discriminator}}) =>
           username === 'kentcdodds' && discriminator === '0001',
       )
-      return `Hey ${kent}, ${member} is asking for help in ${channel}`
+      return {
+        title: `🆘 Someone needs help`,
+        color: colors.base0A,
+        author: {
+          name: member.displayName,
+          iconURL: member.user.avatarURL() ?? member.user.defaultAvatarURL,
+          url: getMemberLink(member),
+        },
+        description: `Hey ${kent}, ${member} is asking for help in ${channel}`,
+      }
     })
   }
 

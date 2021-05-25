@@ -15,8 +15,8 @@ import {
   isRegularStep,
   RegularStep,
   rollbar,
-  botLog,
-  getMemberLink,
+  updateOnboardingBotLog,
+  getBotLogEmbed,
 } from './utils'
 import type {Answers, Step} from './utils'
 
@@ -348,17 +348,9 @@ ${isEdit ? '' : `🎊 You now have access to the whole server. Welcome!`}
   {
     actionOnlyStep: true,
     action: async ({member}) => {
-      void botLog(member.guild, () => {
-        return {
-          title: '🎉 New Member',
-          author: {
-            name: member.displayName,
-            iconURL: member.user.avatarURL() ?? member.user.defaultAvatarURL,
-            url: getMemberLink(member),
-          },
-          description: `${member} has successfully joined the server`,
-        }
-      })
+      void updateOnboardingBotLog(member, () =>
+        getBotLogEmbed(member, `Successfully joined the server 🎉`),
+      )
     },
   },
   {

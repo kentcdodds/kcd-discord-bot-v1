@@ -51,7 +51,7 @@ Goodbye 👋
           url: getMemberLink(member),
         },
         color: colors.base0F,
-        description: `Deleting onboarding channel and kicking unconfirmed member.`,
+        description: `Deleting onboarding channel and kicking unconfirmed member: ${member}`,
         fields: [
           {
             name: 'Reason',

@@ -3,32 +3,13 @@ import Discord from 'discord.js'
 import {firstStep} from './steps'
 import {
   botLog,
-  colors,
-  getMemberLink,
+  getBotLogEmbed,
   getMessageContents,
   getSend,
   isCategoryChannel,
+  updateOnboardingBotLog,
   welcomeChannelPrefix,
 } from './utils'
-
-function getBotLog(member: TDiscord.GuildMember, status: string) {
-  return {
-    title: '👋 New Server Member',
-    author: {
-      name: member.displayName,
-      iconURL: member.user.avatarURL() ?? member.user.defaultAvatarURL,
-      url: getMemberLink(member),
-    },
-    color: colors.base0E,
-    description: `${member} has joined the server.`,
-    fields: [
-      {
-        name: 'Status',
-        value: status,
-      },
-    ],
-  }
-}
 
 async function handleNewMember(member: TDiscord.GuildMember) {
   const {
@@ -37,8 +18,8 @@ async function handleNewMember(member: TDiscord.GuildMember) {
     user: {username, discriminator},
   } = member
 
-  const botLogPromise = botLog(guild, () => {
-    return getBotLog(member, 'Creating welcome channel.')
+  void botLog(guild, () => {
+    return getBotLogEmbed(member, 'Creating welcome channel.')
   })
 
   const everyoneRole = member.guild.roles.cache.find(
@@ -113,17 +94,9 @@ In less than 5 minutes, you'll have full access to this server. So, let's get st
   const answers = {}
   await send(await getMessageContents(firstStep.question, answers, member))
 
-  try {
-    const botLogEmbed = await botLogPromise
-    const updatable = Array.isArray(botLogEmbed) ? botLogEmbed[0] : botLogEmbed
-    if (updatable) {
-      void updatable.edit({
-        embed: getBotLog(member, `Welcome channel created: ${newChannelName}`),
-      })
-    }
-  } catch {
-    // ignore errors for logs....
-  }
+  void updateOnboardingBotLog(member, () =>
+    getBotLogEmbed(member, `Onboarding in: ${newChannelName}`),
+  )
 }
 
 export {handleNewMember}

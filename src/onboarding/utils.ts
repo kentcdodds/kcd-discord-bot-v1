@@ -1,5 +1,14 @@
 import type * as TDiscord from 'discord.js'
-import {getMemberIdFromChannel, isWelcomeChannel, isTextChannel} from '../utils'
+import {
+  getMemberIdFromChannel,
+  isWelcomeChannel,
+  isTextChannel,
+  getTextChannel,
+  botLog,
+  getErrorMessage,
+  getMemberLink,
+  colors,
+} from '../utils'
 
 const editErrorMessagePrefix = `There's a problem with an edit that was just made. Please edit the answer again to fix it.`
 
@@ -115,6 +124,64 @@ const getMemberWelcomeChannel = (member: TDiscord.GuildMember) =>
     channel => getMemberIdFromChannel(channel) === member.id,
   )
 
+function getBotLogEmbed(
+  member: TDiscord.GuildMember,
+  status: string,
+): TDiscord.MessageEmbedOptions {
+  return {
+    title: '👋 New Member',
+    author: {
+      name: member.displayName,
+      iconURL: member.user.avatarURL() ?? member.user.defaultAvatarURL,
+      url: getMemberLink(member),
+    },
+    color: colors.base0E,
+    description: `${member} has joined the server.`,
+    fields: [
+      {name: 'Member ID', value: member.id},
+      {name: 'Status', value: status},
+    ],
+  }
+}
+
+function updateOnboardingBotLog(
+  member: TDiscord.GuildMember,
+  updatedEmbed: () => TDiscord.MessageEmbedOptions,
+) {
+  let botLogMessage
+  try {
+    const botsChannel = getTextChannel(member.guild, 'bot-logs')
+    if (!botsChannel) return
+
+    botLogMessage = botsChannel.messages.cache.find(msg =>
+      msg.embeds.some(embd => {
+        if (!embd.title || !/New Member/i.test(embd.title)) return false
+
+        return embd.fields.find(field => {
+          return /Member ID/i.test(field.name) && field.value === member.id
+        })
+      }),
+    )
+  } catch (error: unknown) {
+    // ignore errors for logs...
+    console.error(
+      `Error trying to get the botLogMessage to update`,
+      getErrorMessage(error),
+    )
+  }
+  if (botLogMessage) {
+    let embed
+    try {
+      embed = updatedEmbed()
+      return botLogMessage.edit({embed})
+    } catch {
+      // ignore
+    }
+  } else {
+    return botLog(member.guild, updatedEmbed)
+  }
+}
+
 export * from '../utils'
 export {
   editErrorMessagePrefix,
@@ -128,5 +195,7 @@ export {
   getMessageContents,
   isRegularStep,
   isActionOnlyStep,
+  updateOnboardingBotLog,
+  getBotLogEmbed,
 }
 export type {Answers, Step, RegularStep, ActionOnlyStep}

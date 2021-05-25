@@ -124,17 +124,22 @@ const allSteps: ReadonlyArray<Step> = [
           `https://verifier.meetchopra.com/verify/${response}`,
         )
         verifierUrl.searchParams.append('token', VERIFIER_API_KEY ?? '')
-        const {result} = await got(verifierUrl.toString()).json()
-        const {error = {}} = result
+        type VerifierResult =
+          | {status: true; email: string; domain: string}
+          | {
+              status: false
+              error: {code: number; message: string}
+            }
+        const result: VerifierResult = await got(verifierUrl.toString()).json()
+
+        if (result.status) return
+
+        const {error} = result
         const {message: errorMessage, code: errorCode} = error
         if (typeof errorMessage === 'string' && errorCode === 500) {
           throw new Error(errorMessage)
         }
-        if (!result.status) {
-          return `You must use your actual email address. Attempted to verify that ${response} exists and received the following error: ${
-            result.error?.message ?? 'Unknown error'
-          }`
-        }
+        return `You must use your actual email address. Attempted to verify that ${response} exists and received the following error: ${result.error.message}`
       } catch (error: unknown) {
         rollbar.error(
           `Trouble checking whether the email "${response}" was disposable`,

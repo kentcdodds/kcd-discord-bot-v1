@@ -11,6 +11,7 @@ import {
   sleep,
   updateOnboardingBotLog,
   getBotLogEmbed,
+  colors,
 } from './utils'
 import {getAnswers} from './steps'
 
@@ -43,6 +44,8 @@ Goodbye 👋
     void updateOnboardingBotLog(member, () =>
       getBotLogEmbed(member, {
         title: '✌️ New Member Kicked',
+        description: `${member.displayName} has joined the server.`,
+        color: colors.base08,
         fields: [
           {name: 'Status', value: `Kicked`},
           {name: 'Reason', value: reason},

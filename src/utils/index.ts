@@ -169,7 +169,7 @@ const getMessageLink = (msg: TDiscord.Message) =>
   }/${msg.id}`
 
 const getMemberLink = (member: TDiscord.GuildMember | TDiscord.User) =>
-  `https://discord.com/channels/@me/${member.id}`
+  `https://discord.com/users/${member.id}`
 
 // we'd just use the message.mentions here, but sometimes the mentions aren't there for some reason 🤷‍♂️
 // so we parse it out ourselves

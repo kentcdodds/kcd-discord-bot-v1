@@ -98,7 +98,7 @@ In less than 5 minutes, you'll have full access to this server. So, let's get st
 
   void updateOnboardingBotLog(member, () =>
     getBotLogEmbed(member, {
-      fields: [{name: 'Status', value: `Onboarding in: ${newChannelName}`}],
+      fields: [{name: 'Status', value: `Onboarding in: ${channel}`}],
     }),
   )
 }

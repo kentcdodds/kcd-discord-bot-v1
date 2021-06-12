@@ -1,5 +1,6 @@
 import type * as TDiscord from 'discord.js'
 import {
+  botLog,
   getScheduledMeetupsChannel,
   startMeetup,
   getMeetupChannels,
@@ -113,10 +114,14 @@ async function cleanup(guild: TDiscord.Guild) {
   const deletingMeetups: Array<Promise<unknown>> = []
   const cutoffAge = now - 1000 * 60 * 15
   for (const meetupChannel of meetupChannels.values()) {
-    if (
-      meetupChannel.createdAt.getTime() < cutoffAge &&
-      meetupChannel.members.size === 0
-    ) {
+    const createdAt = meetupChannel.createdAt.getTime()
+    const memberCount = meetupChannel.members.size
+    if (createdAt < cutoffAge && memberCount === 0) {
+      botLog(
+        guild,
+        () =>
+          `Cleaning up channel ${meetupChannel.name} created at: ${createdAt}`,
+      )
       deletingMeetups.push(meetupChannel.delete())
     }
   }

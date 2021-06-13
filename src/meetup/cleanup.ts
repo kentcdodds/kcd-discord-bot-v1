@@ -120,7 +120,7 @@ async function cleanup(guild: TDiscord.Guild) {
       botLog(
         guild,
         () =>
-          `Cleaning up channel ${meetupChannel.name} created at: ${createdAt}`,
+          `Cleaning up channel ${meetupChannel.name} created at: ${createdAt}, now: ${now}`,
       )
       deletingMeetups.push(meetupChannel.delete())
     }

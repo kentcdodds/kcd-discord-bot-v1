@@ -292,7 +292,7 @@ function botLog(
     const messageSummary =
       message.content ?? message.embed?.title ?? message.embed?.description
     console.error(
-      `Unabel to log message: "${messageSummary}"`,
+      `Unable to log message: "${messageSummary}"`,
       getErrorStack(error),
       callerStack,
     )

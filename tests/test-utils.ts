@@ -53,6 +53,7 @@ async function createEmojis(guild: TDiscord.Guild) {
     'botdontasktoask',
     'botdouble',
     'bothelp',
+    'botgender',
     'jest',
     'react',
     'reactquery',
@@ -113,6 +114,7 @@ async function createChannels(guild: TDiscord.Guild) {
       '🔔-meetup-notifications',
     ),
     talkToBotsChannel: guild.channels.create('🤖-talk-to-bots'),
+    botMessagesChannel: guild.channels.create('🤖-bot-messages'),
   })
 
   for (const channel of Object.values(channels)) {

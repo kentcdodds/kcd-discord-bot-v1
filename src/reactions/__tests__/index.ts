@@ -122,3 +122,46 @@ test('botgender sends the user a message in the #bot-messages channel asking the
 
   expect(botMsg?.reactions.cache.get('✅')).toBeTruthy()
 })
+
+test('botgender reply is deleted only when the replied user reacts with ✅', async () => {
+  // I need a message in the bot-messages channel which is a reply to <@!hannah>
+
+  // const utils = await makeFakeClient()
+  // const {
+  //   client,
+  //   defaultChannels: {botMessagesChannel},
+  //   kody,
+  //   hannah,
+  //   sendFromUser,
+  //   reactFromUser,
+  // } = utils
+  // setup(client)
+  // const message = sendFromUser({
+  //   user: kody,
+  //   channel: botMessagesChannel,
+  //   content:
+  //     '<@!hannah> blah blah... some text which is not relevant for this test...',
+  // })
+
+  // Where was I? Well, right here! :)
+  // Use reactFromUser this to react on a message
+  // However, I don't think I want to use reactioName, I just want to pass the emoji...
+  // And the user and message too of course.
+  //  reactFromUser({user: hannah, reactionName: 'checkmark', message})
+
+  // Test cases:
+
+  // (1) Some user other than <@!hannah> reacts on it with 💯
+  // Expected: the message still exists...
+
+  // (2) Some user other than <@!hannah> reacts on it with ✅
+  // Expected: the message still exists...
+
+  // (3) <@!hannah> reacts on it with 💯
+  // Expected: the message still exists...
+
+  // (4) <@!hannah> reacts on it with ✅
+  // Expected: the message is DELETED...
+
+  expect(1).toBe(1)
+})

@@ -333,6 +333,17 @@ function typedBoolean<T>(
   return Boolean(value)
 }
 
+async function hasHostReaction(
+  message: TDiscord.Message,
+  host: TDiscord.GuildMember,
+  emoji: string,
+) {
+  const reaction = message.reactions.cache.get(emoji)
+  if (!reaction) return false
+  const usersWhoReacted = await reaction.users.fetch()
+  return usersWhoReacted.some(user => user.id === host.id)
+}
+
 export * from './build-info'
 
 export {
@@ -372,4 +383,5 @@ export {
   isTextChannel,
   isVoiceChannel,
   isCategoryChannel,
+  hasHostReaction,
 }

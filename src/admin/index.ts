@@ -2,6 +2,7 @@ import type * as TDiscord from 'discord.js'
 import * as dedupeMessages from './deduping-channel-posts'
 import {pingAboutMissingAvatar} from './ping-about-missing-avatar'
 import * as exclusiveEpicReactRocket from './exclusive-epic-react-rocket'
+import * as exclusiveModBadge from './exclusive-mod-badge'
 import * as cleanupSelfDestructMessages from './cleanup-self-destruct-messages'
 
 function setup(client: TDiscord.Client) {
@@ -15,6 +16,7 @@ function setup(client: TDiscord.Client) {
     'guildMemberUpdate',
     exclusiveEpicReactRocket.handleGuildMemberUpdate,
   )
+  client.on('guildMemberUpdate', exclusiveModBadge.handleGuildMemberUpdate)
   client.on('message', exclusiveEpicReactRocket.handleNewMessage)
 }
 

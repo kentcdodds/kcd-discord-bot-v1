@@ -10,19 +10,19 @@ async function handleGuildMemberUpdate(
 
 async function handleMember(member: TDiscord.GuildMember | undefined | null) {
   if (!member) return
-  const hasRocket = member.nickname?.includes('🚀')
-  const isEpicReactMember = member.roles.cache.some(
-    ({name}) => name === 'EpicReact Dev',
+  const hasRocket = member.nickname?.includes('🏆')
+  const isTestingJSMember = member.roles.cache.some(
+    ({name}) => name === 'TestingJavaScript',
   )
-  if (hasRocket && !isEpicReactMember) {
-    await member.setNickname(member.displayName.replace(/🚀/g, '').trim())
+  if (hasRocket && !isTestingJSMember) {
+    await member.setNickname(member.displayName.replace(/🏆/g, '').trim())
     const botsChannel = getTextChannel(member.guild, 'talk-to-bots')
     if (!botsChannel) return
     await botsChannel.send(
       `
-Hi ${member.user}, I noticed you added a rocket 🚀 to your nickname. I'm afraid you can't do this because your discord account is not connected to your EpicReact.Dev account. Go to <https://epicreact.dev/discord> to make that connection.
+Hi ${member.user}, I noticed you added a trophy 🏆 to your nickname. I'm afraid you can't do this because your discord account is not connected to your TestingJavaScript.com account. Login to <https://TestingJavaScript.com> and click the link at the top to make that connection.
 
-If you don't have an https://EpicReact.Dev account, you should check it out. It's pretty great 😉 🚀
+If you don't have an https://TestingJavaScript.com account, you should check it out. It's pretty great 😉 🏆
       `.trim(),
     )
   }

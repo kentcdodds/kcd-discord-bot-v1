@@ -13,7 +13,7 @@ const reactions: Record<string, ReactionFn | undefined> = {
   botdontasktoask: dontAskToAsk,
   botdouble: doubleAsk,
   botgender: gender,
-  checkmarkReaction: deleteMessageWhenBotMessage,
+  white_check_mark: deleteMessageWhenBotMessage,
 } as const
 
 async function ask(messageReaction: TDiscord.MessageReaction) {
@@ -107,6 +107,8 @@ async function deleteMessageWhenBotMessage(
 
   if (await hasReaction('✅')) {
     await messageReaction.message.delete()
+  } else {
+    console.log('NEE')
   }
 
   return messageReaction

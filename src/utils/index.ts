@@ -338,6 +338,7 @@ async function hasHostReaction(
   host: TDiscord.GuildMember,
   emoji: string,
 ) {
+  if (emoji === 'white_check_mark') console.log(message.reactions.cache.first())
   const reaction = message.reactions.cache.get(emoji)
   if (!reaction) return false
   const usersWhoReacted = await reaction.users.fetch()

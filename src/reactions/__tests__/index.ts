@@ -103,7 +103,7 @@ test('bothelp sends the reacting user a message in talk-to-bots with info on the
     - botdontasktoask: Sends a reply to the message author explaining that they don't need to ask to ask.
     - botdouble: Sends a reply to the message author explaining that they shouldn't ask the same question twice.
     - botgender: Sends a reply to the message author asking them to use gender neutral terms when addressing Discord members.
-  `)
+    `)
 })
 
 test('botgender sends the user a message in the #bot-messages channel asking them to use gender neutral terms to address Discord members', async () => {
@@ -126,42 +126,37 @@ test('botgender sends the user a message in the #bot-messages channel asking the
 test('botgender reply is deleted only when the replied user reacts with ✅', async () => {
   // I need a message in the bot-messages channel which is a reply to <@!hannah>
 
-  // const utils = await makeFakeClient()
-  // const {
-  //   client,
-  //   defaultChannels: {botMessagesChannel},
-  //   kody,
-  //   hannah,
-  //   sendFromUser,
-  //   reactFromUser,
-  // } = utils
-  // setup(client)
-  // const message = sendFromUser({
-  //   user: kody,
-  //   channel: botMessagesChannel,
-  //   content:
-  //     '<@!hannah> blah blah... some text which is not relevant for this test...',
-  // })
+  const utils = await makeFakeClient()
+  const {
+    client,
+    defaultChannels: {botMessagesChannel},
+    kody,
+    hannah,
+    sendFromUser,
+    reactFromUser,
+  } = utils
+  setup(client)
+  const message = sendFromUser({
+    user: kody,
+    channel: botMessagesChannel,
+    content: `<@!${hannah.id}> blah blah... some text which is not relevant for this test...`,
+  })
 
-  // Where was I? Well, right here! :)
-  // Use reactFromUser this to react on a message
-  // However, I don't think I want to use reactioName, I just want to pass the emoji...
-  // And the user and message too of course.
-  //  reactFromUser({user: hannah, reactionName: 'checkmark', message})
+  expect(botMessagesChannel.lastMessage).not.toBeNull()
 
-  // Test cases:
-
-  // (1) Some user other than <@!hannah> reacts on it with 💯
+  // (1) Some user other than <@!hannah> reacts on it with ✅
   // Expected: the message still exists...
+  reactFromUser({user: kody, message, emoji: {name: '✅'}})
 
-  // (2) Some user other than <@!hannah> reacts on it with ✅
-  // Expected: the message still exists...
+  //TODO Wat is de gangbare manier om te checken of een bericht NIET verwijderd is?
 
-  // (3) <@!hannah> reacts on it with 💯
-  // Expected: the message still exists...
-
-  // (4) <@!hannah> reacts on it with ✅
+  //(2) <@!hannah> reacts on it with ✅
   // Expected: the message is DELETED...
+  reactFromUser({user: hannah, message, emoji: {name: '✅'}})
 
-  expect(1).toBe(1)
+  await waitUntil(() => {
+    //expect(botMessagesChannel.messages.cache.size).toBe(0)
+    //expect(botMessagesChannel.lastMessage).toBeNull()
+    //TODO Wat is de gangbare manier om te checken of een bericht   verwijderd is?
+  })
 })

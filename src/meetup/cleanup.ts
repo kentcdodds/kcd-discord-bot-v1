@@ -117,7 +117,7 @@ async function cleanup(guild: TDiscord.Guild) {
     const createdAt = meetupChannel.createdAt.getTime()
     const memberCount = meetupChannel.members.size
     if (createdAt < cutoffAge && memberCount === 0) {
-      botLog(
+      void botLog(
         guild,
         () =>
           `Cleaning up channel ${meetupChannel.name} created at: ${createdAt}, now: ${now}`,

@@ -8,7 +8,7 @@
   "license": "MIT",
   "engines": {
     "node": "16",
-    "npm": "6"
+    "npm": "7"
   },
   "repository": {
     "type": "git",

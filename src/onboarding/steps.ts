@@ -3,6 +3,7 @@ import type * as TDiscord from 'discord.js'
 import got from 'got'
 import mem from 'mem'
 import md5 from 'md5-hash'
+import * as Sentry from '@sentry/node'
 import {
   getSubscriberEndpoint,
   getSend,
@@ -14,9 +15,9 @@ import {
   typedBoolean,
   isRegularStep,
   RegularStep,
-  rollbar,
   updateOnboardingBotLog,
   getBotLogEmbed,
+  getErrorMessage,
 } from './utils'
 import type {Answers, Step} from './utils'
 
@@ -80,9 +81,10 @@ const firstStep: RegularStep = {
       // not sure when this would fail, but if it does, it's not a huge deal.
       // So let's just keep going.
       // it failed on me locally so... 🤷‍♂️
-      rollbar.error(
-        `Failed setting a nickname for ${member.id}:`,
-        (error as Error).message,
+      Sentry.captureMessage(
+        `Failed setting a nickname for ${member.id}: ${
+          (error as Error).message
+        }`,
       )
     }
   },
@@ -142,9 +144,9 @@ const allSteps: ReadonlyArray<Step> = [
         }
         return `You must use your actual email address. Attempted to verify that ${response} exists and received the following error: ${result.error.message}`
       } catch (error: unknown) {
-        rollbar.error(
-          `Trouble checking whether the email "${response}" was disposable`,
-          (error as Error).message,
+        const errorMessage = getErrorMessage(error)
+        Sentry.captureMessage(
+          `Trouble checking whether the email "${response}" was disposable: ${errorMessage}`,
         )
       }
     },

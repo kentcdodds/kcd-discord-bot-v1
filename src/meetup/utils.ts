@@ -1,11 +1,11 @@
 import type * as TDiscord from 'discord.js'
 import * as Discord from 'discord.js'
+import * as Sentry from '@sentry/node'
 import {
   getTextChannel,
   meetupChannelPrefix,
   listify,
   typedBoolean,
-  rollbar,
   getCategoryChannel,
   isVoiceChannel,
 } from '../utils'
@@ -63,7 +63,7 @@ async function startMeetup({
   notificationUsers = [],
 }: StartMeetupOptions) {
   if (!host) {
-    rollbar.warn('Trying to start a meetup without a host')
+    Sentry.captureMessage('Trying to start a meetup without a host')
     return
   }
   const subject = getMeetupSubject(meetupDetails) ?? 'Unknown'

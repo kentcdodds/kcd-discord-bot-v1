@@ -1,5 +1,6 @@
 import type * as TDiscord from 'discord.js'
-import {getSend, sleep, getCategoryChannel, timeToMs, rollbar} from '../utils'
+import * as Sentry from '@sentry/node'
+import {getSend, sleep, getCategoryChannel, timeToMs} from '../utils'
 
 const warningStepMinute = 5
 const defaultLifeTimeMinute = 60
@@ -36,7 +37,9 @@ async function cleanup(guild: TDiscord.Guild) {
     if (match) {
       currentExpirationDate = new Date(match.groups?.utcDate ?? 'invalid')
       if (Number.isNaN(currentExpirationDate.getTime())) {
-        rollbar.warn('Private chat with invalid expiration date. Deleting...')
+        Sentry.captureMessage(
+          'Private chat with invalid expiration date. Deleting...',
+        )
         return channel.delete()
       }
     }

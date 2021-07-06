@@ -4,7 +4,7 @@ import type * as TDiscord from 'discord.js'
 import redent from 'redent'
 import got from 'got'
 import ogs from 'open-graph-scraper'
-import rollbar from '../../../rollbar'
+import * as Sentry from '@sentry/node'
 import {
   getRole,
   getCommandArgs,
@@ -118,10 +118,12 @@ Find an example and template here: <https://kcd.im/kcd-learning-club-docs>
   } catch (e: unknown) {
     const errorMessage =
       (e as {message?: string} | null)?.message ?? 'Unknown error'
-    rollbar.log('error getting the form data when creating a club', {
-      errorMessage,
-      formLink,
-    })
+    Sentry.captureMessage(
+      `error getting the form data when creating a club: ${JSON.stringify({
+        errorMessage,
+        formLink,
+      })}`,
+    )
     await sendBotMessageReply(message, errorMessage)
     return
   }

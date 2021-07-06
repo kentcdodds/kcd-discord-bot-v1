@@ -1,7 +1,7 @@
 import type * as TDiscord from 'discord.js'
 import {HTTPError} from 'discord.js'
 import {setIntervalAsync} from 'set-interval-async/dynamic'
-import rollbar from '../rollbar'
+import * as Sentry from '@sentry/node'
 import * as colors from './colors'
 
 const sleep = (t: number) =>
@@ -84,7 +84,7 @@ function getChannel(
       ch.name.toLowerCase().includes(name.toLowerCase()) && type === ch.type,
   )
   if (!channel) {
-    rollbar.warn(
+    Sentry.captureMessage(
       `Tried to find a channel "${name}" of type ${type} but could not find it`,
     )
     return null
@@ -158,7 +158,9 @@ function listify<ItemType>(
   try {
     return formatter.format(stringified)
   } catch (error: unknown) {
-    rollbar.error('Trouble formatting this:', stringified)
+    Sentry.captureMessage(
+      `Trouble formatting this: ${JSON.stringify(stringified)}`,
+    )
     throw error
   }
 }
@@ -178,7 +180,7 @@ function getMentionedUser(
 ): TDiscord.GuildMember | null {
   const mentionId = message.content.match(/<@!?(\d+)>/)?.[1]
   if (!mentionId) {
-    rollbar.error(
+    Sentry.captureMessage(
       `This message (${getMessageLink(message)}) has no mentions: ${
         message.content
       }`,
@@ -305,9 +307,6 @@ function cleanupGuildOnInterval(
   cb: (client: TDiscord.Guild) => Promise<unknown>,
   interval: number,
 ) {
-  const uncaughtError = new Error(
-    'Uncaught cleanupGuildOnInterval callback error',
-  )
   setIntervalAsync(() => {
     return Promise.all(Array.from(client.guilds.cache.values()).map(cb)).catch(
       error => {
@@ -321,7 +320,7 @@ function cleanupGuildOnInterval(
           // we can do about that so just move on...
           return
         }
-        rollbar.error(uncaughtError.stack, error)
+        Sentry.captureException(error)
       },
     )
   }, interval)
@@ -338,7 +337,6 @@ export * from './build-info'
 export {
   colors,
   cleanupGuildOnInterval,
-  rollbar,
   sleep,
   getSend,
   getMemberIdFromChannel,

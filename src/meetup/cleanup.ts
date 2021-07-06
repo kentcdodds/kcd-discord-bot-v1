@@ -1,4 +1,5 @@
 import type * as TDiscord from 'discord.js'
+import * as Sentry from '@sentry/node'
 import {
   botLog,
   getScheduledMeetupsChannel,
@@ -11,7 +12,6 @@ import {
   listify,
   typedBoolean,
   getTextChannel,
-  rollbar,
   getMessageLink,
 } from './utils'
 
@@ -20,7 +20,7 @@ async function maybeDeleteMessage(
   member: TDiscord.GuildMember | null,
 ) {
   if (!member) {
-    rollbar.warn(
+    Sentry.captureMessage(
       `We want to delete a message that has no member who can delete it: ${getMessageLink(
         message,
       )}`,

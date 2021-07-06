@@ -1,5 +1,6 @@
 import type * as TDiscord from 'discord.js'
-import {getTextChannel, rollbar} from '../utils'
+import * as Sentry from '@sentry/node'
+import {getTextChannel} from '../utils'
 
 async function cleanup(guild: TDiscord.Guild) {
   const channel = getTextChannel(guild, 'open-clubs')
@@ -15,7 +16,7 @@ async function cleanup(guild: TDiscord.Guild) {
 
     const clubCaptain = message.mentions.users.first()
     if (!clubCaptain) {
-      rollbar.warn(
+      Sentry.captureMessage(
         `An open club message is missing a club captain. Deleting the message.`,
       )
       await message.delete()

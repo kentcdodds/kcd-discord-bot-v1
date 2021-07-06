@@ -1,6 +1,6 @@
 {
   "name": "kcd-discord-bot",
-  "version": "0.0.0-semantically-released",
+  "version": "1.0.0",
   "description": "The bot for the KCD discord community (https://kcd.im/discord)",
   "main": "index.js",
   "keywords": [],

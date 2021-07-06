@@ -137,7 +137,7 @@ test('the typical flow', async () => {
   await send(name) // What's your name
   await send(email) // What's your email
   await send('yes') // coc?
-  await send('team@kentcdodds.com') // coc check
+  await send('team+coc@kentcdodds.com') // coc check
   await send('done') // avatar
   await send('yes') // confirm
 
@@ -219,7 +219,7 @@ test('the typical flow', async () => {
     fredjoe: yes
     BOT: Great, thanks for helping us keep this an awesome place to be.
     BOT: **Based on what you read in the Code of Conduct**, what's the email address you send Code of Conduct concerns and violations to? (If you're not sure, open the code of conduct to find out).
-    fredjoe: team@kentcdodds.com
+    fredjoe: team+coc@kentcdodds.com
     BOT: That's right!
     BOT: It's more fun here when folks have an avatar. You can go ahead and set yours now 😄
 
@@ -315,7 +315,7 @@ test('typing and editing to an invalid value', async () => {
     BOT: Great, thanks for helping us keep this an awesome place to be.
     BOT: **Based on what you read in the Code of Conduct**, what's the email address you send Code of Conduct concerns and violations to? (If you're not sure, open the code of conduct to find out).
   `)
-  await send('team@kentcdodds.com')
+  await send('team+coc@kentcdodds.com')
 
   expect(getBotResponses()).toMatchInlineSnapshot(`
     BOT: That's right!
@@ -421,7 +421,7 @@ test('typing and editing to an invalid value', async () => {
     fredjoe: Yes
     BOT: Great, thanks for helping us keep this an awesome place to be.
     BOT: **Based on what you read in the Code of Conduct**, what's the email address you send Code of Conduct concerns and violations to? (If you're not sure, open the code of conduct to find out).
-    fredjoe: team@kentcdodds.com
+    fredjoe: team+coc@kentcdodds.com
     BOT: That's right!
     BOT: It's more fun here when folks have an avatar. You can go ahead and set yours now 😄
 
@@ -531,7 +531,7 @@ test('a new member with some info already', async () => {
   await send('Fred') // name
   await send(email) // email
   await send('yes') // coc
-  await send('team@kentcdodds.com') // coc verify
+  await send('team+coc@kentcdodds.com') // coc verify
   await send('yes') // confirm
   await send('anything else?')
 
@@ -560,7 +560,7 @@ test('a new member with some info already', async () => {
     fredjoe: yes
     BOT: Great, thanks for helping us keep this an awesome place to be.
     BOT: **Based on what you read in the Code of Conduct**, what's the email address you send Code of Conduct concerns and violations to? (If you're not sure, open the code of conduct to find out).
-    fredjoe: team@kentcdodds.com
+    fredjoe: team+coc@kentcdodds.com
     BOT: That's right!
     BOT: Here are your answers:
       First Name: Fred

@@ -37,26 +37,8 @@ jobs:
         # only deploy main branch on pushes
         if:
           ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
-        uses: akhileshns/heroku-deploy@v3.6.8
-        env:
-          # "HD_" is removed by akhileshns/heroku-deploy
-          # from the docs:
-          # > so the action can tell your environment variable apart
-          # > from multiple other variables (passed by your language,
-          # > github actions etc) which you probably don't want sitting
-          # > in your heroku app's config vars.
-          HD_CONVERT_KIT_API_KEY: ${{ secrets.CONVERT_KIT_API_KEY }}
-          HD_CONVERT_KIT_API_SECRET: ${{ secrets.CONVERT_KIT_API_SECRET }}
-          HD_DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
-          HD_GIST_BOT_TOKEN: ${{ secrets.GIST_BOT_TOKEN }}
-          HD_GIST_REPO_THANKS: ${{ secrets.GIST_REPO_THANKS }}
-          HD_ROLLBAR_ACCESS_TOKEN: ${{ secrets.ROLLBAR_ACCESS_TOKEN }}
-          HD_ROLLBAR_ENDPOINT: ${{ secrets.ROLLBAR_ENDPOINT }}
-          HD_VERIFIER_API_KEY: ${{ secrets.VERIFIER_API_KEY }}
-
-          # no need to have husky bothering installing on heroku
-          HD_HUSKY_SKIP_INSTALL: '1'
+        uses: superfly/flyctl-actions@1.1
         with:
-          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
-          heroku_app_name: kcd-discord-bot
-          heroku_email: me@kentcdodds.com
+          args: 'deploy'
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

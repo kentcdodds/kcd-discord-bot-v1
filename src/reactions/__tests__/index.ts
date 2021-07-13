@@ -95,15 +95,15 @@ test('bothelp sends the reacting user a message in talk-to-bots with info on the
 
   expect(talkToBotsChannel.lastMessage?.content).toMatchInlineSnapshot(`
 
-    <@!hannah> Here are the available bot reactions:
+        <@!hannah> Here are the available bot reactions:
 
-    - bothelp: Lists available bot reactions.
-    - botask: Sends a reply to the message author explaining how to improve their question.
-    - botofficehours: Sends a reply to the message author explaining how to ask their question during Office Hours.
-    - botdontasktoask: Sends a reply to the message author explaining that they don't need to ask to ask.
-    - botdouble: Sends a reply to the message author explaining that they shouldn't ask the same question twice.
-    - botgender: Sends a reply to the message author asking them to use gender neutral terms when addressing Discord members.
-    `)
+        - bothelp: Lists available bot reactions.
+        - botask: Sends a reply to the message author explaining how to improve their question.
+        - botofficehours: Sends a reply to the message author explaining how to ask their question during Office Hours.
+        - botdontasktoask: Sends a reply to the message author explaining that they don't need to ask to ask.
+        - botdouble: Sends a reply to the message author explaining that they shouldn't ask the same question twice.
+        - botgender: Sends a reply to the message author asking them to use gender neutral terms when addressing Discord members.
+      `)
 })
 
 test('botgender sends the user a message in the #bot-messages channel asking them to use gender neutral terms to address Discord members', async () => {
@@ -117,46 +117,8 @@ test('botgender sends the user a message in the #bot-messages channel asking the
   const botMsg = botMessagesChannel.lastMessage
   expect(botMsg?.content).toMatchInlineSnapshot(`
     <@!hannah> We want all our community members to feel included and using gender neutral words helps a lot. Please edit your message using "people", "folks" or "everyone" instead of "guys" or similar. Read more here: ... 
-      React with :white_check_mark: to confirm you understand, so this message can be automatically deleted.
+      React with ✅ to confirm you understand, so this message can be automatically deleted.
   `)
 
   expect(botMsg?.reactions.cache.get('✅')).toBeTruthy()
-})
-
-test('botgender reply is deleted only when the replied user reacts with ✅', async () => {
-  // I need a message in the bot-messages channel which is a reply to <@!hannah>
-
-  const utils = await makeFakeClient()
-  const {
-    client,
-    defaultChannels: {botMessagesChannel},
-    kody,
-    hannah,
-    sendFromUser,
-    reactFromUser,
-  } = utils
-  setup(client)
-  const message = sendFromUser({
-    user: kody,
-    channel: botMessagesChannel,
-    content: `<@!${hannah.id}> blah blah... some text which is not relevant for this test...`,
-  })
-
-  expect(botMessagesChannel.lastMessage).not.toBeNull()
-
-  // (1) Some user other than <@!hannah> reacts on it with ✅
-  // Expected: the message still exists...
-  reactFromUser({user: kody, message, emoji: {name: '✅'}})
-
-  //TODO Wat is de gangbare manier om te checken of een bericht NIET verwijderd is?
-
-  //(2) <@!hannah> reacts on it with ✅
-  // Expected: the message is DELETED...
-  reactFromUser({user: hannah, message, emoji: {name: '✅'}})
-
-  await waitUntil(() => {
-    //expect(botMessagesChannel.messages.cache.size).toBe(0)
-    //expect(botMessagesChannel.lastMessage).toBeNull()
-    //TODO Wat is de gangbare manier om te checken of een bericht   verwijderd is?
-  })
 })

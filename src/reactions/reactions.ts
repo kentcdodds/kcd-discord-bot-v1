@@ -1,5 +1,5 @@
 import type * as TDiscord from 'discord.js'
-import {getMentionedUser, getTextChannel, hasHostReaction} from './utils'
+import {getTextChannel} from './utils'
 
 type ReactionFn = {
   (message: TDiscord.MessageReaction): Promise<unknown>
@@ -13,7 +13,7 @@ const reactions: Record<string, ReactionFn | undefined> = {
   botdontasktoask: dontAskToAsk,
   botdouble: doubleAsk,
   botgender: gender,
-  white_check_mark: deleteMessageWhenBotMessage,
+  // '✅': deleteMessageWhenBotMessage,
 } as const
 
 async function ask(messageReaction: TDiscord.MessageReaction) {
@@ -80,38 +80,11 @@ async function gender(messageReaction: TDiscord.MessageReaction) {
   if (!botMessagesChannel) return
 
   const message = await botMessagesChannel.send(`${author} We want all our community members to feel included and using gender neutral words helps a lot. Please edit your message using "people", "folks" or "everyone" instead of "guys" or similar. Read more here: ... 
-  React with :white_check_mark: to confirm you understand, so this message can be automatically deleted.`)
+  React with ✅ to confirm you understand, so this message can be automatically deleted.`)
 
   await message.react('✅')
 
   return message
-}
-
-async function deleteMessageWhenBotMessage(
-  messageReaction: TDiscord.MessageReaction,
-) {
-  const botMessagesChannel = getTextChannel(
-    messageReaction.message.guild,
-    'bot-messages',
-  )
-  if (!botMessagesChannel) return
-
-  const mentionedUser = getMentionedUser(messageReaction.message)
-  if (!mentionedUser) return
-
-  const hasReaction = hasHostReaction.bind(
-    null,
-    messageReaction.message,
-    mentionedUser,
-  )
-
-  if (await hasReaction('✅')) {
-    await messageReaction.message.delete()
-  } else {
-    console.log('NEE')
-  }
-
-  return messageReaction
 }
 
 export default reactions

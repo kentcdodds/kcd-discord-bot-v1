@@ -111,6 +111,15 @@
         "ideas",
         "code"
       ]
+    },
+    {
+      "login": "jdsandifer",
+      "name": "J.D. Sandifer",
+      "avatar_url": "https://avatars.githubusercontent.com/u/11567955?v=4",
+      "profile": "https://github.com/jdsandifer",
+      "contributions": [
+        "bug"
+      ]
     }
   ]
 }

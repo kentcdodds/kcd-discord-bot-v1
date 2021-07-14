@@ -121,10 +121,6 @@ const allSteps: ReadonlyArray<Step> = [
       // let's check whether they're a subscriber first...
       if (await getConvertKitSubscriber(response)) return
 
-      // verifier trates protonmail.com as disposable, but I guess it's not.
-      // So we'll skip verification for emails that end in protonmail.com
-      if (response.endsWith('@protonmail.com')) return
-
       // let's make sure the given email isn't a disposable email
       try {
         const verifierUrl = new URL(

@@ -212,7 +212,7 @@ ${image}
       return `
 ${message}
 
-Here's how you set your avatar: <https://support.discord.com/hc/en-us/articles/204156688-How-do-I-change-my-avatar->
+Here's how you set your avatar: <https://support.discord.com/hc/en-us/articles/360035491151-Account-Customization#h_3b115372-f09d-42cf-a02c-d7db97272735>
 
 **When you're finished (or if you'd like to just move on), just say "done"**
       `.trim()

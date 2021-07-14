@@ -15,7 +15,7 @@ async function pingAboutMissingAvatar(message: TDiscord.Message) {
     `
 Congratulations on your new level ${member.user}! I noticed you still don't have an avatar set. Could you please take a second to get that set?
 
-Here's how you do that: <https://support.discord.com/hc/en-us/articles/204156688-How-do-I-change-my-avatar->
+Here's how you do that: <https://support.discord.com/hc/en-us/articles/360035491151-Account-Customization#h_3b115372-f09d-42cf-a02c-d7db97272735>
 
 If you don't, I'll bug you about it every time you level-up 😈 So you may as well just get it over with.
     `.trim(),

@@ -66,7 +66,7 @@ function getMeetupDetailsFromScheduledMessage(content: string): string {
 }
 
 async function handleHostReactions(message: TDiscord.Message) {
-  const host = getMentionedUser(message)
+  const host = await getMentionedUser(message)
   if (!host) return
   const hasReaction = hasHostReaction.bind(null, message, host)
   if (await hasReaction('🏁')) {
@@ -128,7 +128,7 @@ async function cleanup(guild: TDiscord.Guild) {
 
   const deletingFollowMeMessages = Array.from(
     (await getFollowMeMessages(guild)).values(),
-  ).map(msg => maybeDeleteMessage(msg, getMentionedUser(msg)))
+  ).map(async msg => maybeDeleteMessage(msg, await getMentionedUser(msg)))
 
   const scheduledMeetupsChannel = getScheduledMeetupsChannel(guild)
   let deletingScheduledMeetupMessages: Array<Promise<unknown>> = []
@@ -137,7 +137,7 @@ async function cleanup(guild: TDiscord.Guild) {
   if (scheduledMeetupsChannel) {
     deletingScheduledMeetupMessages = Array.from(
       (await scheduledMeetupsChannel.messages.fetch()).values(),
-    ).map(msg => maybeDeleteMessage(msg, getMentionedUser(msg)))
+    ).map(async msg => maybeDeleteMessage(msg, await getMentionedUser(msg)))
 
     handleReactions = scheduledMeetupsChannel.messages.cache.map(
       async message => {

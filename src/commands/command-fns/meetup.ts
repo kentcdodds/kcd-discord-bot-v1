@@ -232,7 +232,7 @@ async function updateScheduledMeetup(
       `Could not find (<${link}>) in ${scheduledMeetupsChannel}`,
     )
   }
-  const host = getMentionedUser(originalMessage)
+  const host = await getMentionedUser(originalMessage)
   if (!host || host.id !== message.author.id) {
     return sendBotMessageReply(
       message,

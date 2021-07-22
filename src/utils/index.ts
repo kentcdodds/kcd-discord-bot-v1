@@ -175,9 +175,9 @@ const getMemberLink = (member: TDiscord.GuildMember | TDiscord.User) =>
 
 // we'd just use the message.mentions here, but sometimes the mentions aren't there for some reason 🤷‍♂️
 // so we parse it out ourselves
-function getMentionedUser(
+async function getMentionedUser(
   message: TDiscord.Message,
-): TDiscord.GuildMember | null {
+): Promise<TDiscord.GuildMember | null> {
   const mentionId = message.content.match(/<@!?(\d+)>/)?.[1]
   if (!mentionId) {
     Sentry.captureMessage(
@@ -186,6 +186,10 @@ function getMentionedUser(
       }`,
     )
     return null
+  }
+  const mentionedMember = message.guild?.members.cache.get(mentionId)
+  if (!mentionedMember) {
+    await message.guild?.members.fetch(mentionId)
   }
   return message.guild?.members.cache.get(mentionId) ?? null
 }

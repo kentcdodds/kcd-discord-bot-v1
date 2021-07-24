@@ -344,6 +344,13 @@ async function hasHostReaction(
   return usersWhoReacted.some(user => user.id === host.id)
 }
 
+async function countReactions(message: TDiscord.Message, emoji: string) {
+  const reaction = message.reactions.cache.get(emoji)
+  if (!reaction) return false
+  const usersWhoReacted = await reaction.users.fetch()
+  return usersWhoReacted.size
+}
+
 export * from './build-info'
 
 export {
@@ -384,4 +391,5 @@ export {
   isVoiceChannel,
   isCategoryChannel,
   hasHostReaction,
+  countReactions,
 }

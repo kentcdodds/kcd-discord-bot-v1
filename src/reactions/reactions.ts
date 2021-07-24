@@ -1,5 +1,10 @@
 import type * as TDiscord from 'discord.js'
-import {getTextChannel} from './utils'
+import {
+  getTextChannel,
+  getMentionedUser,
+  hasHostReaction,
+  countReactions,
+} from './utils'
 
 type ReactionFn = {
   (message: TDiscord.MessageReaction): Promise<unknown>
@@ -13,7 +18,7 @@ const reactions: Record<string, ReactionFn | undefined> = {
   botdontasktoask: dontAskToAsk,
   botdouble: doubleAsk,
   botgender: gender,
-  // '✅': deleteMessageWhenBotMessage,
+  '✅': deleteConfirmedGenderMessage,
 } as const
 
 async function ask(messageReaction: TDiscord.MessageReaction) {
@@ -85,6 +90,31 @@ async function gender(messageReaction: TDiscord.MessageReaction) {
   await message.react('✅')
 
   return message
+}
+
+async function deleteConfirmedGenderMessage(
+  messageReaction: TDiscord.MessageReaction,
+) {
+  const botMessagesChannel = getTextChannel(
+    messageReaction.message.guild,
+    'bot-messages',
+  )
+  if (!botMessagesChannel) return
+
+  const howManyCheckmarks = await countReactions(messageReaction.message, '✅')
+  if (howManyCheckmarks < 2) return
+
+  const mentionedUser = getMentionedUser(messageReaction.message)
+  if (!mentionedUser) return
+
+  const hasMentionedUserReacted = await hasHostReaction(
+    messageReaction.message,
+    mentionedUser,
+    '✅',
+  )
+  if (hasMentionedUserReacted) await messageReaction.message.delete()
+
+  return messageReaction
 }
 
 export default reactions

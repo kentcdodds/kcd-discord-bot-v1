@@ -122,3 +122,38 @@ test('botgender sends the user a message in the #bot-messages channel asking the
 
   expect(botMsg?.reactions.cache.get('✅')).toBeTruthy()
 })
+
+test('botgender reply is deleted only when the replied user reacts with ✅', async () => {
+  // Create a message in the bot-messages channel which is a reply to <@!hannah>:
+  const utils = await makeFakeClient()
+  const {
+    client,
+    defaultChannels: {botMessagesChannel},
+    kody,
+    hannah,
+    sendFromUser,
+    reactFromUser,
+  } = utils
+  setup(client)
+  const message = sendFromUser({
+    user: kody,
+    channel: botMessagesChannel,
+    content: `<@!${hannah.id}> blah blah... some text which is not relevant for this test...`,
+  })
+
+  expect(botMessagesChannel.lastMessage).not.toBeNull()
+
+  // (1) Some user other than <@!hannah> reacts on it with ✅
+  // Expected: the message still exists...
+  reactFromUser({user: kody, message, emoji: {name: '✅'}})
+  //expect(botMessagesChannel.lastMessage).not.toBeNull()
+  expect(botMessagesChannel.messages.cache.size).toBe(1)
+
+  //(2) <@!hannah> reacts on it with ✅
+  // Expected: the message is DELETED...
+  reactFromUser({user: hannah, message, emoji: {name: '✅'}})
+
+  await waitUntil(() => {
+    expect(botMessagesChannel.messages.cache.size).toBe(0)
+  })
+})

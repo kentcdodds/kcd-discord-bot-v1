@@ -19,12 +19,6 @@ async function handleNewReaction(messageReaction: TDiscord.MessageReaction) {
   if (!reactionFn) return
 
   await reactionFn(messageReaction)
-
-  //TODO Get rid of this
-  if (emoji.name === '✅') return
-
-  //TODO Move this to the actual reaction function?!
-  await messageReaction.remove()
 }
 
 function setup(client: TDiscord.Client) {

@@ -113,7 +113,7 @@ async function deleteConfirmedGenderMessage(
   const howManyCheckmarks = await countReactions(messageReaction.message, '✅')
   if (howManyCheckmarks < 2) return
 
-  const mentionedUser = getMentionedUser(messageReaction.message)
+  const mentionedUser = await getMentionedUser(messageReaction.message)
   if (!mentionedUser) return
 
   const hasMentionedUserReacted = await hasHostReaction(

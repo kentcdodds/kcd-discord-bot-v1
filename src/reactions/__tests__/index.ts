@@ -140,14 +140,13 @@ test('botgender reply is deleted only when the replied user reacts with ✅', as
   const message = sendFromUser({
     user: kody,
     channel: botMessagesChannel,
-    content: `<@!${hannah.id}> Please use gender neutral words... (this text is not relevant for this test)`,
+    content: `<@!${hannah.id}> Please use gender neutral words... (this is not the actual text, but it is not relevant for this test)`,
   })
 
   // Add a checkmark, which is normally done by the botgender bot when sending the message.
   // For this test it doesn't really matter who puts the botgender reaction on it.
   reactFromUser({user: marty, message, emoji: {name: '✅'}})
-
-  expect(botMessagesChannel.lastMessage).not.toBeNull()
+  expect(botMessagesChannel.messages.cache.size).toBe(1)
 
   // Some user other than <@!hannah> reacts on it with ✅ so the message should not be deleted.
   reactFromUser({user: kody, message, emoji: {name: '✅'}})

@@ -1,5 +1,7 @@
 import type * as TDiscord from 'discord.js'
+import * as Sentry from '@sentry/node'
 import {
+  botLog,
   getScheduledMeetupsChannel,
   startMeetup,
   getMeetupChannels,
@@ -10,7 +12,6 @@ import {
   listify,
   typedBoolean,
   getTextChannel,
-  rollbar,
   getMessageLink,
   hasHostReaction,
 } from './utils'
@@ -20,7 +21,7 @@ async function maybeDeleteMessage(
   member: TDiscord.GuildMember | null,
 ) {
   if (!member) {
-    rollbar.warn(
+    Sentry.captureMessage(
       `We want to delete a message that has no member who can delete it: ${getMessageLink(
         message,
       )}`,
@@ -55,7 +56,7 @@ function getMeetupDetailsFromScheduledMessage(content: string): string {
 }
 
 async function handleHostReactions(message: TDiscord.Message) {
-  const host = getMentionedUser(message)
+  const host = await getMentionedUser(message)
   if (!host) return
   const hasReaction = hasHostReaction.bind(null, message, host)
   if (await hasReaction('🏁')) {
@@ -103,17 +104,21 @@ async function cleanup(guild: TDiscord.Guild) {
   const deletingMeetups: Array<Promise<unknown>> = []
   const cutoffAge = now - 1000 * 60 * 15
   for (const meetupChannel of meetupChannels.values()) {
-    if (
-      meetupChannel.createdAt.getTime() < cutoffAge &&
-      meetupChannel.members.size === 0
-    ) {
+    const createdAt = meetupChannel.createdAt.getTime()
+    const memberCount = meetupChannel.members.size
+    if (createdAt < cutoffAge && memberCount === 0) {
+      void botLog(
+        guild,
+        () =>
+          `Cleaning up channel ${meetupChannel.name} created at: ${createdAt}, now: ${now}`,
+      )
       deletingMeetups.push(meetupChannel.delete())
     }
   }
 
   const deletingFollowMeMessages = Array.from(
     (await getFollowMeMessages(guild)).values(),
-  ).map(msg => maybeDeleteMessage(msg, getMentionedUser(msg)))
+  ).map(async msg => maybeDeleteMessage(msg, await getMentionedUser(msg)))
 
   const scheduledMeetupsChannel = getScheduledMeetupsChannel(guild)
   let deletingScheduledMeetupMessages: Array<Promise<unknown>> = []
@@ -122,7 +127,7 @@ async function cleanup(guild: TDiscord.Guild) {
   if (scheduledMeetupsChannel) {
     deletingScheduledMeetupMessages = Array.from(
       (await scheduledMeetupsChannel.messages.fetch()).values(),
-    ).map(msg => maybeDeleteMessage(msg, getMentionedUser(msg)))
+    ).map(async msg => maybeDeleteMessage(msg, await getMentionedUser(msg)))
 
     handleReactions = scheduledMeetupsChannel.messages.cache.map(
       async message => {

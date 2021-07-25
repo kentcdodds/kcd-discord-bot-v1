@@ -5,7 +5,12 @@ process.env.CONVERT_KIT_API_KEY = 'FAKE_CONVERT_KIT_API_KEY'
 process.env.CONVERT_KIT_API_SECRET = 'FAKE_CONVERT_KIT_API_SECRET'
 process.env.DISCORD_BOT_TOKEN = 'FAKE_BOT_TOKEN'
 process.env.GIST_REPO_THANKS = 'testThanks'
+process.env.GIST_BOT_TOKEN = 'some_github_token'
 process.env.VERIFIER_API_KEY = 'FAKE_VERIFIER_API_KEY'
+process.env.SENTRY_DSN =
+  'https://293408d23048@f029432.ingest.sentry.io/34902384032'
+
+jest.mock('@sentry/node')
 
 beforeEach(() => jest.spyOn(Date, 'now'))
 beforeAll(() => server.listen({onUnhandledRequest: 'error'}))

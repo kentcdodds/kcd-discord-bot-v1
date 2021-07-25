@@ -65,18 +65,22 @@ function getStartTimeInfo() {
 }
 
 function getCommitInfo() {
-  const {commit} = buildInfo
-  if (!commit) return null
+  try {
+    const {commit} = buildInfo
+    if (!commit) return null
 
-  const commitDate = new Date(commit.date)
-  const relativeCommitDate = getAppropriateTimeframe(
-    commitDate.getTime() - Date.now(),
-  )
-  return {
-    author: commit.author,
-    date: `${commitDate.toUTCString()} (${relativeCommitDate})`,
-    message: `${commit.message.trim().split('\n')[0]}`,
-    link: commit.link,
+    const commitDate = new Date(commit.date)
+    const relativeCommitDate = getAppropriateTimeframe(
+      commitDate.getTime() - Date.now(),
+    )
+    return {
+      author: commit.author,
+      date: `${commitDate.toUTCString()} (${relativeCommitDate})`,
+      message: `${commit.message.trim().split('\n')[0]}`,
+      link: commit.link,
+    }
+  } catch {
+    return null
   }
 }
 

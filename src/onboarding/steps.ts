@@ -3,6 +3,7 @@ import type * as TDiscord from 'discord.js'
 import got from 'got'
 import mem from 'mem'
 import md5 from 'md5-hash'
+import * as Sentry from '@sentry/node'
 import {
   getSubscriberEndpoint,
   getSend,
@@ -14,9 +15,9 @@ import {
   typedBoolean,
   isRegularStep,
   RegularStep,
-  rollbar,
   updateOnboardingBotLog,
   getBotLogEmbed,
+  getErrorMessage,
 } from './utils'
 import type {Answers, Step} from './utils'
 
@@ -80,9 +81,10 @@ const firstStep: RegularStep = {
       // not sure when this would fail, but if it does, it's not a huge deal.
       // So let's just keep going.
       // it failed on me locally so... 🤷‍♂️
-      rollbar.error(
-        `Failed setting a nickname for ${member.id}:`,
-        (error as Error).message,
+      Sentry.captureMessage(
+        `Failed setting a nickname for ${member.id}: ${
+          (error as Error).message
+        }`,
       )
     }
   },
@@ -142,9 +144,9 @@ const allSteps: ReadonlyArray<Step> = [
         }
         return `You must use your actual email address. Attempted to verify that ${response} exists and received the following error: ${result.error.message}`
       } catch (error: unknown) {
-        rollbar.error(
-          `Trouble checking whether the email "${response}" was disposable`,
-          (error as Error).message,
+        const errorMessage = getErrorMessage(error)
+        Sentry.captureMessage(
+          `Trouble checking whether the email "${response}" was disposable: ${errorMessage}`,
         )
       }
     },
@@ -182,7 +184,7 @@ Do you agree to abide by and uphold the code of conduct? **The only correct answ
         response === answers.email
           ? `Please note, I'm not looking for *your* email address again. I'm looking for the email address that's listed in the code of conduct`
           : ''
-      if (!response.toLowerCase().includes('team@kentcdodds.com')) {
+      if (!response.toLowerCase().includes('team+coc@kentcdodds.com')) {
         const mainMessage = `That's not right. **I'm testing you to make sure you actually opened the code of conduct**. Please **open the code of conduct** and copy/paste the email address listed under the heading "Have questions/need to report an issue?" We take our code of conduct seriously, so I want to make sure you've opened it. Thanks!`
         const openCoc = `Now, please open <https://kentcdodds.com/conduct> and copy/paste the email address that's listed on that page.`
         return [mainMessage, sameEmail, openCoc].filter(Boolean).join('\n\n')
@@ -210,7 +212,7 @@ ${image}
       return `
 ${message}
 
-Here's how you set your avatar: <https://support.discord.com/hc/en-us/articles/204156688-How-do-I-change-my-avatar->
+Here's how you set your avatar: <https://support.discord.com/hc/en-us/articles/360035491151-Account-Customization#h_3b115372-f09d-42cf-a02c-d7db97272735>
 
 **When you're finished (or if you'd like to just move on), just say "done"**
       `.trim()

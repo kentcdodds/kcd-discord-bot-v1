@@ -1,0 +1,13 @@
+# fly.toml file generated for kcd-discord-bot on 2021-07-06T14:22:54-06:00
+
+app = "kcd-discord-bot"
+
+kill_signal = "SIGINT"
+kill_timeout = 5
+
+[build]
+  builtin = "node"
+
+[env]
+  NODE_ENV = "production"
+  HUSKY_SKIP_INSTALL = "1"

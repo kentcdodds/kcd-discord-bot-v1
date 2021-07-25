@@ -2,6 +2,14 @@ const path = require('path')
 const fs = require('fs')
 const got = require('got')
 
+let existingBuildInfo = {}
+try {
+  // eslint-disable-next-line import/extensions
+  existingBuildInfo = require('../build-info.json')
+} catch {
+  // ignore
+}
+
 const commit = process.env.SOURCE_VERSION
 
 async function getCommit() {
@@ -27,8 +35,12 @@ const buildTime = Date.now()
 
 async function go() {
   const buildInfo = {
+    ...existingBuildInfo,
     buildTime,
-    commit: await getCommit(),
+    commit: {
+      ...existingBuildInfo.commit,
+      ...(await getCommit()),
+    },
   }
 
   fs.writeFileSync(

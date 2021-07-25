@@ -5,11 +5,11 @@ import {MessageMentions} from 'discord.js'
 import leven from 'leven'
 import got from 'got'
 import {matchSorter} from 'match-sorter'
+import * as Sentry from '@sentry/node'
 import {
   getCommandArgs,
   listify,
   getMember,
-  rollbar,
   sendBotMessageReply,
   sendSelfDestructMessage,
   getErrorMessage,
@@ -53,9 +53,8 @@ async function getKifInfo(message: TDiscord.Message, {force = false} = {}) {
       },
       (e: unknown) => {
         const errorMessage = getErrorMessage(e)
-        rollbar.error(
-          `There was a problem getting kifs info from GitHub:`,
-          errorMessage,
+        Sentry.captureMessage(
+          `There was a problem getting kifs info from GitHub: ${errorMessage}`,
         )
         if (guild) {
           void botLog(guild, () => {
@@ -80,7 +79,9 @@ async function getKifInfo(message: TDiscord.Message, {force = false} = {}) {
     kifKeysWithoutEmoji.push(kifKey, ...aliases)
     for (const alias of [...aliases, ...emojiAliases]) {
       if (kifMap[alias]) {
-        rollbar.error(`Cannot have two kifs with the same alias: ${alias}`)
+        Sentry.captureMessage(
+          `Cannot have two kifs with the same alias: ${alias}`,
+        )
         if (guild) {
           void botLog(guild, () => {
             return {

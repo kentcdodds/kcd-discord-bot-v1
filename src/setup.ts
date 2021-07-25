@@ -1,5 +1,5 @@
 import type {Client} from 'discord.js'
-import rollbar from './rollbar'
+import './sentry'
 import * as onboarding from './onboarding'
 import * as commands from './commands'
 import * as admin from './admin'
@@ -18,4 +18,4 @@ function setup(client: Client) {
   reactions.setup(client)
 }
 
-export {onboarding, commands, clubApplication, setup, rollbar, admin}
+export {onboarding, commands, clubApplication, setup, admin}

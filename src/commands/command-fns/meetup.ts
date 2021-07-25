@@ -1,4 +1,5 @@
 import type * as TDiscord from 'discord.js'
+import * as Sentry from '@sentry/node'
 import {
   getCommandArgs,
   getMember,
@@ -11,7 +12,6 @@ import {
   getFollowMeChannel,
   startMeetup,
   getFollowers,
-  rollbar,
   getTextChannel,
 } from '../../meetup/utils'
 
@@ -122,7 +122,11 @@ async function scheduleMeetup(
 ) {
   const host = getMember(message.guild, message.author.id)
   if (!host) {
-    rollbar.warn(`Trying to schedule a meetup without a host!`, {meetupDetails})
+    Sentry.captureMessage(
+      `Trying to schedule a meetup without a host! ${JSON.stringify({
+        meetupDetails,
+      })}`,
+    )
     return
   }
   const scheduledMeetupsChannel = getScheduledMeetupsChannel(message.guild)
@@ -228,7 +232,7 @@ async function updateScheduledMeetup(
       `Could not find (<${link}>) in ${scheduledMeetupsChannel}`,
     )
   }
-  const host = getMentionedUser(originalMessage)
+  const host = await getMentionedUser(originalMessage)
   if (!host || host.id !== message.author.id) {
     return sendBotMessageReply(
       message,

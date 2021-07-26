@@ -91,7 +91,7 @@ async function gender(messageReaction: TDiscord.MessageReaction) {
   )
   if (!botMessagesChannel) return
 
-  const message = await botMessagesChannel.send(`${author} We want all our community members to feel included and using gender neutral words helps a lot. Please edit your message using "people", "folks" or "everyone" instead of "guys" or similar. Read more here: https://kcd.im/coc.
+  const message = await botMessagesChannel.send(`${author} We want all our community members to feel included and using gender neutral words helps a lot. Please edit your message using "people", "folks", or "everyone" instead of "guys", or similar. Read more here: https://kcd.im/coc.
   React with ✅ to confirm you understand, so this message can be automatically deleted.`)
 
   await message.react('✅')

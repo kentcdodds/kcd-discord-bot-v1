@@ -53,5 +53,9 @@ expect.addSnapshotSerializer({
         }
         return match
       })
+      .replace(
+        /https:\/\/discordapp.com\/channels\/(?<guildId>\d+)\/(?<channelId>\d+)\/(?<messageId>\d+)/g,
+        `https://discordapp.com/channels/:guildId/:channelId/:messageId`,
+      )
   },
 })

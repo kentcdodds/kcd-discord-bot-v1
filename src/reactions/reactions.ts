@@ -1,5 +1,10 @@
 import type * as TDiscord from 'discord.js'
-import {getMentionedUser, getTextChannel, hasReactionFromUser} from './utils'
+import {
+  getMentionedUser,
+  getMessageLink,
+  getTextChannel,
+  hasReactionFromUser,
+} from './utils'
 
 type ReactionFn = {
   (message: TDiscord.MessageReaction): Promise<unknown>
@@ -82,7 +87,9 @@ async function gender(messageReaction: TDiscord.MessageReaction) {
 
   const message = await botMessagesChannel.send(
     `
-${author} We want all our community members to feel included and using gender neutral words helps a lot. Please edit your message using "friends", "people", "folks", or "everyone" instead of "guys", or similar. Read more here: https://kcd.im/coc.
+${author} We want all our community members to feel included and using gender neutral words helps a lot. Please edit your message (<${getMessageLink(
+      messageReaction.message,
+    )}>) using "friends", "people", "folks", or "everyone" instead of "guys", or similar. Read more here: https://kcd.im/coc.
 
 React with ✅ to confirm you understand, so this message can be automatically deleted.
     `.trim(),

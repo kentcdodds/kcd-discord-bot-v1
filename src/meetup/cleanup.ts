@@ -13,6 +13,7 @@ import {
   typedBoolean,
   getTextChannel,
   getMessageLink,
+  hasReactionFromUser,
 } from './utils'
 
 async function maybeDeleteMessage(
@@ -33,17 +34,6 @@ async function maybeDeleteMessage(
   if (deleteReactions.some(user => user.id === member.id)) {
     await message.delete()
   }
-}
-
-async function hasHostReaction(
-  message: TDiscord.Message,
-  host: TDiscord.GuildMember,
-  emoji: string,
-) {
-  const reaction = message.reactions.cache.get(emoji)
-  if (!reaction) return false
-  const usersWhoReacted = await reaction.users.fetch()
-  return usersWhoReacted.some(user => user.id === host.id)
 }
 
 async function getNotificationUsers(message: TDiscord.Message) {
@@ -68,7 +58,7 @@ function getMeetupDetailsFromScheduledMessage(content: string): string {
 async function handleHostReactions(message: TDiscord.Message) {
   const host = await getMentionedUser(message)
   if (!host) return
-  const hasReaction = hasHostReaction.bind(null, message, host)
+  const hasReaction = hasReactionFromUser.bind(null, message, host)
   if (await hasReaction('🏁')) {
     await startMeetup({
       host,

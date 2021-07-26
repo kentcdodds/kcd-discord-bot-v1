@@ -1,5 +1,5 @@
 import type * as TDiscord from 'discord.js'
-import {getTextChannel} from '../utils'
+import {getMentionedUser, getTextChannel, hasReactionFromUser} from './utils'
 
 type ReactionFn = {
   (message: TDiscord.MessageReaction): Promise<unknown>
@@ -7,12 +7,13 @@ type ReactionFn = {
 }
 
 const reactions: Record<string, ReactionFn | undefined> = {
-  // the help command depends on this, so we do not include it here...
   bothelp: help,
   botask: ask,
   botofficehours: officeHours,
   botdontasktoask: dontAskToAsk,
   botdouble: doubleAsk,
+  botgender: gender,
+  '✅': deleteConfirmedMessage,
 } as const
 
 async function ask(messageReaction: TDiscord.MessageReaction) {
@@ -20,15 +21,12 @@ async function ask(messageReaction: TDiscord.MessageReaction) {
     `We appreciate your question and we'll do our best to help you when we can. Could you please give us more details? Please follow the guidelines in <https://kcd.im/ask> (especially the part about making a <https://kcd.im/repro>) and then we'll be able to answer your question.`,
   )
 }
-ask.description =
-  'Sends a reply to the message author explaining how to improve their question'
 
 async function doubleAsk(messageReaction: TDiscord.MessageReaction) {
   await messageReaction.message.reply(
     `Please avoid posting the same thing in multiple channels. Choose the best channel, and wait for a response there. Please delete the other message to avoid fragmenting the answers and causing confusion. Thanks!`,
   )
 }
-doubleAsk.description = `Sends a reply to the message author explaining that they shouldn't ask the same question twice.`
 
 async function officeHours(messageReaction: TDiscord.MessageReaction) {
   const message = messageReaction.message
@@ -39,8 +37,6 @@ async function officeHours(messageReaction: TDiscord.MessageReaction) {
     `If you don't get a satisfactory answer here, feel free to ask Kent during his <https://kcd.im/office-hours> in ${officeHoursChannel}. To do so, formulate your question to make sure it's clear (follow the guidelines in <https://kcd.im/ask>) and a <https://kcd.im/repro> helps a lot if applicable. Then post it to ${officeHoursChannel} or join the meeting and ask live. Kent streams/records his office hours on YouTube so even if you can't make it in person, you should be able to watch his answer later.`,
   )
 }
-officeHours.description =
-  'Sends a reply to the message author explaining how to ask their question during Office Hours.'
 
 async function dontAskToAsk(messageReaction: TDiscord.MessageReaction) {
   const message = messageReaction.message
@@ -48,7 +44,6 @@ async function dontAskToAsk(messageReaction: TDiscord.MessageReaction) {
     `We're happy to answer your questions if we can, so you don't need to ask if you can ask. Learn more: <https://dontasktoask.com>`,
   )
 }
-dontAskToAsk.description = `Sends a reply to the message author explaining that they don't need to ask to ask.`
 
 async function help(messageReaction: TDiscord.MessageReaction) {
   const helpRequester = messageReaction.users.cache.first()
@@ -60,18 +55,66 @@ async function help(messageReaction: TDiscord.MessageReaction) {
   )
   if (!botsChannel) return
 
-  const result = botsChannel.send(
+  const result = await botsChannel.send(
     `
 ${helpRequester} Here are the available bot reactions:
 
-- ${Object.entries(reactions)
-      .map(([name, fn]) => [name, fn?.description].filter(Boolean).join(': '))
-      .join('\n- ')}
-    `.trim(),
+- bothelp: Lists available bot reactions.
+- botask: Sends a reply to the message author explaining how to improve their question.
+- botofficehours: Sends a reply to the message author explaining how to ask their question during Office Hours.
+- botdontasktoask: Sends a reply to the message author explaining that they don't need to ask to ask.
+- botdouble: Sends a reply to the message author explaining that they shouldn't ask the same question twice.
+- botgender: Sends a reply to the message author asking them to use gender neutral terms when addressing Discord members.`,
   )
+
   return result
 }
-help.description = 'Lists available bot reactions'
+
+async function gender(messageReaction: TDiscord.MessageReaction) {
+  const author = messageReaction.users.cache.first()
+  if (!author) return
+
+  const botMessagesChannel = getTextChannel(
+    messageReaction.message.guild,
+    'bot-messages',
+  )
+  if (!botMessagesChannel) return
+
+  const message = await botMessagesChannel.send(
+    `
+${author} We want all our community members to feel included and using gender neutral words helps a lot. Please edit your message using "friends", "people", "folks", or "everyone" instead of "guys", or similar. Read more here: https://kcd.im/coc.
+
+React with ✅ to confirm you understand, so this message can be automatically deleted.
+    `.trim(),
+  )
+
+  await message.react('✅')
+
+  return message
+}
+
+async function deleteConfirmedMessage(
+  messageReaction: TDiscord.MessageReaction,
+) {
+  const botMessagesChannel = getTextChannel(
+    messageReaction.message.guild,
+    'bot-messages',
+  )
+  if (!botMessagesChannel) return
+
+  if (messageReaction.message.channel !== botMessagesChannel) return
+
+  const mentionedUser = await getMentionedUser(messageReaction.message)
+  if (!mentionedUser) return
+
+  const hasMentionedUserReacted = await hasReactionFromUser(
+    messageReaction.message,
+    mentionedUser,
+    '✅',
+  )
+  if (hasMentionedUserReacted) await messageReaction.message.delete()
+
+  return messageReaction
+}
 
 export default reactions
-export {help}

@@ -53,6 +53,7 @@ async function createEmojis(guild: TDiscord.Guild) {
     'botdontasktoask',
     'botdouble',
     'bothelp',
+    'botgender',
     'jest',
     'react',
     'reactquery',
@@ -105,7 +106,7 @@ async function createChannels(guild: TDiscord.Guild) {
     kcdOfficeHoursChannel: guild.channels.create('🏫-kcd-office-hours'),
     introductionChannel: guild.channels.create('👶-introductions'),
     tipsChannel: guild.channels.create('💁-tips'),
-    botLog: guild.channels.create('🤖-bot-logs'),
+    botLogsChannel: guild.channels.create('🤖-bot-logs'),
     thanksChannel: guild.channels.create(`😍-thank-you`),
     scheduledMeetupsChannel: guild.channels.create(`⏱-upcoming-meetups`),
     followMeChannel: guild.channels.create('➡️-follow-me'),
@@ -113,6 +114,7 @@ async function createChannels(guild: TDiscord.Guild) {
       '🔔-meetup-notifications',
     ),
     talkToBotsChannel: guild.channels.create('🤖-talk-to-bots'),
+    botMessagesChannel: guild.channels.create('🤖-bot-messages'),
   })
 
   for (const channel of Object.values(channels)) {

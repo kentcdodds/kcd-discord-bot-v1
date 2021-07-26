@@ -5,12 +5,15 @@ import * as exclusiveEpicReactRocket from './exclusive-epic-react-rocket'
 import * as exclusiveTestingJSTrophy from './exclusive-testing-js-trophy'
 import * as exclusiveModBadge from './exclusive-mod-badge'
 import * as cleanupSelfDestructMessages from './cleanup-self-destruct-messages'
+import * as cleanupBotMessages from './cleanup-bot-messages'
 
 function setup(client: TDiscord.Client) {
   client.on('message', dedupeMessages.handleNewMessage)
   dedupeMessages.setup(client)
 
   void cleanupSelfDestructMessages.setup(client)
+
+  void cleanupBotMessages.setup(client)
 
   client.on('message', pingAboutMissingAvatar)
 

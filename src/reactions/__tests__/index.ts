@@ -12,7 +12,7 @@ async function setupTest({
   const utils = await makeFakeClient()
   const {
     client,
-    defaultChannels: {generalChannel},
+    defaultChannels: {generalChannel, botLog: botLogsChannel},
     kody,
     hannah,
     sendFromUser,
@@ -30,6 +30,11 @@ async function setupTest({
   await waitUntil(() => {
     // the bot removes the reaction
     expect(message.reactions.cache.size).toBe(0)
+  })
+
+  // bot logs the fact the reaction was added, so wait for that log to happen
+  await waitUntil(() => {
+    expect(botLogsChannel.messages.cache.size).toBe(1)
   })
   return utils
 }
@@ -95,15 +100,15 @@ test('bothelp sends the reacting user a message in talk-to-bots with info on the
 
   expect(talkToBotsChannel.lastMessage?.content).toMatchInlineSnapshot(`
 
-            <@!hannah> Here are the available bot reactions:
+      <@!hannah> Here are the available bot reactions:
 
-            - bothelp: Lists available bot reactions.
-            - botask: Sends a reply to the message author explaining how to improve their question.
-            - botofficehours: Sends a reply to the message author explaining how to ask their question during Office Hours.
-            - botdontasktoask: Sends a reply to the message author explaining that they don't need to ask to ask.
-            - botdouble: Sends a reply to the message author explaining that they shouldn't ask the same question twice.
-            - botgender: Sends a reply to the message author asking them to use gender neutral terms when addressing Discord members.
-        `)
+      - bothelp: Lists available bot reactions.
+      - botask: Sends a reply to the message author explaining how to improve their question.
+      - botofficehours: Sends a reply to the message author explaining how to ask their question during Office Hours.
+      - botdontasktoask: Sends a reply to the message author explaining that they don't need to ask to ask.
+      - botdouble: Sends a reply to the message author explaining that they shouldn't ask the same question twice.
+      - botgender: Sends a reply to the message author asking them to use gender neutral terms when addressing Discord members.
+  `)
 })
 
 test('botgender sends the user a message in the #bot-messages channel asking them to use gender neutral terms to address Discord members', async () => {
@@ -116,8 +121,9 @@ test('botgender sends the user a message in the #bot-messages channel asking the
 
   const botMsg = botMessagesChannel.lastMessage
   expect(botMsg?.content).toMatchInlineSnapshot(`
-    <@!hannah> We want all our community members to feel included and using gender neutral words helps a lot. Please edit your message using "people", "folks", or "everyone" instead of "guys", or similar. Read more here: https://kcd.im/coc.
-      React with ✅ to confirm you understand, so this message can be automatically deleted.
+    <@!hannah> We want all our community members to feel included and using gender neutral words helps a lot. Please edit your message using "friends", "people", "folks", or "everyone" instead of "guys", or similar. Read more here: https://kcd.im/coc.
+
+    React with ✅ to confirm you understand, so this message can be automatically deleted.
   `)
 
   expect(botMsg?.reactions.cache.get('✅')).toBeTruthy()
@@ -129,7 +135,7 @@ test('botgender reply is deleted only when the replied user reacts with ✅', as
   const utils = await makeFakeClient()
   const {
     client,
-    defaultChannels: {botMessagesChannel},
+    defaultChannels: {botMessagesChannel, botLog: botLogsChannel},
     marty,
     kody,
     hannah,
@@ -147,14 +153,23 @@ test('botgender reply is deleted only when the replied user reacts with ✅', as
   // For this test it doesn't really matter who puts the botgender reaction on it.
   reactFromUser({user: marty, message, emoji: {name: '✅'}})
   expect(botMessagesChannel.messages.cache.size).toBe(1)
+  await waitUntil(() => {
+    expect(botLogsChannel.messages.cache.size).toBe(1)
+  })
 
   // Some user other than <@!hannah> reacts on it with ✅ so the message should not be deleted.
   reactFromUser({user: kody, message, emoji: {name: '✅'}})
   expect(botMessagesChannel.messages.cache.size).toBe(1)
+  await waitUntil(() => {
+    expect(botLogsChannel.messages.cache.size).toBe(2)
+  })
 
   // <@!hannah> reacts on it (confirms) with ✅ so the message will be deleted.
   reactFromUser({user: hannah, message, emoji: {name: '✅'}})
   await waitUntil(() => {
     expect(botMessagesChannel.messages.cache.size).toBe(0)
+  })
+  await waitUntil(() => {
+    expect(botLogsChannel.messages.cache.size).toBe(3)
   })
 })

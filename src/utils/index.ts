@@ -294,15 +294,18 @@ function botLog(
 
   const callerStack = new Error('Caller stack:')
 
-  return botsChannel.send(message).catch((error: unknown) => {
-    const messageSummary =
-      message.content ?? message.embed?.title ?? message.embed?.description
-    console.error(
-      `Unable to log message: "${messageSummary}"`,
-      getErrorStack(error),
-      callerStack,
-    )
-  })
+  // make sure sync errors don't crash the bot
+  return Promise.resolve()
+    .then(() => botsChannel.send(message))
+    .catch((error: unknown) => {
+      const messageSummary =
+        message.content ?? message.embed?.title ?? message.embed?.description
+      console.error(
+        `Unable to log message: "${messageSummary}"`,
+        getErrorStack(error),
+        callerStack,
+      )
+    })
 }
 
 // read up on dynamic setIntervalAsync here: https://github.com/ealmansi/set-interval-async#dynamic-and-fixed-setintervalasync
@@ -336,7 +339,7 @@ function typedBoolean<T>(
   return Boolean(value)
 }
 
-async function hasHostReaction(
+async function hasReactionFromUser(
   message: TDiscord.Message,
   host: TDiscord.GuildMember,
   emoji: string,
@@ -345,13 +348,6 @@ async function hasHostReaction(
   if (!reaction) return false
   const usersWhoReacted = await reaction.users.fetch()
   return usersWhoReacted.some(user => user.id === host.id)
-}
-
-async function countReactions(message: TDiscord.Message, emoji: string) {
-  const reaction = message.reactions.cache.get(emoji)
-  if (!reaction) return 0
-  const usersWhoReacted = await reaction.users.fetch()
-  return usersWhoReacted.size
 }
 
 export * from './build-info'
@@ -392,6 +388,5 @@ export {
   isTextChannel,
   isVoiceChannel,
   isCategoryChannel,
-  hasHostReaction,
-  countReactions,
+  hasReactionFromUser,
 }

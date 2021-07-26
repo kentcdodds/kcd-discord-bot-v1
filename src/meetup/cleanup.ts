@@ -13,7 +13,7 @@ import {
   typedBoolean,
   getTextChannel,
   getMessageLink,
-  hasHostReaction,
+  hasReactionFromUser,
 } from './utils'
 
 async function maybeDeleteMessage(
@@ -58,7 +58,7 @@ function getMeetupDetailsFromScheduledMessage(content: string): string {
 async function handleHostReactions(message: TDiscord.Message) {
   const host = await getMentionedUser(message)
   if (!host) return
-  const hasReaction = hasHostReaction.bind(null, message, host)
+  const hasReaction = hasReactionFromUser.bind(null, message, host)
   if (await hasReaction('🏁')) {
     await startMeetup({
       host,

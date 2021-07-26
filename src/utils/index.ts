@@ -349,7 +349,7 @@ async function hasHostReaction(
 
 async function countReactions(message: TDiscord.Message, emoji: string) {
   const reaction = message.reactions.cache.get(emoji)
-  if (!reaction) return false
+  if (!reaction) return 0
   const usersWhoReacted = await reaction.users.fetch()
   return usersWhoReacted.size
 }

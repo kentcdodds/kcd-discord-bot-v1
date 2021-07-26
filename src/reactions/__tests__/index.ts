@@ -12,7 +12,7 @@ async function setupTest({
   const utils = await makeFakeClient()
   const {
     client,
-    defaultChannels: {generalChannel, botLog: botLogsChannel},
+    defaultChannels: {generalChannel, botLogsChannel},
     kody,
     hannah,
     sendFromUser,
@@ -135,7 +135,7 @@ test('botgender reply is deleted only when the replied user reacts with ✅', as
   const utils = await makeFakeClient()
   const {
     client,
-    defaultChannels: {botMessagesChannel, botLog: botLogsChannel},
+    defaultChannels: {botMessagesChannel, botLogsChannel},
     marty,
     kody,
     hannah,

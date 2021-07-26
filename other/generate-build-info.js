@@ -10,7 +10,7 @@ try {
   // ignore
 }
 
-const commit = process.env.SOURCE_VERSION
+const commit = process.env.COMMIT_SHA
 
 async function getCommit() {
   if (!commit) return

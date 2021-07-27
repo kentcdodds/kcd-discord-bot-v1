@@ -76,8 +76,7 @@ ${helpRequester} Here are the available bot reactions:
 }
 
 async function gender(messageReaction: TDiscord.MessageReaction) {
-  const author = messageReaction.users.cache.first()
-  if (!author) return
+  const author = messageReaction.message.author
 
   const botMessagesChannel = getTextChannel(
     messageReaction.message.guild,

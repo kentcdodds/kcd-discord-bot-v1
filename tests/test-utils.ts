@@ -63,12 +63,13 @@ async function createEmojis(guild: TDiscord.Guild) {
     'graphql',
     'html',
     'css',
-    'js',
-    'node',
+    'javascript',
+    'typescript',
+    'nodejs',
     'msw',
     'cypress',
-    'ReactTestingLibrary',
-    'DOMTestingLibrary',
+    'reacttestinglibrary',
+    'domtestinglibrary',
   ]
   const guildEmojis: Record<string, TDiscord.GuildEmoji> = {}
   for (const emoji of emojies) {

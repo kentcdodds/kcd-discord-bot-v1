@@ -369,9 +369,9 @@ ${isEdit ? '' : `🎊 You now have access to the whole server. Welcome!`}
       const emojis = [
         'react',
         'remix',
-        'js',
-        'ts',
-        'node',
+        'javascript',
+        'typescript',
+        'nodejs',
         'jest',
         'msw',
         'cypress',

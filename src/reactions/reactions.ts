@@ -18,7 +18,7 @@ const reactions: Record<string, ReactionFn | undefined> = {
   botdontasktoask: dontAskToAsk,
   botdouble: doubleAsk,
   botgender: gender,
-  '✅': deleteConfirmedMessage,
+  botconfirm: deleteConfirmedMessage,
 } as const
 
 async function ask(messageReaction: TDiscord.MessageReaction) {
@@ -90,11 +90,11 @@ ${author} We want all our community members to feel included and using gender ne
       messageReaction.message,
     )}>) using "friends", "people", "folks", or "everyone" instead of "guys", or similar. Read more here: https://kcd.im/coc.
 
-React with ✅ to confirm you understand, so this message can be automatically deleted.
+React with :botconfirm: to confirm you understand, so this message can be automatically deleted.
     `.trim(),
   )
 
-  await message.react('✅')
+  await message.react('botconfirm')
 
   return message
 }
@@ -116,7 +116,7 @@ async function deleteConfirmedMessage(
   const hasMentionedUserReacted = await hasReactionFromUser(
     messageReaction.message,
     mentionedUser,
-    '✅',
+    'botconfirm',
   )
   if (hasMentionedUserReacted) await messageReaction.message.delete()
 

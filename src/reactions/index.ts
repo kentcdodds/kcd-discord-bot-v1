@@ -70,11 +70,6 @@ async function handleNewReaction(
       ],
     }
   })
-
-  const messageStillExists = message.channel.messages.cache.get(message.id)
-  if (messageStillExists) {
-    await messageReaction.remove()
-  }
 }
 
 function setup(client: TDiscord.Client) {

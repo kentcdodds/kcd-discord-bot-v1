@@ -25,12 +25,14 @@ async function ask(messageReaction: TDiscord.MessageReaction) {
   await messageReaction.message.reply(
     `We appreciate your question and we'll do our best to help you when we can. Could you please give us more details? Please follow the guidelines in <https://kcd.im/ask> (especially the part about making a <https://kcd.im/repro>) and then we'll be able to answer your question.`,
   )
+  await messageReaction.remove()
 }
 
 async function doubleAsk(messageReaction: TDiscord.MessageReaction) {
   await messageReaction.message.reply(
     `Please avoid posting the same thing in multiple channels. Choose the best channel, and wait for a response there. Please delete the other message to avoid fragmenting the answers and causing confusion. Thanks!`,
   )
+  await messageReaction.remove()
 }
 
 async function officeHours(messageReaction: TDiscord.MessageReaction) {
@@ -41,6 +43,7 @@ async function officeHours(messageReaction: TDiscord.MessageReaction) {
   await message.reply(
     `If you don't get a satisfactory answer here, feel free to ask Kent during his <https://kcd.im/office-hours> in ${officeHoursChannel}. To do so, formulate your question to make sure it's clear (follow the guidelines in <https://kcd.im/ask>) and a <https://kcd.im/repro> helps a lot if applicable. Then post it to ${officeHoursChannel} or join the meeting and ask live. Kent streams/records his office hours on YouTube so even if you can't make it in person, you should be able to watch his answer later.`,
   )
+  await messageReaction.remove()
 }
 
 async function dontAskToAsk(messageReaction: TDiscord.MessageReaction) {
@@ -48,6 +51,7 @@ async function dontAskToAsk(messageReaction: TDiscord.MessageReaction) {
   await message.reply(
     `We're happy to answer your questions if we can, so you don't need to ask if you can ask. Learn more: <https://dontasktoask.com>`,
   )
+  await messageReaction.remove()
 }
 
 async function help(messageReaction: TDiscord.MessageReaction) {
@@ -60,7 +64,7 @@ async function help(messageReaction: TDiscord.MessageReaction) {
   )
   if (!botsChannel) return
 
-  const result = await botsChannel.send(
+  await botsChannel.send(
     `
 ${helpRequester} Here are the available bot reactions:
 
@@ -71,8 +75,7 @@ ${helpRequester} Here are the available bot reactions:
 - botdouble: Sends a reply to the message author explaining that they shouldn't ask the same question twice.
 - botgender: Sends a reply to the message author asking them to use gender neutral terms when addressing Discord members.`,
   )
-
-  return result
+  await messageReaction.remove()
 }
 
 async function gender(messageReaction: TDiscord.MessageReaction) {
@@ -95,8 +98,7 @@ React with :botconfirm: to confirm you understand, so this message can be automa
   )
 
   await message.react('botconfirm')
-
-  return message
+  await messageReaction.remove()
 }
 
 async function deleteConfirmedMessage(
@@ -119,8 +121,7 @@ async function deleteConfirmedMessage(
     'botconfirm',
   )
   if (hasMentionedUserReacted) await messageReaction.message.delete()
-
-  return messageReaction
+  // no need to remove the reaction now because the message is gone...
 }
 
 export default reactions

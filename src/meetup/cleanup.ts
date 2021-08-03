@@ -55,6 +55,23 @@ function getMeetupDetailsFromScheduledMessage(content: string): string {
   return match?.groups?.meetupDetails?.trim() ?? ''
 }
 
+function handleOldMeetupNotifications(guild: TDiscord.Guild) {
+  const meetupNotifications = getTextChannel(guild, 'meetup-notifications')
+  if (!meetupNotifications) return
+
+  return Promise.all(
+    meetupNotifications.messages.cache.mapValues(message => {
+      const oneDay = 1000 * 60 * 60 * 24
+      // autodelete after one day
+      if (message.createdAt.getTime() + oneDay < Date.now()) {
+        return message.delete({
+          reason: `Self destructed after ${oneDay}ms`,
+        })
+      }
+    }),
+  )
+}
+
 async function handleHostReactions(message: TDiscord.Message) {
   const host = await getMentionedUser(message)
   if (!host) return
@@ -147,6 +164,7 @@ async function cleanup(guild: TDiscord.Guild) {
 
   await Promise.all([
     ...handleReactions,
+    handleOldMeetupNotifications(guild),
     ...deletingMeetups,
     ...deletingFollowMeMessages,
     ...deletingScheduledMeetupMessages,

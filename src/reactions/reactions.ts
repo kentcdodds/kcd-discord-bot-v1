@@ -80,12 +80,21 @@ ${helpRequester} Here are the available bot reactions:
 
 async function gender(messageReaction: TDiscord.MessageReaction) {
   const author = messageReaction.message.author
+  const guild = messageReaction.message.guild
+  if (!guild) return
 
-  const botMessagesChannel = getTextChannel(
-    messageReaction.message.guild,
-    'bot-messages',
+  const botMessagesChannel = getTextChannel(guild, 'bot-messages')
+  if (!botMessagesChannel) {
+    return
+  }
+
+  const botConfirmReaction = guild.emojis.cache.find(
+    ({name}) => name.toLowerCase() === 'botconfirm',
   )
-  if (!botMessagesChannel) return
+  if (!botConfirmReaction) {
+    console.error('There is no :botconfirm: reaction')
+    return
+  }
 
   const message = await botMessagesChannel.send(
     `
@@ -93,11 +102,11 @@ ${author} We want all our community members to feel included and using gender ne
       messageReaction.message,
     )}>) using "friends", "people", "folks", or "everyone" instead of "guys", or similar. Read more here: https://kcd.im/coc.
 
-React with :botconfirm: to confirm you understand, so this message can be automatically deleted.
+React with ${botConfirmReaction} to confirm you understand, so this message can be automatically deleted.
     `.trim(),
   )
 
-  await message.react('botconfirm')
+  await message.react(botConfirmReaction)
   await messageReaction.remove()
 }
 

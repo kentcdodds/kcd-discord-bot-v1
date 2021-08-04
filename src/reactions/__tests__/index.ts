@@ -120,13 +120,20 @@ test('botgender sends the user a message in the #bot-messages channel asking the
   })
 
   const botMsg = botMessagesChannel.lastMessage
-  expect(botMsg?.content).toMatchInlineSnapshot(`
+  // eslint-disable-next-line jest/no-if
+  if (!botMsg)
+    throw new Error('No message was added to the bot-message channel')
+
+  expect(botMsg.content).toMatchInlineSnapshot(`
     <@!kody> We want all our community members to feel included and using gender neutral words helps a lot. Please edit your message (<https://discordapp.com/channels/:guildId/:channelId/:messageId>) using "friends", "people", "folks", or "everyone" instead of "guys", or similar. Read more here: https://kcd.im/coc.
 
     React with :botconfirm: to confirm you understand, so this message can be automatically deleted.
   `)
 
-  expect(botMsg?.reactions.cache.get('botconfirm')).toBeTruthy()
+  const botconfirmReaction = botMsg.reactions.cache.find(
+    r => r.emoji.name === 'botconfirm',
+  )
+  expect(botconfirmReaction).toBeDefined()
 })
 
 test('botgender reply is deleted only when the replied user reacts with :botconfirm:', async () => {

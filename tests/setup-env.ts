@@ -31,7 +31,8 @@ expect.addSnapshotSerializer({
   },
   print(val) {
     const stringVal = val as string
-    return stringVal
+    const newVal = stringVal
+      // member mention
       .replace(/<@!?(\d+)>/g, (match, memberId: string) => {
         for (const guild of Object.values(DiscordManager.guilds)) {
           const member = guild.members.cache.get(memberId)
@@ -39,6 +40,7 @@ expect.addSnapshotSerializer({
         }
         return match
       })
+      // channel mention
       .replace(/<#(\d+)>/g, (match, channelId: string) => {
         for (const guild of Object.values(DiscordManager.guilds)) {
           const channel = guild.channels.cache.get(channelId)
@@ -46,6 +48,7 @@ expect.addSnapshotSerializer({
         }
         return match
       })
+      // role mention
       .replace(/<@&(\d+)>/g, (match, roleId: string) => {
         for (const guild of Object.values(DiscordManager.guilds)) {
           const role = guild.roles.cache.get(roleId)
@@ -53,9 +56,14 @@ expect.addSnapshotSerializer({
         }
         return match
       })
+      // emoji
+      .replace(/<(:.+?:)\d+>/g, '$1')
+      // message url
       .replace(
         /https:\/\/discordapp.com\/channels\/(?<guildId>\d+)\/(?<channelId>\d+)\/(?<messageId>\d+)/g,
         `https://discordapp.com/channels/:guildId/:channelId/:messageId`,
       )
+
+    return newVal
   },
 })

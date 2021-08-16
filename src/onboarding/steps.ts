@@ -47,12 +47,6 @@ const firstStep: RegularStep = {
   validate({message}) {
     const response = message.content
     const base = `That does not look like a first name.{qualifier} I need to know what to call you. What's your real first name?`
-    if (response.includes(' ')) {
-      return `${base.replace(
-        '{qualifier}',
-        ` You gave me "${response}" which includes a space.`,
-      )} (If your real first name actually does include a space, then please email team@kentcdodds.com.`
-    }
     if (response.length < 0) {
       return base.replace('{qualifier}', ` It's too short.`)
     }

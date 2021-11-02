@@ -308,7 +308,7 @@ Start a new meetup right now:
 Add yourself to ${getFollowMeChannel(message.guild)}:
   \`${commandPrefix}meetup follow-me Here's a brief description about me\`
 
-NOTE: For both the schedule and start commands, if you include a Zoom link, that will be shared instead of creating a voice channel.
+NOTE: For both the schedule and start commands, if you include a Zoom, Twitch, YouTube, or WebinarGeek link, that will be shared instead of creating a voice channel.
 NOTE: If you just want to test things out and not notify people, include the text "TESTING" in your subject.
     `.trim(),
   )

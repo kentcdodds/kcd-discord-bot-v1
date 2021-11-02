@@ -472,18 +472,24 @@ CC: ${hannah} and ${marty}
   )
 })
 
-test('if the meetup command includes a zoom link, that is shared instead of creating a voice channel', async () => {
-  const {guild, kody, createMessage} = await setup()
+test.each([
+  ['Zoom', 'https://egghead.zoom.us/j/97341329204?pwd=MTRPc1p4UitxNTRlUT09'],
+  ['Twitch', 'https://www.twitch.tv/videos/1163705517'],
+  ['YouTube normal', 'https://www.youtube.com/watch?v=Q-S123aBcqq'],
+  ['YouTube shareable', 'https://youtu.be/Q-S123aBcqq'],
+  ['WebinarGeek', 'https://someone.webinargeek.com/test123-1'],
+])(
+  `if the meetup command includes a %s link, that is shared instead of creating a voice channel`,
+  async (_, link) => {
+    const {guild, kody, createMessage} = await setup()
 
-  await meetup(
-    createMessage(
-      `?meetup start Migrating to Tailwind https://egghead.zoom.us/j/97341329204?pwd=MTRPc1p4Uit4K2ZpVjNDSWFxNTRlUT09`,
-      kody.user,
-    ),
-  )
-  const meetupChannels = Array.from(getMeetupChannels(guild).values())
-  expect(meetupChannels).toHaveLength(0)
-})
+    await meetup(
+      createMessage(`?meetup start Migrating to Tailwind ${link}`, kody.user),
+    )
+    const meetupChannels = Array.from(getMeetupChannels(guild).values())
+    expect(meetupChannels).toHaveLength(0)
+  },
+)
 
 test('can use "TESTING" in the subject to test things out and not notify anyone', async () => {
   const {

@@ -55,7 +55,7 @@ type StartMeetupOptions = {
   notificationUsers?: Array<TDiscord.GuildMember>
 }
 
-const noVoiceChannelRegex = /(zoom\.us|twitch\.tv)/i
+const noVoiceChannelRegex = /(zoom\.us|twitch\.tv|youtube\.com|youtu\.be|webinargeek\.com)/i
 
 async function startMeetup({
   host,

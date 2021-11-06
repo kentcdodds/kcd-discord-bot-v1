@@ -1,10 +1,5 @@
 import type * as TDiscord from 'discord.js'
-import {
-  getMentionedUser,
-  getMessageLink,
-  getTextChannel,
-  hasReactionFromUser,
-} from './utils'
+import {getMentionedUser, getTextChannel, hasReactionFromUser} from './utils'
 
 type ReactionFn = {
   (message: TDiscord.MessageReaction): Promise<unknown>
@@ -17,7 +12,6 @@ const reactions: Record<string, ReactionFn | undefined> = {
   botofficehours: officeHours,
   botdontasktoask: dontAskToAsk,
   botdouble: doubleAsk,
-  botgender: gender,
   botconfirm: deleteConfirmedMessage,
 } as const
 
@@ -72,41 +66,8 @@ ${helpRequester} Here are the available bot reactions:
 - botask: Sends a reply to the message author explaining how to improve their question.
 - botofficehours: Sends a reply to the message author explaining how to ask their question during Office Hours.
 - botdontasktoask: Sends a reply to the message author explaining that they don't need to ask to ask.
-- botdouble: Sends a reply to the message author explaining that they shouldn't ask the same question twice.
-- botgender: Sends a reply to the message author asking them to use gender neutral terms when addressing Discord members.`,
+- botdouble: Sends a reply to the message author explaining that they shouldn't ask the same question twice.`,
   )
-  await messageReaction.remove()
-}
-
-async function gender(messageReaction: TDiscord.MessageReaction) {
-  const author = messageReaction.message.author
-  const guild = messageReaction.message.guild
-  if (!guild) return
-
-  const botMessagesChannel = getTextChannel(guild, 'bot-messages')
-  if (!botMessagesChannel) {
-    return
-  }
-
-  const botConfirmReaction = guild.emojis.cache.find(
-    ({name}) => name.toLowerCase() === 'botconfirm',
-  )
-  if (!botConfirmReaction) {
-    console.error('There is no :botconfirm: reaction')
-    return
-  }
-
-  const message = await botMessagesChannel.send(
-    `
-${author} We want all our community members to feel included and using gender neutral words helps a lot. Please edit your message (<${getMessageLink(
-      messageReaction.message,
-    )}>) using "friends", "people", "folks", or "everyone" instead of "guys", or similar. Read more here: https://kcd.im/coc.
-
-React with ${botConfirmReaction} to confirm you understand, so this message can be automatically deleted.
-    `.trim(),
-  )
-
-  await message.react(botConfirmReaction)
   await messageReaction.remove()
 }
 

@@ -69,7 +69,7 @@ async function createChat(message: TDiscord.Message) {
 
   const allActivePrivateChannels = guild.channels.cache.filter(
     channel =>
-      channel.type === 'text' &&
+      channel.type === 'GUILD_TEXT' &&
       channel.parentID === categoryPrivateChat.id &&
       channel.name.includes('-private-') &&
       !channel.deleted,

@@ -77,7 +77,7 @@ async function startMeetup({
     await host.guild.channels.create(
       `${meetupChannelPrefix}${host.nickname} "${subject}"`.slice(0, 100),
       {
-        type: 'voice',
+        type: 'GUILD_VOICE',
         topic: `A meetup hosted by ${host.nickname} about "${subject}"`,
         reason: `Meetup started`,
         parent: meetupCategory ?? undefined,

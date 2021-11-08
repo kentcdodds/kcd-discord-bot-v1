@@ -12,15 +12,13 @@ import {
 
 function start() {
   const client = new Discord.Client({
-    ws: {
-      intents: [
-        'GUILDS',
-        'GUILD_MEMBERS',
-        'GUILD_EMOJIS',
-        'GUILD_MESSAGES',
-        'GUILD_MESSAGE_REACTIONS',
-      ],
-    },
+    intents: [
+      'GUILDS',
+      'GUILD_MEMBERS',
+      'GUILD_EMOJIS_AND_STICKERS',
+      'GUILD_MESSAGES',
+      'GUILD_MESSAGE_REACTIONS',
+    ],
   })
 
   Sentry.captureMessage('logging in discord client')

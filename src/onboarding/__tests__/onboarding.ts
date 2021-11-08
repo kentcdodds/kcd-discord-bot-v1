@@ -11,7 +11,7 @@ function assertTextChannel(ch: unknown): asserts ch is TDiscord.TextChannel {
     type: 'unknown',
     name: 'unknown',
   }
-  if (type !== 'text') {
+  if (type !== 'GUILD_TEXT') {
     throw new Error(
       `Channel ${name} is not a text channel (it's type is: ${type})`,
     )
@@ -51,11 +51,21 @@ async function setup() {
   async function update(oldMessage: TDiscord.Message, newContent: string) {
     assertTextChannel(onboardingChannel)
 
-    const newMessage = new Discord.Message(
-      client,
-      {id: oldMessage.id, content: newContent, author: oldMessage.member?.user},
-      onboardingChannel,
-    )
+    if (!oldMessage.member) {
+      throw new Error(
+        'Cannot update a message from a user that is not a member',
+      )
+    }
+
+    // @ts-expect-error this is private but we need it... we've got the author
+    // field wrong. It changed to an APIUser and I don't know how to make one
+    // of those. Hopefullly the member.user works 😅
+    const newMessage: TDiscord.Message = new Discord.Message(client, {
+      id: oldMessage.id,
+      content: newContent,
+      author: oldMessage.member.user,
+      channel_id: onboardingChannel.id,
+    })
 
     onboardingChannel.messages.cache.set(newMessage.id, newMessage)
     await handleUpdatedMessage(oldMessage, newMessage)

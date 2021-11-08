@@ -17,7 +17,7 @@ async function cleanup(guild: TDiscord.Guild) {
     guild.channels.cache
       .filter(
         channel =>
-          channel.type === 'text' &&
+          channel.type === 'GUILD_TEXT' &&
           channel.parentID === categoryPrivateChat.id &&
           channel.name.includes('-private-') &&
           !channel.deleted,

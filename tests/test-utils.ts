@@ -1,5 +1,6 @@
 import type * as TDiscord from 'discord.js'
 import Discord, {SnowflakeUtil} from 'discord.js'
+import {RawRoleData} from 'discord.js/typings/rawDataTypes'
 import {DiscordManager} from './DiscordManager'
 
 type Handler<Data = unknown, Return = unknown> = {handle(data: Data): Return}
@@ -98,12 +99,12 @@ async function awaitObject<Promises extends Record<string, Promise<unknown>>>(
 async function createChannels(guild: TDiscord.Guild) {
   const channels = await awaitObject({
     privateChatCategory: guild.channels.create('Private Chat', {
-      type: 'category',
+      type: 'GUILD_CATEGORY',
     }),
     onBoardingCategory: guild.channels.create('Onboarding-1', {
-      type: 'category',
+      type: 'GUILD_CATEGORY',
     }),
-    meetupsCategory: guild.channels.create('Meetups', {type: 'category'}),
+    meetupsCategory: guild.channels.create('Meetups', {type: 'GUILD_CATEGORY'}),
     generalChannel: guild.channels.create('💬-general'),
     kcdOfficeHoursChannel: guild.channels.create('🏫-kcd-office-hours'),
     introductionChannel: guild.channels.create('👶-introductions'),
@@ -127,50 +128,41 @@ async function createChannels(guild: TDiscord.Guild) {
 }
 
 function createRoles(client: TDiscord.Client, guild: TDiscord.Guild) {
-  const everyoneRole = new Discord.Role(
-    client,
-    {id: guild.id, name: '@everyone'},
-    guild,
-  )
-  guild.roles.cache.set(guild.id, everyoneRole)
+  function createRole({
+    id = SnowflakeUtil.generate(),
+    name,
+  }: Partial<RawRoleData> & {name: string}): TDiscord.Role {
+    // @ts-expect-error this is private, but I mean... I need it...
+    const role: TDiscord.Role = new Discord.Role(
+      client,
+      {
+        id,
+        name,
+        color: 0x0001,
+        hoist: false,
+        position: 1,
+        permissions: '',
+        managed: true,
+        mentionable: true,
+      },
+      guild,
+    )
+    guild.roles.cache.set(id, role)
+    return role
+  }
+  const everyoneRole = createRole({id: guild.id, name: '@everyone'})
 
-  const officeHoursRole = new Discord.Role(
-    client,
-    {id: SnowflakeUtil.generate(), name: 'Notify: Office Hours'},
-    guild,
-  )
-  guild.roles.cache.set(officeHoursRole.id, officeHoursRole)
+  const officeHoursRole = createRole({name: 'Notify: Office Hours'})
 
-  const liveStreamRole = new Discord.Role(
-    client,
-    {id: SnowflakeUtil.generate(), name: 'Notify: Kent Live'},
-    guild,
-  )
-  guild.roles.cache.set(liveStreamRole.id, liveStreamRole)
+  const liveStreamRole = createRole({name: 'Notify: Kent Live'})
 
-  const unconfirmedRole = new Discord.Role(
-    client,
-    {id: SnowflakeUtil.generate(), name: 'Unconfirmed Member'},
-    guild,
-  )
-  guild.roles.cache.set(unconfirmedRole.id, unconfirmedRole)
+  const unconfirmedRole = createRole({name: 'Unconfirmed Member'})
 
-  const memberRole = new Discord.Role(
-    client,
-    {id: SnowflakeUtil.generate(), name: 'Member'},
-    guild,
-  )
-  guild.roles.cache.set(memberRole.id, memberRole)
+  const memberRole = createRole({name: 'Member'})
 
-  const newConfirmedMemberRole = new Discord.Role(
-    client,
-    {
-      id: SnowflakeUtil.generate(),
-      name: 'New confirmed member',
-    },
-    guild,
-  )
-  guild.roles.cache.set(newConfirmedMemberRole.id, newConfirmedMemberRole)
+  const newConfirmedMemberRole = createRole({
+    name: 'New confirmed member',
+  })
 
   return {
     memberRole,
@@ -182,36 +174,93 @@ function createRoles(client: TDiscord.Client, guild: TDiscord.Guild) {
   }
 }
 
+// eslint-disable-next-line max-lines-per-function
 async function makeFakeClient() {
-  const client = new Discord.Client()
+  const client = new Discord.Client({
+    intents: [
+      'GUILDS',
+      'GUILD_MEMBERS',
+      'GUILD_EMOJIS_AND_STICKERS',
+      'GUILD_MESSAGES',
+      'GUILD_MESSAGE_REACTIONS',
+    ],
+  })
   Object.assign(client, {
     token: process.env.DISCORD_BOT_TOKEN,
+    // @ts-expect-error this is protected, but I need it for tests...
     user: new Discord.ClientUser(client, {
       id: SnowflakeUtil.generate(),
       bot: true,
       username: 'BOT',
     }),
   })
+  // @ts-expect-error this is protected, but I need it for tests...
+  const kent = new Discord.User(client, {
+    id: SnowflakeUtil.generate(),
+    username: 'kentcdodds',
+    discriminator: '0001',
+  })
+
   const guild = new Discord.Guild(client, {
+    // most of these values are made up...
     id: SnowflakeUtil.generate(),
     name: 'KCD',
+    discovery_splash: null,
+    owner_id: kent.id,
+    icon: null,
+    splash: null,
+    region: '',
+    afk_channel_id: null,
+    afk_timeout: 1000,
+    verification_level: 0,
+    default_message_notifications: 1,
+    explicit_content_filter: 2,
+    roles: [],
+    emojis: [],
+    features: [],
+    mfa_level: 0,
+    application_id: null,
+    system_channel_id: null,
+    system_channel_flags: 1,
+    rules_channel_id: null,
+    vanity_url_code: null,
+    description: null,
+    banner: null,
+    premium_tier: 3,
+    preferred_locale: 'en-US',
+    public_updates_channel_id: null,
+    nsfw_level: 2,
+    stickers: [],
   })
 
   DiscordManager.guilds[guild.id] = guild
   client.guilds.cache.set(guild.id, guild)
 
   const {memberRole} = createRoles(client, guild)
+
   const defaultChannels = await createChannels(guild)
+
   await createEmojis(guild)
 
-  async function createUser(username: string, options = {}) {
-    const newMember = new Discord.GuildMember(client, {nick: username}, guild)
-    newMember.user = new Discord.User(client, {
+  async function createUser(
+    username: string,
+    options = {},
+  ): Promise<TDiscord.GuildMember> {
+    // @ts-expect-error this is private, but I need it for tests...
+    const newMember: TDiscord.GuildMember = new Discord.GuildMember(
+      client,
+      {nick: username},
+      guild,
+    )
+
+    // @ts-expect-error this is protected, but I need it for tests...
+    const newUser: TDiscord.User = new Discord.User(client, {
       id: SnowflakeUtil.generate(),
       username,
-      discriminator: client.users.cache.size,
+      discriminator: '0001',
       ...options,
     })
+    newMember.user = newUser
     guild.members.cache.set(newMember.id, newMember)
     client.users.cache.set(newMember.id, newMember.user)
     await newMember.roles.add(memberRole)
@@ -247,25 +296,25 @@ async function makeFakeClient() {
     message,
     reactionName,
     emoji = guild.emojis.cache.find(({name}) => reactionName === name),
-  }:
+  }: {
+    user?: TDiscord.GuildMember | TDiscord.User
+    message?: TDiscord.Message | null
+  } & (
     | {
-        user?: TDiscord.GuildMember | TDiscord.User
-        message?: TDiscord.Message | null
         reactionName: string
-        emoji?: {name: string; id?: string}
+        emoji?: never
       }
     | {
-        user?: TDiscord.GuildMember | TDiscord.User
-        message?: TDiscord.Message | null
-        reactionName?: string
-        emoji: {name: string; id?: string}
-      }) {
+        reactionName?: never
+        emoji: {name: string; id?: string} | TDiscord.GuildEmoji
+      }
+  )) {
     if (!message) {
       throw new Error(
         `Tried to react to a message but did not provide a message`,
       )
     }
-    if (!emoji) {
+    if (typeof emoji === 'undefined' || !emoji.name || !emoji.id) {
       throw new Error(
         `No guild emoji found with the name ${
           typeof reactionName === 'undefined' ? 'NO NAME GIVEN' : reactionName
@@ -286,6 +335,9 @@ async function makeFakeClient() {
       if (!reactionsMap) {
         reactionsMap = {}
         DiscordManager.reactions[result.message.id] = reactionsMap
+      }
+      if (result.reaction.emoji.name === null) {
+        throw new Error('emoji name should not be null')
       }
       reactionsMap[result.reaction.emoji.name] = result.reaction
     } else {

@@ -22,14 +22,14 @@ const isWelcomeChannel = (ch: TDiscord.TextChannel) =>
   ch.name.startsWith(welcomeChannelPrefix)
 
 const isTextChannel = (ch: TDiscord.Channel): ch is TDiscord.TextChannel =>
-  ch.type === 'text'
+  ch.type === 'GUILD_TEXT'
 
 const isVoiceChannel = (ch: TDiscord.Channel): ch is TDiscord.VoiceChannel =>
-  ch.type === 'voice'
+  ch.type === 'GUILD_VOICE'
 
 const isCategoryChannel = (
   ch: TDiscord.Channel,
-): ch is TDiscord.CategoryChannel => ch.type === 'category'
+): ch is TDiscord.CategoryChannel => ch.type === 'GUILD_CATEGORY'
 
 const getSend = (channel: TDiscord.TextChannel) => async (message: string) => {
   if (!message) {
@@ -64,20 +64,23 @@ function getMember(guild: TDiscord.Guild | null, memberId: string) {
  */
 function getChannel(
   guild: TDiscord.Guild | null,
-  options: {name: string; type?: 'text'},
+  options: {name: string; type?: 'GUILD_TEXT'},
 ): null | TDiscord.TextChannel
 function getChannel(
   guild: TDiscord.Guild | null,
-  options: {name: string; type: 'voice'},
+  options: {name: string; type: 'GUILD_VOICE'},
 ): null | TDiscord.VoiceChannel
 function getChannel(
   guild: TDiscord.Guild | null,
-  options: {name: string; type: 'category'},
+  options: {name: string; type: 'GUILD_CATEGORY'},
 ): null | TDiscord.CategoryChannel
 
 function getChannel(
   guild: TDiscord.Guild | null,
-  {name, type = 'text'}: {name: string; type?: 'text' | 'voice' | 'category'},
+  {
+    name,
+    type = 'GUILD_TEXT',
+  }: {name: string; type?: 'GUILD_TEXT' | 'GUILD_VOICE' | 'GUILD_CATEGORY'},
 ) {
   const channel = guild?.channels.cache.find(
     ch =>
@@ -96,10 +99,10 @@ const getTextChannel = (guild: TDiscord.Guild | null, name: string) =>
   getChannel(guild, {name})
 
 const getVoiceChannel = (guild: TDiscord.Guild | null, name: string) =>
-  getChannel(guild, {name, type: 'voice'})
+  getChannel(guild, {name, type: 'GUILD_VOICE'})
 
 const getCategoryChannel = (guild: TDiscord.Guild | null, name: string) =>
-  getChannel(guild, {name, type: 'category'})
+  getChannel(guild, {name, type: 'GUILD_CATEGORY'})
 
 /**
  * The name will be lowercased and the first role with a lowercased name that
@@ -250,7 +253,7 @@ _Replying to ${msg.author} <${getMessageLink(msg)}>_
 ${reply}
       `.trim(),
     )
-    if (msg.channel.type === 'text') {
+    if (msg.channel.type === 'GUILD_TEXT') {
       return sendSelfDestructMessage(
         msg.channel,
         `Hey ${msg.author}, I replied to you here: ${getMessageLink(botMsg)}`,
@@ -285,7 +288,7 @@ function botLog(
     if (typeof result === 'string') {
       message = {content: result}
     } else {
-      message = {embed: result}
+      message = {embeds: [result]}
     }
   } catch (error: unknown) {
     console.error(`Unable to get message for bot log`, getErrorStack(error))
@@ -299,7 +302,9 @@ function botLog(
     .then(() => botsChannel.send(message))
     .catch((error: unknown) => {
       const messageSummary =
-        message.content ?? message.embed?.title ?? message.embed?.description
+        message.content ??
+        message.embeds?.[0]?.title ??
+        message.embeds?.[0]?.description
       console.error(
         `Unable to log message: "${messageSummary}"`,
         getErrorStack(error),

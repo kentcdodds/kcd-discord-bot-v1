@@ -13,6 +13,7 @@ const reactions: Record<string, ReactionFn | undefined> = {
   botdontasktoask: dontAskToAsk,
   botdouble: doubleAsk,
   botconfirm: deleteConfirmedMessage,
+  botcall: callKent,
 } as const
 
 async function ask(messageReaction: TDiscord.MessageReaction) {
@@ -25,6 +26,17 @@ async function ask(messageReaction: TDiscord.MessageReaction) {
 async function doubleAsk(messageReaction: TDiscord.MessageReaction) {
   await messageReaction.message.reply(
     `Please avoid posting the same thing in multiple channels. Choose the best channel, and wait for a response there. Please delete the other message to avoid fragmenting the answers and causing confusion. Thanks!`,
+  )
+  await messageReaction.remove()
+}
+
+async function callKent(messageReaction: TDiscord.MessageReaction) {
+  await messageReaction.message.reply(
+    `
+This looks like a great question for Kent's "Call Kent Podcast": https://kentcdodds.com/call
+
+Simply create an account on kentcdodds.com, then go to <https://kentcdodds.com/calls/record/new> to record your question and Kent will answer when he gets the chance. Don't forget to subscribe to the podcast so you can hear the answer!
+    `.trim(),
   )
   await messageReaction.remove()
 }

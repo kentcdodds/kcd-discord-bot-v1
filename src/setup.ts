@@ -4,7 +4,6 @@ import * as onboarding from './onboarding'
 import * as commands from './commands'
 import * as admin from './admin'
 import * as clubApplication from './club-application'
-import * as privateChat from './private-chat'
 import * as meetup from './meetup'
 import * as reactions from './reactions'
 
@@ -13,7 +12,6 @@ function setup(client: Client) {
   commands.setup(client)
   admin.setup(client)
   clubApplication.setup(client)
-  privateChat.setup(client)
   meetup.setup(client)
   reactions.setup(client)
 }

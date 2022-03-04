@@ -122,5 +122,3 @@ MIT
 [requests]: https://github.com/kentcdodds/kcd-discord-bot/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc+label%3Aenhancement
 [good-first-issue]: https://github.com/kentcdodds/kcd-discord-bot/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc+label%3Aenhancement+label%3A%22good+first+issue%22
 <!-- prettier-ignore-end -->
-
-Manual deploy: 1

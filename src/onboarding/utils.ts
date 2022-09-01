@@ -99,7 +99,7 @@ const getWelcomeChannels = (guild: TDiscord.Guild) =>
     ch => isTextChannel(ch) && isWelcomeChannel(ch),
   ) as TDiscord.Collection<string, TDiscord.TextChannel>
 
-const hasRole = (member: TDiscord.GuildMember, roleName: string) =>
+export const hasRole = (member: TDiscord.GuildMember, roleName: string) =>
   member.roles.cache.some(({name}) => name === roleName)
 
 const isRegularStep = (step: Step | undefined): step is RegularStep =>

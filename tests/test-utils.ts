@@ -203,17 +203,23 @@ async function makeFakeClient() {
   const defaultChannels = await createChannels(guild)
   await createEmojis(guild)
 
-  async function createUser(username: string, options = {}) {
+  async function createUser(
+    username: string,
+    userOptions = {},
+    options: {memberRole?: boolean} = {},
+  ) {
     const newMember = new Discord.GuildMember(client, {nick: username}, guild)
     newMember.user = new Discord.User(client, {
       id: SnowflakeUtil.generate(),
       username,
       discriminator: client.users.cache.size,
-      ...options,
+      ...userOptions,
     })
     guild.members.cache.set(newMember.id, newMember)
     client.users.cache.set(newMember.id, newMember.user)
-    await newMember.roles.add(memberRole)
+    if (options.memberRole !== false) {
+      await newMember.roles.add(memberRole)
+    }
     return newMember
   }
 

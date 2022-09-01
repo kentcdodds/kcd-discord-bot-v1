@@ -6,6 +6,7 @@ import {
   getBotLogEmbed,
   getMessageContents,
   getSend,
+  hasRole,
   isCategoryChannel,
   updateOnboardingBotLog,
   welcomeChannelPrefix,
@@ -17,6 +18,19 @@ async function handleNewMember(member: TDiscord.GuildMember) {
     user,
     user: {username, discriminator},
   } = member
+
+  // if they were added by a bot (like the KCD site) then they'll probably
+  // get new roles in the next little bit, so let's wait a second before
+  // continuing...
+  // also, this bot is about to be decommissioned, so please excuse me while I
+  // implement this short-term hack...
+  if (process.env.NODE_ENV === 'production') {
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    await member.fetch()
+  }
+
+  // this is already a confirmed member
+  if (hasRole(member, 'Member')) return
 
   void botLog(guild, () => {
     return getBotLogEmbed(member, {

@@ -28,9 +28,11 @@ async function setup() {
     defaultChannels,
   } = await makeFakeClient()
 
-  const member = await createUser('fredjoe', {
-    discriminator: 1234,
-  })
+  const member = await createUser(
+    'fredjoe',
+    {discriminator: 1234},
+    {memberRole: false},
+  )
 
   await handleNewMember(member)
 

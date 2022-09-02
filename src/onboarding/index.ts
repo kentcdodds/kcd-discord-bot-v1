@@ -14,7 +14,8 @@ function setup(client: TDiscord.Client) {
 }
 
 // onboarding no longer supported...
-function newSetup() {}
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function newSetup(client: TDiscord.Client) {}
 
 export * from './handle-new-message'
 export * from './handle-updated-message'

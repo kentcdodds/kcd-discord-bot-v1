@@ -13,8 +13,11 @@ function setup(client: TDiscord.Client) {
   cleanupGuildOnInterval(client, guild => cleanup(guild), 5000)
 }
 
+// onboarding no longer supported...
+function newSetup() {}
+
 export * from './handle-new-message'
 export * from './handle-updated-message'
 export * from './handle-new-member'
 export * from './cleanup'
-export {setup}
+export {setup as oldSetup, newSetup as setup}
